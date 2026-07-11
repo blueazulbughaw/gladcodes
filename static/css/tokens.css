@@ -1,0 +1,36 @@
+/* GladCodes design tokens. Single source of truth for palette, type, and
+   spacing — see CLAUDE.md for the rationale behind these exact values. */
+:root {
+  --navy: #1A2E44;
+  --teal: #0E8A8A;
+  --aqua: #5EC4C4;
+  --ocean: #3F88C5;
+  --sand: #FAF6EF;
+  --cream: #FFFDF8;
+  --card: #FFFFFF;
+  --success: #3BA55D;
+  --warn: #E7A93C;
+
+  --navy-rgb: 26, 46, 68;
+  --teal-rgb: 14, 138, 138;
+
+  --font-heading: "Space Grotesk", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-script: "Caveat", cursive;
+
+  --radius-card: 14px;
+  --radius-pill: 999px;
+  --shadow-card: 0 4px 20px rgba(var(--navy-rgb), 0.08);
+  --shadow-card-hover: 0 12px 32px rgba(var(--navy-rgb), 0.14);
+
+  --container-max: 1180px;
+  --space-xs: 0.5rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2.5rem;
+  --space-xl: 4rem;
+  --space-2xl: 6rem;
+
+  --transition-fast: 150ms ease;
+  --transition-base: 300ms cubic-bezier(0.2, 0.65, 0.3, 0.9);
+}

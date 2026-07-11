@@ -1,0 +1,179 @@
+/* Hero --------------------------------------------------------------- */
+.hero {
+  padding: var(--space-2xl) 0;
+  position: relative;
+  overflow: hidden;
+}
+.hero .container {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: var(--space-2xl);
+  align-items: center;
+}
+.hero-headline {
+  font-size: clamp(2.2rem, 4vw, 3.4rem);
+  margin-bottom: var(--space-sm);
+}
+.hero-lede {
+  font-size: 1.1rem;
+  max-width: 46ch;
+  color: rgba(var(--navy-rgb), 0.8);
+}
+.hero-actions {
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  margin-top: var(--space-lg);
+}
+
+.now-card { position: relative; z-index: 1; }
+.now-card h3 {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--teal);
+  margin-bottom: var(--space-md);
+}
+.now-card dl { margin: 0; }
+.now-card dt {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(var(--navy-rgb), 0.55);
+  margin-top: var(--space-sm);
+}
+.now-card dt:first-of-type { margin-top: 0; }
+.now-card dd { margin: 0.15rem 0 0; font-weight: 500; }
+.now-card .updated-at {
+  margin-top: var(--space-md);
+  padding-top: var(--space-sm);
+  border-top: 1px solid rgba(var(--navy-rgb), 0.08);
+  font-size: 0.8rem;
+  color: rgba(var(--navy-rgb), 0.5);
+}
+
+.hero-decoration {
+  position: absolute;
+  right: -6%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 420px;
+  max-width: 45vw;
+  z-index: 0;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .hero .container { grid-template-columns: 1fr; }
+  .hero-decoration { display: none; }
+}
+
+/* Stat counters -------------------------------------------------------- */
+.stats-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-md);
+  padding: var(--space-lg) 0;
+}
+.stat-tile {
+  text-align: center;
+  padding: var(--space-lg) var(--space-sm);
+}
+.stat-value {
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 3.5vw, 2.75rem);
+  font-weight: 700;
+  color: var(--teal);
+  display: block;
+}
+.stat-label {
+  font-size: 0.9rem;
+  color: rgba(var(--navy-rgb), 0.65);
+  margin-top: 0.25rem;
+}
+@media (max-width: 760px) {
+  .stats-strip { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Timeline --------------------------------------------------------------- */
+.timeline-track {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-md);
+}
+.timeline-month {
+  border-left: 3px solid rgba(var(--navy-rgb), 0.1);
+  padding-left: var(--space-sm);
+}
+.timeline-month-label {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--navy);
+  margin-bottom: var(--space-sm);
+}
+.milestone {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  margin-bottom: var(--space-sm);
+  font-size: 0.9rem;
+}
+.milestone svg { flex-shrink: 0; margin-top: 0.15rem; }
+.milestone--done svg { color: var(--success); }
+.milestone--pending svg { color: rgba(var(--navy-rgb), 0.35); }
+.milestone-title { font-weight: 600; }
+.milestone-desc { color: rgba(var(--navy-rgb), 0.65); font-size: 0.85rem; }
+
+/* Projects ----------------------------------------------------------- */
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-md);
+}
+.project-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(14, 138, 138, 0.1);
+  color: var(--teal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-sm);
+}
+.project-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-sm);
+}
+.project-progress { margin-top: var(--space-md); }
+.project-progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: rgba(var(--navy-rgb), 0.6);
+  margin-bottom: 0.35rem;
+}
+.project-link { display: inline-block; margin-top: var(--space-sm); font-weight: 600; }
+
+/* Journal ------------------------------------------------------------ */
+.journal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-md);
+}
+.journal-date {
+  font-size: 0.8rem;
+  color: rgba(var(--navy-rgb), 0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.journal-card h3 { font-size: 1.1rem; margin: 0.4rem 0; }
+.journal-excerpt {
+  font-size: 0.9rem;
+  color: rgba(var(--navy-rgb), 0.7);
+}
+.journal-read-more { font-weight: 600; font-size: 0.9rem; }
