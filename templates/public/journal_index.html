@@ -1,0 +1,59 @@
+{% extends "base_public.html" %}
+{% import "_macros.html" as macros %}
+
+{% block title %}Journal — GladCodes{% endblock %}
+{% block description %}Founder journal entries on building GladCodes in public: engineering, program management, and lessons from the road.{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">Founder journal</span>
+    <h1>Notes from building in public</h1>
+    <p>Every post I've published about engineering, founding, and everything in between.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="journal-controls">
+      <form class="search-form" method="get" action="{{ url_for('public.journal_index') }}">
+        {% if active_tag %}<input type="hidden" name="tag" value="{{ active_tag }}">{% endif %}
+        <input type="search" name="q" value="{{ q }}" placeholder="Search posts by title&hellip;" aria-label="Search journal posts">
+        <button class="btn btn-secondary" type="submit">Search</button>
+      </form>
+      {% if all_tags %}
+      <div class="tag-pills">
+        <a class="tag-pill{{ ' tag-pill--active' if not active_tag }}" href="{{ url_for('public.journal_index', q=q) if q else url_for('public.journal_index') }}">All</a>
+        {% for tag in all_tags %}
+        <a class="tag-pill{{ ' tag-pill--active' if tag == active_tag }}" href="{{ url_for('public.journal_index', tag=tag, q=q) if q else url_for('public.journal_index', tag=tag) }}">{{ tag }}</a>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    {% if posts %}
+    <div class="journal-grid">
+      {% for post in posts %}
+      {{ macros.journal_card(post, reveal=False) }}
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      {% if q and active_tag %}
+      <p>No posts match &ldquo;{{ q }}&rdquo; tagged #{{ active_tag }}.</p>
+      {% elif q %}
+      <p>No posts match &ldquo;{{ q }}&rdquo;.</p>
+      {% elif active_tag %}
+      <p>No posts tagged #{{ active_tag }} yet.</p>
+      {% else %}
+      <p>No posts published yet — check back soon.</p>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

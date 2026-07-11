@@ -1,0 +1,23 @@
+{% extends "base_public.html" %}
+
+{% block title %}Resources — GladCodes{% endblock %}
+{% block description %}Tutorials, videos, and tools — coming soon from GladCodes.{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container placeholder-hero">
+    <span class="badge badge--experimental">Phase 2 — coming soon</span>
+    <span class="eyebrow">Resources</span>
+    <h1>Tutorials, videos, and tools</h1>
+    <p>
+      This is where long-form tutorials, recorded talks, and downloadable
+      guides will live once they're ready. For now, the fastest way to follow
+      what I'm learning and building is the <a href="{{ url_for('public.journal_index') }}">journal</a>.
+    </p>
+  </div>
+</section>
+{% endblock %}

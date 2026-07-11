@@ -1,0 +1,40 @@
+{% extends "base_public.html" %}
+
+{% block title %}Speaking — GladCodes{% endblock %}
+{% block description %}Talks, meetups, and community events — where I've spoken about building in public, engineering, and founding.{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">Community</span>
+    <h1>Speaking</h1>
+    <p>Talks, panels, and meetups where I've shown up in person for the community.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    {% if events %}
+    <div class="speaking-list">
+      {% for event in events %}
+      <div class="card card--hover speaking-item reveal">
+        <div class="speaking-item-date">{{ event.event_date|human_date if event.event_date else 'TBA' }}</div>
+        <div class="speaking-item-body">
+          <div class="speaking-item-event">{{ event.event_name }}</div>
+          <h3>{{ event.title }}</h3>
+          {% if event.description %}<p>{{ event.description }}</p>{% endif %}
+          {% if event.link %}<a href="{{ event.link }}" target="_blank" rel="noopener">Event details &rarr;</a>{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state"><p>No speaking engagements listed yet — check back soon.</p></div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

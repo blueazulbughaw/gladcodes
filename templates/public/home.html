@@ -1,4 +1,5 @@
 {% extends "base_public.html" %}
+{% import "_macros.html" as macros %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
@@ -102,30 +103,11 @@
     </div>
     <div class="projects-grid">
       {% for project in projects %}
-      <div class="card card--hover reveal">
-        <div class="project-card-header">
-          <div class="project-card-icon"><i data-lucide="{{ project.icon }}" width="22" height="22"></i></div>
-          <span class="badge badge--{{ project.status }}">{{ project.status.replace('_', ' ') }}</span>
-        </div>
-        <h3>{{ project.title }}</h3>
-        <p>{{ project.description }}</p>
-        <div class="project-progress">
-          <div class="project-progress-label">
-            <span>Progress</span>
-            <span>{{ project.progress_pct }}%</span>
-          </div>
-          <div class="progress-track">
-            <div class="progress-fill reveal" data-progress="{{ project.progress_pct }}"></div>
-          </div>
-        </div>
-        {% if project.url %}
-        <a class="project-link" href="{{ project.url }}" target="_blank" rel="noopener">View project &rarr;</a>
-        {% endif %}
-      </div>
+      {{ macros.project_card(project) }}
       {% endfor %}
     </div>
     <div class="section-footer-link reveal">
-      <a href="/projects">See all projects &rarr;</a>
+      <a href="{{ url_for('public.projects_index') }}">See all projects &rarr;</a>
     </div>
   </div>
 </section>
@@ -139,16 +121,11 @@
     </div>
     <div class="journal-grid">
       {% for post in journal_posts %}
-      <div class="card card--hover journal-card reveal">
-        <div class="journal-date">{{ post.published_at|human_date }}</div>
-        <h3>{{ post.title }}</h3>
-        <p class="journal-excerpt">{{ post.excerpt }}</p>
-        <a class="journal-read-more" href="/journal/{{ post.slug }}">Read more &rarr;</a>
-      </div>
+      {{ macros.journal_card(post) }}
       {% endfor %}
     </div>
     <div class="section-footer-link reveal">
-      <a href="/journal">See all posts &rarr;</a>
+      <a href="{{ url_for('public.journal_index') }}">See all posts &rarr;</a>
     </div>
   </div>
 </section>

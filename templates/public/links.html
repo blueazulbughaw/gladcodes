@@ -1,0 +1,28 @@
+{% extends "base_public.html" %}
+
+{% block title %}Links — GladCodes{% endblock %}
+{% block description %}Every place to find Glad online — GitHub, LinkedIn, the journal, and more.{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">Find me</span>
+    <h1>Links</h1>
+    <p>Everywhere to follow the journey in one place.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="links-stack">
+      {% for link in links %}
+      <a class="link-button reveal" href="{{ link.url }}" {{ ('target="_blank" rel="noopener"' if link.url.startswith('http') else '')|safe }}>{{ link.label }}</a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

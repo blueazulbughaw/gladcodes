@@ -1,0 +1,32 @@
+{% extends "base_public.html" %}
+
+{% block title %}About — GladCodes{% endblock %}
+{% block description %}Software engineer, TPM, MBA-MIS, and founder — an engineering career across Japan and Hong Kong, American Express, and back to building.{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container placeholder-hero">
+    <span class="badge badge--experimental">Phase 2 — full page coming soon</span>
+    <span class="eyebrow">About</span>
+    <h1>Software Engineer &middot; TPM &middot; MBA-MIS &middot; Founder Who Ships</h1>
+    <p>
+      My engineering career has taken me from Japan to Hong Kong, including a
+      stint as a Technical Program Manager at American Express, before an MBA
+      in Management Information Systems. Now I'm returning to hands-on
+      engineering as a founder — building GladCodes in public, one shipped
+      feature at a time, while staying active in the developer communities
+      that shaped me along the way.
+    </p>
+    <p>
+      A longer version of this story — the full career timeline, the case for
+      building in public, and how community leadership fits into all of it —
+      is coming in Phase 2. For the short version: I ship, I write it down,
+      and I show up for the community.
+    </p>
+  </div>
+</section>
+{% endblock %}
