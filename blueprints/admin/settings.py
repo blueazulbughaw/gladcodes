@@ -6,12 +6,13 @@ from . import admin_bp
 from .uploads import save_image
 
 SETTINGS_FIELDS = [
-    ("github_username", "GitHub username"),
-    ("linkedin_url", "LinkedIn URL"),
-    ("instagram_url", "Instagram URL"),
-    ("site_title", "Site title"),
-    ("site_description", "Site description"),
-    ("contact_email", "Contact email"),
+    ("github_username", "GitHub username", "text"),
+    ("linkedin_url", "LinkedIn URL", "text"),
+    ("instagram_url", "Instagram URL", "text"),
+    ("site_title", "Site title", "text"),
+    ("site_description", "Site description", "text"),
+    ("contact_email", "Contact email", "text"),
+    ("hero_bio", "Hero bio (home page paragraph)", "textarea"),
 ]
 
 
@@ -29,7 +30,7 @@ def _upsert_setting(key, value):
 def settings_editor():
     error = None
     if request.method == "POST":
-        for key, _ in SETTINGS_FIELDS:
+        for key, _, _ in SETTINGS_FIELDS:
             _upsert_setting(key, request.form.get(key, "").strip())
 
         file = request.files.get("headshot_image")

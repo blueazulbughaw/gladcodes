@@ -14,14 +14,10 @@
       <h1 class="hero-headline">I don't know exactly what I'm doing.<br>
         <span class="script-accent">But I'm doing it anyway.</span>
       </h1>
-      <p class="hero-lede">
-        Software engineer turned founder, writing down every project, metric,
-        and lesson in the open — from shipping code across Japan and Hong
-        Kong to building GladCodes from a blank folder.
-      </p>
+      <p class="hero-lede">{{ settings.get('hero_bio') or "Software engineer turned founder, writing down every project, metric, and lesson in the open — from shipping code across Japan and Hong Kong to building GladCodes from a blank folder." }}</p>
       <div class="hero-actions">
         <a class="btn btn-primary" href="#newsletter">Follow the journey &rarr;</a>
-        <a class="btn btn-secondary" href="{{ url_for('public.resume') }}">Hire Me</a>
+        <a class="btn btn-secondary" href="{{ url_for('public.lets_connect') }}">Let's Connect</a>
       </div>
     </div>
 

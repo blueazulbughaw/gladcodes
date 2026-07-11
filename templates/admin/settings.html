@@ -8,10 +8,14 @@
   {% if error %}<p class="admin-error">{{ error }}</p>{% endif %}
   <form method="post" enctype="multipart/form-data" class="admin-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-    {% for key, label in fields %}
+    {% for key, label, ftype in fields %}
     <label class="admin-field">
       <span>{{ label }}</span>
+      {% if ftype == 'textarea' %}
+      <textarea name="{{ key }}" rows="4">{{ current.get(key, '') }}</textarea>
+      {% else %}
       <input type="text" name="{{ key }}" value="{{ current.get(key, '') }}">
+      {% endif %}
     </label>
     {% endfor %}
     <label class="admin-field">
