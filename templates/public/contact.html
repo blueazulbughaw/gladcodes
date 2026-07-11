@@ -1,0 +1,59 @@
+{% extends "base_public.html" %}
+
+{% block title %}Get in touch — GladCodes{% endblock %}
+{% block description %}Send a message directly — job offers, funding conversations, collaborations, or just to say hi.{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">Get in touch</span>
+    <h1>Send a message</h1>
+    <p>Pick what this is about, and I'll get back to you.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <p class="form-message form-message--{{ category }}">{{ message }}</p>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <form method="post" class="contact-form">
+      <div class="contact-honeypot" aria-hidden="true">
+        <label for="company">Company</label>
+        <input type="text" id="company" name="company" tabindex="-1" autocomplete="off">
+      </div>
+      <label class="form-field">
+        <span>Your name</span>
+        <input type="text" name="name" value="{{ form.get('name', '') }}" required>
+      </label>
+      <label class="form-field">
+        <span>Your email</span>
+        <input type="email" name="email" value="{{ form.get('email', '') }}" required>
+      </label>
+      <label class="form-field">
+        <span>Subject</span>
+        <select name="subject" required>
+          <option value="" disabled {{ 'selected' if not form.get('subject') }}>Choose one&hellip;</option>
+          {% for subject in subjects %}
+          <option value="{{ subject }}" {{ 'selected' if form.get('subject') == subject }}>{{ subject }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="form-field">
+        <span>Message</span>
+        <textarea name="message" rows="6" required>{{ form.get('message', '') }}</textarea>
+      </label>
+      <button type="submit" class="btn btn-primary">Send message</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

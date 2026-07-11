@@ -90,9 +90,7 @@
         <div>
           <h4>Work with me</h4>
           <a href="{{ url_for('public.resume') }}">Resume</a>
-          {% if settings.get('contact_email') %}
-          <a href="mailto:{{ settings.contact_email }}">Get in touch</a>
-          {% endif %}
+          <a href="{{ url_for('public.contact') }}">Send a message</a>
         </div>
       </div>
       <div class="footer-bottom">

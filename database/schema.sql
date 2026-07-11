@@ -262,6 +262,37 @@ INSERT INTO resume_meta (id, file_path, last_updated)
 SELECT * FROM (SELECT 1 AS id, NULL AS file_path, '2026-06-01' AS last_updated) AS tmp
 WHERE NOT EXISTS (SELECT 1 FROM resume_meta WHERE id = 1);
 
+-- Flat, category+skill_name rows — grouped by category (in sort_order,
+-- first-appearance order) when rendered, same pattern as timeline_milestones
+-- grouping by month. Admin can add a brand-new category just by typing one
+-- on a new skill row, and a category disappears once its last skill is
+-- deleted — no separate "categories" table needed.
+CREATE TABLE IF NOT EXISTS skills (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    category VARCHAR(100) NOT NULL,
+    skill_name VARCHAR(100) NOT NULL,
+    sort_order INT NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO skills (category, skill_name, sort_order)
+SELECT * FROM (SELECT 'Engineering' AS category, 'Python' AS skill_name, 1 AS sort_order UNION ALL
+    SELECT 'Engineering', 'Flask', 2 UNION ALL
+    SELECT 'Engineering', 'JavaScript', 3 UNION ALL
+    SELECT 'Engineering', 'SQL', 4 UNION ALL
+    SELECT 'Engineering', 'REST APIs', 5 UNION ALL
+    SELECT 'Program & product', 'Roadmapping', 6 UNION ALL
+    SELECT 'Program & product', 'Cross-functional leadership', 7 UNION ALL
+    SELECT 'Program & product', 'Agile delivery', 8 UNION ALL
+    SELECT 'Program & product', 'Stakeholder management', 9 UNION ALL
+    SELECT 'Business', 'MBA — MIS', 10 UNION ALL
+    SELECT 'Business', 'Data-informed strategy', 11 UNION ALL
+    SELECT 'Business', 'Founder operations', 12 UNION ALL
+    SELECT 'Community', 'Public speaking', 13 UNION ALL
+    SELECT 'Community', 'Mentorship', 14 UNION ALL
+    SELECT 'Community', 'Developer communities', 15
+) AS tmp
+WHERE NOT EXISTS (SELECT 1 FROM skills);
+
 CREATE TABLE IF NOT EXISTS github_cache (
     id INT AUTO_INCREMENT PRIMARY KEY,
     cache_key VARCHAR(100) NOT NULL UNIQUE,

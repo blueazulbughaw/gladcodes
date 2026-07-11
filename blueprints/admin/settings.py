@@ -12,6 +12,7 @@ SETTINGS_FIELDS = [
     ("site_title", "Site title", "text"),
     ("site_description", "Site description", "text"),
     ("contact_email", "Contact email", "text"),
+    ("calendly_url", "Calendly booking link", "text"),
     ("hero_bio", "Hero bio (home page paragraph)", "textarea"),
 ]
 

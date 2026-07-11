@@ -7,15 +7,26 @@ from flask import Response, abort, current_app, flash, redirect, render_template
 from database.db import execute, query, query_one
 from services.content import render_markdown
 from services.github import get_profile_summary
+from services.mail import send_contact_email
 from services.metrics import get_chart_series
 
 from . import public_bp
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
+CONTACT_SUBJECTS = [
+    "I Have a Job for You",
+    "I Want to Fund Your Idea",
+    "Let's Create Something Awesome",
+    "Can I Buy You a Drink?",
+    "I Need Your Expertise",
+    "Promote My Product",
+    "Just want to say Hi!",
+    "Surprise Me",
+]
+
 # /about and /resources are Phase 1 placeholder pages (Phase 2 content per
-# spec). /contact has no dedicated page — "work with me" is a mailto link
-# in the footer, wired via site_settings.contact_email.
+# spec).
 
 
 @public_bp.app_context_processor
@@ -185,7 +196,53 @@ def lets_connect():
 @public_bp.route("/resume")
 def resume():
     meta = query_one("SELECT * FROM resume_meta WHERE id = 1")
-    return render_template("resume.html", meta=meta)
+
+    skill_rows = query("SELECT * FROM skills ORDER BY sort_order")
+    skills_by_category = OrderedDict()
+    for row in skill_rows:
+        skills_by_category.setdefault(row["category"], []).append(row["skill_name"])
+
+    return render_template("resume.html", meta=meta, skills_by_category=skills_by_category)
+
+
+@public_bp.route("/contact", methods=["GET", "POST"])
+def contact():
+    if request.method == "POST":
+        # Honeypot: a hidden field real visitors never fill in. A bot that
+        # fills every field trips this — pretend success, send nothing.
+        if request.form.get("company"):
+            flash("Thanks — I'll get back to you soon.", "success")
+            return redirect(url_for("public.contact"))
+
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip()
+        subject_choice = request.form.get("subject", "")
+        message = request.form.get("message", "").strip()
+
+        errors = []
+        if not name:
+            errors.append("Please enter your name.")
+        if not EMAIL_RE.match(email):
+            errors.append("Please enter a valid email address.")
+        if subject_choice not in CONTACT_SUBJECTS:
+            errors.append("Please choose a subject.")
+        if not message:
+            errors.append("Please enter a message.")
+        elif len(message) > 5000:
+            errors.append("Message is too long (max 5000 characters).")
+
+        if errors:
+            for error in errors:
+                flash(error, "error")
+            return render_template("contact.html", subjects=CONTACT_SUBJECTS, form=request.form)
+
+        if send_contact_email(name, email, subject_choice, message):
+            flash("Thanks — I'll get back to you soon.", "success")
+        else:
+            flash("Something went wrong sending your message — please email me directly instead.", "error")
+        return redirect(url_for("public.contact"))
+
+    return render_template("contact.html", subjects=CONTACT_SUBJECTS, form={})
 
 
 @public_bp.route("/about")
@@ -224,7 +281,7 @@ def sitemap():
     static_endpoints = [
         "public.home", "public.journal_index", "public.projects_index",
         "public.dashboard", "public.resume", "public.speaking",
-        "public.lets_connect", "public.about", "public.resources",
+        "public.lets_connect", "public.contact", "public.about", "public.resources",
     ]
     urls = [{"loc": base_url + url_for(endpoint), "lastmod": None} for endpoint in static_endpoints]
 

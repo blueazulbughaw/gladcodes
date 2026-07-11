@@ -7,6 +7,36 @@
 .page-hero h1 { font-size: clamp(1.9rem, 3.4vw, 2.6rem); }
 .page-hero p { max-width: 56ch; color: rgba(var(--navy-rgb), 0.7); }
 
+/* Flash messages on light backgrounds (contact form, etc.) — the newsletter
+   card's own message colors are tuned for its dark navy background, so
+   this is a separate, light-background-safe variant. ---------------------- */
+.form-message {
+  margin: 0 0 var(--space-md);
+  font-size: 0.9rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+}
+.form-message--success { background: rgba(59, 165, 93, 0.1); color: var(--success); }
+.form-message--error { background: rgba(179, 38, 30, 0.08); color: #b3261e; }
+
+/* Public-facing form fields (contact form) -------------------------------- */
+.contact-form { display: flex; flex-direction: column; gap: var(--space-md); max-width: 560px; }
+.form-field { display: flex; flex-direction: column; gap: 0.4rem; font-weight: 600; font-size: 0.9rem; }
+.form-field input, .form-field select, .form-field textarea {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 0.95rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid rgba(var(--navy-rgb), 0.2);
+}
+.form-field textarea { resize: vertical; }
+.form-field input:focus, .form-field select:focus, .form-field textarea:focus {
+  outline: 2px solid var(--teal);
+  outline-offset: 1px;
+}
+.contact-honeypot { position: absolute; left: -9999px; top: -9999px; }
+
 /* Journal index --------------------------------------------------------- */
 .journal-controls {
   display: flex;

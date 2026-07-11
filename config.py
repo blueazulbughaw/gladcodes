@@ -30,6 +30,18 @@ class Config:
     GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
     GITHUB_CACHE_TTL_SECONDS = 60 * 60  # 1 hour
 
+    # Contact form delivery. Defaults assume a Python app on cPanel shared
+    # hosting, where Exim already handles mail for the account and accepts
+    # local, unauthenticated submission on localhost:25 — no external email
+    # service needed. Override via env if the host requires authenticated
+    # submission instead (e.g. SMTP_PORT=587 + SMTP_USER/SMTP_PASSWORD).
+    MAIL_TO = os.environ.get("MAIL_TO", "hello@gladcodes.com")
+    MAIL_FROM = os.environ.get("MAIL_FROM", "noreply@glad.codes")
+    SMTP_HOST = os.environ.get("SMTP_HOST", "localhost")
+    SMTP_PORT = int(os.environ.get("SMTP_PORT", "25"))
+    SMTP_USER = os.environ.get("SMTP_USER", "")
+    SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+
     MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # 10 MB upload ceiling
 
     UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), "static", "uploads")

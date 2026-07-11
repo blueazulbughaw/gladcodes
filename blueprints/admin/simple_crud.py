@@ -117,6 +117,16 @@ RESOURCES = {
             ("sort_order", "int", "Sort order"),
         ],
     },
+    "skills": {
+        "table": "skills",
+        "title": "Skills",
+        "order_by": "sort_order",
+        "fields": [
+            ("category", "text", "Category (e.g. Engineering)"),
+            ("skill_name", "text", "Skill"),
+            ("sort_order", "int", "Sort order"),
+        ],
+    },
 }
 
 

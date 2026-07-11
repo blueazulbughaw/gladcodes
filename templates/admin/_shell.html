@@ -15,6 +15,7 @@
     <a href="{{ url_for('admin.simple_list', resource='community') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'community' }}">Community</a>
     <a href="{{ url_for('admin.simple_list', resource='links') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'links' }}">Links</a>
     <a href="{{ url_for('admin.resume_editor') }}" class="{{ 'active' if request.endpoint == 'admin.resume_editor' }}">Resume</a>
+    <a href="{{ url_for('admin.simple_list', resource='skills') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'skills' }}">Skills</a>
     <a href="{{ url_for('admin.simple_list', resource='speaking') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'speaking' }}">Speaking</a>
     <a href="{{ url_for('admin.subscribers_index') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('admin.subscribers') }}">Subscribers</a>
     <a href="{{ url_for('admin.settings_editor') }}" class="{{ 'active' if request.endpoint == 'admin.settings_editor' }}">Settings</a>

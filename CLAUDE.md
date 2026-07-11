@@ -154,3 +154,23 @@ Visible in admin nav as "Coming soon", backed by real tables already in
   local time; see the GitHub cache pattern above for why that broke
   things) whenever the app, not the DB, decides the timestamp (e.g.
   journal `published_at`, NOW card `updated_at`).
+- The `skills` table (resume page) follows the exact same flat
+  category+sort_order grouping pattern as `timeline_milestones`
+  (grouped by month): one row per skill, grouped by `category` in
+  sort_order/first-appearance order at render time. Adding a brand-new
+  category is just adding a skill row with a new category name via the
+  `skills` simple_crud resource; a category disappears once its last
+  skill is deleted. No separate categories table.
+- The contact form (`/contact`) sends mail via Python's stdlib
+  `smtplib`/`email`, not a paid transactional-email API — the
+  production host is cPanel shared hosting, where Exim already accepts
+  local unauthenticated submission on `localhost:25` for the account's
+  domains, so no external service or API key is needed by default.
+  `services/mail.py`'s `send_contact_email()` is configurable via
+  `SMTP_HOST`/`SMTP_PORT`/`SMTP_USER`/`SMTP_PASSWORD` env vars for hosts
+  that require authenticated submission instead, and always returns
+  `False` on any failure rather than raising — the route shows a
+  friendly error, never a crash. The form also carries a simple
+  honeypot field (`company`, absolutely positioned off-screen); a
+  filled honeypot silently "succeeds" without sending mail rather than
+  telling the bot it was caught.
