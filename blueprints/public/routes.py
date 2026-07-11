@@ -174,10 +174,12 @@ def speaking():
     return render_template("speaking.html", events=events)
 
 
-@public_bp.route("/links")
-def links_page():
+@public_bp.route("/lets-connect")
+def lets_connect():
     links = query("SELECT * FROM page_links WHERE is_visible = 1 ORDER BY sort_order")
-    return render_template("links.html", links=links)
+    headshot_row = query_one("SELECT setting_value FROM site_settings WHERE setting_key = 'headshot_image'")
+    headshot = headshot_row["setting_value"] if headshot_row else None
+    return render_template("links.html", links=links, headshot=headshot)
 
 
 @public_bp.route("/resume")
@@ -222,7 +224,7 @@ def sitemap():
     static_endpoints = [
         "public.home", "public.journal_index", "public.projects_index",
         "public.dashboard", "public.resume", "public.speaking",
-        "public.links_page", "public.about", "public.resources",
+        "public.lets_connect", "public.about", "public.resources",
     ]
     urls = [{"loc": base_url + url_for(endpoint), "lastmod": None} for endpoint in static_endpoints]
 

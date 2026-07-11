@@ -116,6 +116,22 @@
 .speaking-item-event { font-size: 0.85rem; color: rgba(var(--navy-rgb), 0.55); text-transform: uppercase; letter-spacing: 0.04em; }
 
 /* Links (linktree) --------------------------------------------------------- */
+.headshot-photo {
+  display: block;
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto var(--space-lg);
+  box-shadow: var(--shadow-card);
+}
+.headshot-photo--placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--navy-rgb), 0.06);
+  color: rgba(var(--navy-rgb), 0.35);
+}
 .links-stack {
   max-width: 480px;
   margin: 0 auto;

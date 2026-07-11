@@ -1,6 +1,6 @@
 {% extends "base_public.html" %}
 
-{% block title %}Links — GladCodes{% endblock %}
+{% block title %}Let's Connect — GladCodes{% endblock %}
 {% block description %}Every place to find Glad online — GitHub, LinkedIn, the journal, and more.{% endblock %}
 
 {% block extra_css %}
@@ -11,13 +11,20 @@
 <section class="page-hero">
   <div class="container">
     <span class="eyebrow">Find me</span>
-    <h1>Links</h1>
+    <h1>Let's Connect</h1>
     <p>Everywhere to follow the journey in one place.</p>
   </div>
 </section>
 
 <section class="section">
   <div class="container">
+    {% if headshot %}
+    <img class="headshot-photo reveal" src="{{ url_for('static', filename='uploads/' + headshot) }}" alt="Photo of Glad">
+    {% else %}
+    <div class="headshot-photo headshot-photo--placeholder reveal">
+      <i data-lucide="user-round" width="48" height="48"></i>
+    </div>
+    {% endif %}
     <div class="links-stack">
       {% for link in links %}
       <a class="link-button reveal" href="{{ link.url }}" {{ ('target="_blank" rel="noopener"' if link.url.startswith('http') else '')|safe }}>{{ link.label }}</a>

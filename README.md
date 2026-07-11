@@ -10,7 +10,7 @@ CMS at `/gc-admin/`. See [CLAUDE.md](CLAUDE.md) for architecture rules.
   timeline, projects, journal preview, dashboard teaser, currently
   learning, toolbox, live GitHub repos, community, newsletter),
   `/journal` (search + tag filter) and `/journal/<slug>`, `/projects`,
-  `/dashboard` (Chart.js), `/resume`, `/speaking`, `/links`, `/about`
+  `/dashboard` (Chart.js), `/resume`, `/speaking`, `/lets-connect`, `/about`
   and `/resources` (Phase 2 placeholders).
 - **Admin CMS** at `/gc-admin/` (never linked publicly — see CLAUDE.md):
   JWT-cookie auth with a silent-redirect gate, CSRF-protected editors for
