@@ -15,8 +15,7 @@ SETTINGS_FIELDS = [
     ("calendly_url", "Calendly booking link", "text"),
     ("hero_bio", "Hero bio (home page paragraph)", "textarea"),
     ("footer_copyright", "Footer copyright text", "text"),
-    ("footer_extra_1", "Footer note (middle, left)", "text"),
-    ("footer_extra_2", "Footer note (middle, right)", "text"),
+    ("footer_note", "Footer note (middle)", "text"),
 ]
 
 

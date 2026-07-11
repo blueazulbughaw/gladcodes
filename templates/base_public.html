@@ -1,3 +1,4 @@
+{% import "_macros.html" as macros %}
 <!doctype html>
 <html lang="en">
 <head>
@@ -44,17 +45,17 @@
         <div class="nav-socials">
           {% if github_url %}
           <a href="{{ github_url }}" aria-label="GitHub" target="_blank" rel="noopener">
-            <i data-lucide="github" width="20" height="20"></i>
+            {{ macros.social_icon('github', 20) }}
           </a>
           {% endif %}
           {% if settings.get('linkedin_url') %}
           <a href="{{ settings.linkedin_url }}" aria-label="LinkedIn" target="_blank" rel="noopener">
-            <i data-lucide="linkedin" width="20" height="20"></i>
+            {{ macros.social_icon('linkedin', 20) }}
           </a>
           {% endif %}
           {% if settings.get('instagram_url') %}
           <a href="{{ settings.instagram_url }}" aria-label="Instagram" target="_blank" rel="noopener">
-            <i data-lucide="instagram" width="20" height="20"></i>
+            {{ macros.social_icon('instagram', 20) }}
           </a>
           {% endif %}
         </div>
@@ -95,21 +96,18 @@
       </div>
       <div class="footer-bottom">
         <span>{{ settings.get('footer_copyright') or ('© ' ~ current_year ~ ' Glad.') }}</span>
-        {% if settings.get('footer_extra_1') or settings.get('footer_extra_2') %}
-        <div class="footer-extra">
-          {% if settings.get('footer_extra_1') %}<span>{{ settings.footer_extra_1 }}</span>{% endif %}
-          {% if settings.get('footer_extra_2') %}<span>{{ settings.footer_extra_2 }}</span>{% endif %}
-        </div>
+        {% if settings.get('footer_note') %}
+        <span class="footer-extra">{{ settings.footer_note }}</span>
         {% endif %}
         <div class="footer-socials">
           {% if github_url %}
-          <a href="{{ github_url }}" aria-label="GitHub" target="_blank" rel="noopener"><i data-lucide="github" width="18" height="18"></i></a>
+          <a href="{{ github_url }}" aria-label="GitHub" target="_blank" rel="noopener">{{ macros.social_icon('github', 18) }}</a>
           {% endif %}
           {% if settings.get('linkedin_url') %}
-          <a href="{{ settings.linkedin_url }}" aria-label="LinkedIn" target="_blank" rel="noopener"><i data-lucide="linkedin" width="18" height="18"></i></a>
+          <a href="{{ settings.linkedin_url }}" aria-label="LinkedIn" target="_blank" rel="noopener">{{ macros.social_icon('linkedin', 18) }}</a>
           {% endif %}
           {% if settings.get('instagram_url') %}
-          <a href="{{ settings.instagram_url }}" aria-label="Instagram" target="_blank" rel="noopener"><i data-lucide="instagram" width="18" height="18"></i></a>
+          <a href="{{ settings.instagram_url }}" aria-label="Instagram" target="_blank" rel="noopener">{{ macros.social_icon('instagram', 18) }}</a>
           {% endif %}
         </div>
       </div>
