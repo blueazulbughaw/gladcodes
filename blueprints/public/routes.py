@@ -2,16 +2,16 @@ import re
 from collections import OrderedDict
 from datetime import datetime, timezone
 
-from flask import abort, flash, redirect, render_template, request, url_for
+from flask import Response, abort, current_app, flash, redirect, render_template, request, url_for
 
 from database.db import execute, query, query_one
 from services.content import render_markdown
 from services.github import get_profile_summary
 from services.metrics import get_chart_series
 
-EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-
 from . import public_bp
+
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 # /about and /resources are Phase 1 placeholder pages (Phase 2 content per
 # spec). /contact has no dedicated page — "work with me" is a mailto link
@@ -24,9 +24,36 @@ def inject_globals():
 
 
 @public_bp.context_processor
-def inject_site_settings():
+def inject_site_globals():
     rows = query("SELECT setting_key, setting_value FROM site_settings")
-    return {"settings": {row["setting_key"]: row["setting_value"] for row in rows}}
+    settings_map = {row["setting_key"]: row["setting_value"] for row in rows}
+    base_url = current_app.config["PUBLIC_SITE_URL"].rstrip("/")
+
+    same_as = [settings_map[k] for k in ("linkedin_url", "instagram_url") if settings_map.get(k)]
+    if settings_map.get("github_username"):
+        same_as.append(f"https://github.com/{settings_map['github_username']}")
+
+    person_ld = {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Glad",
+        "url": base_url,
+        "jobTitle": "Software Engineer, Technical Program Manager, Founder",
+        "sameAs": same_as,
+    }
+    website_ld = {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": settings_map.get("site_title", "GladCodes"),
+        "url": base_url,
+        "description": settings_map.get("site_description", ""),
+    }
+    return {
+        "settings": settings_map,
+        "site_url": base_url,
+        "person_ld": person_ld,
+        "website_ld": website_ld,
+    }
 
 
 @public_bp.route("/")
@@ -187,3 +214,34 @@ def newsletter_subscribe():
     )
     flash("Thanks for subscribing — you're on the list.", "success")
     return redirect(url_for("public.home") + "#newsletter")
+
+
+@public_bp.route("/sitemap.xml")
+def sitemap():
+    base_url = current_app.config["PUBLIC_SITE_URL"].rstrip("/")
+    static_endpoints = [
+        "public.home", "public.journal_index", "public.projects_index",
+        "public.dashboard", "public.resume", "public.speaking",
+        "public.links_page", "public.about", "public.resources",
+    ]
+    urls = [{"loc": base_url + url_for(endpoint), "lastmod": None} for endpoint in static_endpoints]
+
+    posts = query("SELECT slug, updated_at FROM journal_posts WHERE status = 'published'")
+    urls += [
+        {"loc": f"{base_url}{url_for('public.journal_post', slug=post['slug'])}", "lastmod": post["updated_at"]}
+        for post in posts
+    ]
+
+    xml = render_template("sitemap.xml", urls=urls)
+    return Response(xml, mimetype="application/xml")
+
+
+@public_bp.route("/robots.txt")
+def robots():
+    base_url = current_app.config["PUBLIC_SITE_URL"].rstrip("/")
+    body = (
+        "User-agent: *\n"
+        "Disallow: /gc-admin/\n"
+        f"Sitemap: {base_url}/sitemap.xml\n"
+    )
+    return Response(body, mimetype="text/plain")

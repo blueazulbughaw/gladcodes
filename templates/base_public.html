@@ -5,6 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}GladCodes — Software Engineer, TPM, Founder Who Ships{% endblock %}</title>
   <meta name="description" content="{% block description %}Building in public: a founder platform tracking projects, metrics, and lessons from an engineer-turned-founder.{% endblock %}">
+  <link rel="canonical" href="{{ site_url }}{{ request.path }}">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ settings.get('site_title', 'GladCodes') }}">
+  <meta property="og:title" content="{% block og_title %}{{ self.title() }}{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}{{ self.description() }}{% endblock %}">
+  <meta property="og:url" content="{{ site_url }}{{ request.path }}">
+  {% block og_image %}{% endblock %}
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="{{ self.og_title() }}">
+  <meta name="twitter:description" content="{{ self.og_description() }}">
+
+  <script type="application/ld+json">{{ person_ld|tojson }}</script>
+  <script type="application/ld+json">{{ website_ld|tojson }}</script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
