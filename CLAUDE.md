@@ -133,3 +133,24 @@ Visible in admin nav as "Coming soon", backed by real tables already in
   `values` key silently renders a function object instead of the data —
   this broke the dashboard once already. Keep the same `data`-keyed shape
   for the GitHub commit-activity series when it lands in step 5.
+- CSRF uses the double-submit-cookie pattern (`blueprints/admin/csrf.py`),
+  not Flask-WTF's session-token approach — there's no server-side session
+  to hang a token on, since auth is a stateless JWT cookie. A random token
+  is set as a (non-HttpOnly) cookie and must be echoed back as a hidden
+  `csrf_token` form field; a forged cross-site POST can't read the cookie
+  to produce a matching field value. Every admin form needs that hidden
+  field or its POST gets a flat 400.
+- `blueprints/admin/simple_crud.py` is one generic, whitelisted CRUD engine
+  covering 8 flat sort_order-based tables (timeline, projects, learning,
+  toolbox, community, links, speaking, stats) instead of 8 near-identical
+  route files. `resource` (the URL segment) is only ever used as a
+  `RESOURCES` dict lookup key — never concatenated into SQL — so the
+  dynamic table/column names in its generated SQL can't be
+  attacker-influenced even though they aren't parameterized (SQL can't
+  parameterize identifiers, only values). Add new simple flat-table
+  editors here before writing a bespoke route file.
+- `database/db.utc_now()` is the one place the app writes "now" to a
+  DATETIME column from Python — use it instead of MySQL's `NOW()` (server
+  local time; see the GitHub cache pattern above for why that broke
+  things) whenever the app, not the DB, decides the timestamp (e.g.
+  journal `published_at`, NOW card `updated_at`).

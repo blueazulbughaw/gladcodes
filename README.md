@@ -4,6 +4,24 @@ Personal founder platform and building-in-public site for [glad.codes](https://g
 One Flask app: public site, public metrics dashboard, and a hidden custom
 CMS at `/gc-admin/`. See [CLAUDE.md](CLAUDE.md) for architecture rules.
 
+## What's here
+
+- **Public site**: home (hero, NOW card, animated stats, build-in-public
+  timeline, projects, journal preview, dashboard teaser, currently
+  learning, toolbox, live GitHub repos, community, newsletter),
+  `/journal` (search + tag filter) and `/journal/<slug>`, `/projects`,
+  `/dashboard` (Chart.js), `/resume`, `/speaking`, `/links`, `/about`
+  and `/resources` (Phase 2 placeholders).
+- **Admin CMS** at `/gc-admin/` (never linked publicly — see CLAUDE.md):
+  JWT-cookie auth with a silent-redirect gate, CSRF-protected editors for
+  every Phase 1 content type (NOW card, timeline, projects, journal with
+  live Markdown preview, metrics, learning, toolbox, community, links,
+  resume upload, speaking, subscribers + CSV export, settings), and a
+  Phase 2 nav marked "Coming soon" (tutorials, videos, Instagram/Reels,
+  PDF library, API keys — schema exists, no UI yet).
+- **SEO**: JSON-LD (Person + WebSite), Open Graph/Twitter tags,
+  `sitemap.xml`, `robots.txt`.
+
 ## Local dev (Windows / PowerShell)
 
 ```powershell
@@ -15,15 +33,17 @@ Copy-Item .env.example .env
 ```
 
 Create the database tables (import `database/schema.sql` via phpMyAdmin,
-or locally via the MySQL client of your choice), then:
+or locally via the MySQL client of your choice — it's idempotent, safe to
+re-run), then:
 
 ```powershell
 flask --app app run --debug
 ```
 
-Visit http://127.0.0.1:5000/ .
+Visit http://127.0.0.1:5000/ for the public site, http://127.0.0.1:5000/gc-admin/
+for the CMS.
 
-To create the admin login:
+Create the admin login (required before the CMS is usable):
 
 ```powershell
 python create_admin.py <username>
