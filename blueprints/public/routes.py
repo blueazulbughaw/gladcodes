@@ -6,6 +6,7 @@ from flask import abort, render_template, request
 from database.db import query, query_one
 from services.content import render_markdown
 from services.github import get_profile_summary
+from services.metrics import get_chart_series
 
 from . import public_bp
 
@@ -23,21 +24,6 @@ def inject_globals():
 def inject_site_settings():
     rows = query("SELECT setting_key, setting_value FROM site_settings")
     return {"settings": {row["setting_key"]: row["setting_value"] for row in rows}}
-
-
-def get_chart_series(metric_key):
-    """labels/values pair for one chart_metrics series, in sort_order."""
-    rows = query(
-        "SELECT period_label, value FROM chart_metrics WHERE metric_key = %s ORDER BY sort_order",
-        (metric_key,),
-    )
-    # Key is "data", not "values" — dict has a builtin .values() method, and
-    # Jinja's attribute-access fallback (foo.values) would silently return
-    # that bound method instead of the dict item.
-    return {
-        "labels": [row["period_label"] for row in rows],
-        "data": [float(row["value"]) for row in rows],
-    }
 
 
 @public_bp.route("/")

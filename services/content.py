@@ -1,6 +1,8 @@
 """Markdown -> sanitized HTML for journal posts (and, later, tutorials).
 Never render markdown.markdown() output directly — always through bleach.
 """
+import re
+
 import bleach
 import markdown
 
@@ -24,3 +26,9 @@ ALLOWED_ATTRIBUTES = {
 def render_markdown(text: str) -> str:
     html = markdown.markdown(text or "", extensions=["fenced_code", "tables"])
     return bleach.clean(html, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES, strip=True)
+
+
+def slugify(text: str) -> str:
+    text = (text or "").lower().strip()
+    text = re.sub(r"[^a-z0-9]+", "-", text)
+    return text.strip("-")

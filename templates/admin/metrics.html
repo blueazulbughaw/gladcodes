@@ -1,0 +1,46 @@
+{% extends "admin/_shell.html" %}
+
+{% block title %}Metrics{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="admin-page-header">
+    <h1>Metrics</h1>
+    <a href="{{ url_for('admin.simple_list', resource='stats') }}">Edit stat counters &rarr;</a>
+  </div>
+
+  {% for group in groups %}
+  <section class="admin-metrics-group">
+    <h2>{{ group.label }}</h2>
+    <table class="admin-table admin-table-compact">
+      <thead><tr><th>Label</th><th>Value</th><th>Sort</th><th></th></tr></thead>
+      <tbody>
+        {% for row in group.rows %}
+        <tr>
+          <td>{{ row.period_label }}</td>
+          <td>{{ row.value }}</td>
+          <td>{{ row.sort_order }}</td>
+          <td class="admin-table-actions">
+            <a href="{{ url_for('admin.metrics_edit', row_id=row.id) }}">Edit</a>
+            <form method="post" action="{{ url_for('admin.metrics_delete', row_id=row.id) }}" onsubmit="return confirm('Delete this entry?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <button type="submit" class="btn-link btn-link-danger">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="admin-empty">No entries yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <form method="post" action="{{ url_for('admin.metrics_create', metric_key=group.key) }}" class="admin-inline-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="text" name="period_label" placeholder="Label (e.g. W9 or Jun)" required>
+      <input type="number" step="0.01" name="value" placeholder="Value" required>
+      <input type="number" name="sort_order" placeholder="Sort" value="0">
+      <button type="submit" class="btn btn-secondary-admin">Add</button>
+    </form>
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

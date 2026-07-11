@@ -1,18 +1,60 @@
-{% extends "base_admin.html" %}
+{% extends "admin/_shell.html" %}
 
 {% block title %}Dashboard{% endblock %}
 
-{% block admin_nav %}
-<header class="admin-topbar">
-  <span class="admin-topbar-brand">gc-admin</span>
-  <a href="{{ url_for('admin.logout') }}">Log out</a>
-</header>
-{% endblock %}
-
 {% block content %}
 <div class="container">
-  <h1>Welcome, {{ user }}</h1>
-  <p>The full CMS dashboard — overview cards, metrics snapshot, and all
-     Phase 1 editors — lands in the next step.</p>
+  <div class="admin-page-header">
+    <h1>Welcome, {{ user }}</h1>
+    <span id="sessionCountdown" class="session-countdown" data-exp="{{ token_exp }}"></span>
+  </div>
+
+  <div class="overview-cards">
+    <div class="overview-card">
+      <span class="overview-value">{{ post_count }}</span>
+      <span class="overview-label">Journal posts</span>
+    </div>
+    <div class="overview-card">
+      <span class="overview-value">{{ subscriber_count }}</span>
+      <span class="overview-label">Subscribers</span>
+    </div>
+    <div class="overview-card">
+      <span class="overview-value">{{ project_count }}</span>
+      <span class="overview-label">Projects</span>
+    </div>
+    <div class="overview-card">
+      <span class="overview-value overview-value--small">{{ now_updated_at|human_date if now_updated_at else '—' }}</span>
+      <span class="overview-label">NOW card last updated</span>
+    </div>
+  </div>
+
+  <div class="card chart-card">
+    <h3>Coding hours per week</h3>
+    <canvas id="adminCodingHoursChart" height="220"></canvas>
+  </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}" defer></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    if (window.GladCharts) {
+      GladCharts.lineChart("adminCodingHoursChart", {{ coding_hours.labels|tojson }}, {{ coding_hours.data|tojson }}, "Coding hours");
+    }
+
+    var el = document.getElementById("sessionCountdown");
+    var exp = parseInt(el.dataset.exp, 10) * 1000;
+    function tick() {
+      var remaining = Math.max(0, exp - Date.now());
+      var mins = Math.floor(remaining / 60000);
+      var secs = Math.floor((remaining % 60000) / 1000);
+      el.textContent = "Session expires in " + mins + ":" + String(secs).padStart(2, "0");
+      if (remaining <= 0) { window.location.reload(); }
+    }
+    tick();
+    setInterval(tick, 1000);
+  });
+</script>
 {% endblock %}

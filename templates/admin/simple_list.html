@@ -1,0 +1,49 @@
+{% extends "admin/_shell.html" %}
+{% import "admin/_form_macros.html" as fm %}
+
+{% block title %}{{ config.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="admin-page-header"><h1>{{ config.title }}</h1></div>
+
+  <table class="admin-table">
+    <thead>
+      <tr>
+        {% for name, ftype, label in config.fields %}<th>{{ label }}</th>{% endfor %}
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        {% for name, ftype, label in config.fields %}
+        <td>
+          {% if ftype == 'checkbox' %}{{ 'Yes' if row[name] else 'No' }}
+          {% elif ftype == 'url' and row[name] %}<a href="{{ row[name] }}" target="_blank" rel="noopener">link</a>
+          {% else %}{{ row[name] if row[name] is not none else '' }}
+          {% endif %}
+        </td>
+        {% endfor %}
+        <td class="admin-table-actions">
+          <a href="{{ url_for('admin.simple_edit', resource=resource, row_id=row.id) }}">Edit</a>
+          <form method="post" action="{{ url_for('admin.simple_delete', resource=resource, row_id=row.id) }}" onsubmit="return confirm('Delete this entry?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn-link btn-link-danger">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="{{ config.fields|length + 1 }}" class="admin-empty">Nothing here yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2 class="admin-subheading">Add new</h2>
+  <form method="post" action="{{ url_for('admin.simple_create', resource=resource) }}" class="admin-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    {{ fm.render_fields(config, icon_choices) }}
+    <button type="submit" class="btn btn-primary">Add</button>
+  </form>
+</div>
+{% endblock %}

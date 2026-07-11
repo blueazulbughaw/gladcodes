@@ -3,10 +3,23 @@ get_db()/query()/execute() here so parameterization stays consistent — never
 build SQL with string formatting outside this module.
 """
 from contextlib import contextmanager
+from datetime import datetime, timezone
 
 import pymysql
 import pymysql.cursors
 from flask import current_app, g
+
+
+def utc_now():
+    """Naive UTC datetime for writing to DATETIME columns from Python.
+
+    Prefer this over MySQL's NOW() when the app (not the DB) decides the
+    timestamp: NOW() returns the DB server's local time, which silently
+    breaks any comparison against datetime.now(timezone.utc) unless the
+    server is configured for UTC — this bit github_cache's TTL check once
+    already (see services/github.py).
+    """
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def get_db():

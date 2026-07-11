@@ -1,0 +1,21 @@
+{% extends "admin/_shell.html" %}
+
+{% block title %}NOW card{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="admin-page-header">
+    <h1>NOW card</h1>
+    <span class="admin-meta">Last updated: {{ now.updated_at|human_date if now and now.updated_at else '—' }}</span>
+  </div>
+  <form method="post" class="admin-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label class="admin-field"><span>Location</span><input type="text" name="location" value="{{ now.location if now else '' }}" required></label>
+    <label class="admin-field"><span>What I'm building</span><textarea name="building" rows="2" required>{{ now.building if now else '' }}</textarea></label>
+    <label class="admin-field"><span>What I'm drinking</span><input type="text" name="drinking" value="{{ now.drinking if now else '' }}" required></label>
+    <label class="admin-field"><span>What I'm reading</span><input type="text" name="reading" value="{{ now.reading if now else '' }}" required></label>
+    <label class="admin-field"><span>Goal this week</span><textarea name="goal_this_week" rows="2" required>{{ now.goal_this_week if now else '' }}</textarea></label>
+    <button type="submit" class="btn btn-primary">Save</button>
+  </form>
+</div>
+{% endblock %}

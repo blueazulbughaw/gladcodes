@@ -1,5 +1,8 @@
 from flask import abort, current_app, g, redirect, render_template, request, url_for
 
+from database.db import query_one
+from services.metrics import get_chart_series
+
 from . import admin_bp
 from .auth import (
     COOKIE_NAME,
@@ -12,9 +15,10 @@ from .auth import (
 )
 from .csrf import CSRF_COOKIE_NAME, csrf_cookie_missing, get_or_create_csrf_token, validate_csrf
 
-# All Phase 1 CMS editors are built in step 7. This is the auth flow only:
-# login, logout, the silent-redirect gate, and CSRF protection that every
-# future admin POST reuses.
+# Auth flow (login/logout/silent-redirect/CSRF) plus the dashboard landing
+# page. Every other editor lives in its own module (now_card.py, journal.py,
+# metrics.py, resume.py, settings.py, simple_crud.py) but shares this
+# blueprint, so they all get the auth gate and CSRF protection for free.
 
 
 @admin_bp.before_request
@@ -25,6 +29,7 @@ def require_auth():
     if payload is None:
         return redirect(url_for("admin.login"))
     g.admin_user = payload["sub"]
+    g.token_exp = payload["exp"]
 
 
 @admin_bp.before_request
@@ -87,4 +92,19 @@ def logout():
 
 @admin_bp.route("/")
 def index():
-    return render_template("index.html", user=g.admin_user)
+    post_count = query_one("SELECT COUNT(*) AS c FROM journal_posts")["c"]
+    subscriber_count = query_one("SELECT COUNT(*) AS c FROM subscribers WHERE is_active = 1")["c"]
+    project_count = query_one("SELECT COUNT(*) AS c FROM projects")["c"]
+    now_row = query_one("SELECT updated_at FROM now_card WHERE id = 1")
+    coding_hours = get_chart_series("coding_hours_weekly")
+
+    return render_template(
+        "index.html",
+        user=g.admin_user,
+        token_exp=g.token_exp,
+        post_count=post_count,
+        subscriber_count=subscriber_count,
+        project_count=project_count,
+        now_updated_at=now_row["updated_at"] if now_row else None,
+        coding_hours=coding_hours,
+    )

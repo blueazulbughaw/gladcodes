@@ -1,0 +1,71 @@
+{% extends "admin/_shell.html" %}
+
+{% block title %}{{ 'Edit post' if post else 'New post' }}{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="admin-page-header"><h1>{{ 'Edit post' if post else 'New post' }}</h1></div>
+  {% if error %}<p class="admin-error">{{ error }}</p>{% endif %}
+  <form method="post" enctype="multipart/form-data" class="admin-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label class="admin-field"><span>Title</span><input type="text" name="title" value="{{ post.title if post else '' }}" required></label>
+    <label class="admin-field"><span>Slug (leave blank to auto-generate from title)</span><input type="text" name="slug" value="{{ post.slug if post else '' }}"></label>
+    <label class="admin-field"><span>Excerpt</span><textarea name="excerpt" rows="2">{{ post.excerpt if post else '' }}</textarea></label>
+    <label class="admin-field"><span>Tags (comma-separated)</span><input type="text" name="tags" value="{{ post.tags if post else '' }}"></label>
+    <label class="admin-field">
+      <span>Status</span>
+      <select name="status">
+        <option value="draft" {{ 'selected' if post and post.status == 'draft' }}>Draft</option>
+        <option value="published" {{ 'selected' if post and post.status == 'published' }}>Published</option>
+      </select>
+    </label>
+    <label class="admin-field">
+      <span>Cover image{{ ' (upload to replace)' if post and post.cover_image else '' }}</span>
+      <input type="file" name="cover_image" accept="image/png,image/jpeg,image/webp,image/gif">
+      {% if post and post.cover_image %}<small>Current: {{ post.cover_image }}</small>{% endif %}
+    </label>
+
+    <div class="admin-editor-grid">
+      <label class="admin-field">
+        <span>Content (Markdown)</span>
+        <textarea id="markdownInput" name="content_markdown" rows="18">{{ post.content_markdown if post else '' }}</textarea>
+      </label>
+      <div class="admin-field">
+        <span>Live preview</span>
+        <div id="markdownPreview" class="admin-preview-pane"></div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+  </form>
+  <a class="admin-back-link" href="{{ url_for('admin.journal_index') }}">&larr; Back to Journal</a>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  var input = document.getElementById("markdownInput");
+  var preview = document.getElementById("markdownPreview");
+  var csrfToken = {{ csrf_token|tojson }};
+  var previewUrl = {{ url_for('admin.journal_preview')|tojson }};
+  var timer = null;
+
+  function updatePreview() {
+    var body = new URLSearchParams();
+    body.set("markdown", input.value);
+    body.set("csrf_token", csrfToken);
+    fetch(previewUrl, { method: "POST", body: body })
+      .then(function (r) { return r.text(); })
+      .then(function (html) { preview.innerHTML = html; });
+  }
+
+  input.addEventListener("input", function () {
+    clearTimeout(timer);
+    timer = setTimeout(updatePreview, 400);
+  });
+
+  updatePreview();
+})();
+</script>
+{% endblock %}

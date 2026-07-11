@@ -1,0 +1,32 @@
+{% macro render_fields(config, icon_choices, row=None) %}
+{% for name, ftype, label in config.fields %}
+<label class="admin-field">
+  <span>{{ label }}</span>
+  {% if ftype == 'textarea' %}
+  <textarea name="{{ name }}" rows="3">{{ row[name] if row else '' }}</textarea>
+  {% elif ftype == 'checkbox' %}
+  <input type="checkbox" name="{{ name }}" {{ 'checked' if row and row[name] }}>
+  {% elif ftype == 'select' %}
+  <select name="{{ name }}">
+    {% for opt in config.select_options[name] %}
+    <option value="{{ opt }}" {{ 'selected' if row and row[name] == opt }}>{{ opt.replace('_', ' ') }}</option>
+    {% endfor %}
+  </select>
+  {% elif ftype == 'icon' %}
+  <select name="{{ name }}">
+    {% for choice in icon_choices %}
+    <option value="{{ choice }}" {{ 'selected' if row and row[name] == choice }}>{{ choice }}</option>
+    {% endfor %}
+  </select>
+  {% elif ftype == 'date' %}
+  <input type="date" name="{{ name }}" value="{{ row[name] if row and row[name] else '' }}">
+  {% elif ftype == 'int' %}
+  <input type="number" name="{{ name }}" value="{{ row[name] if row else 0 }}">
+  {% elif ftype == 'url' %}
+  <input type="url" name="{{ name }}" value="{{ row[name] if row and row[name] else '' }}">
+  {% else %}
+  <input type="text" name="{{ name }}" value="{{ row[name] if row and row[name] else '' }}">
+  {% endif %}
+</label>
+{% endfor %}
+{% endmacro %}
