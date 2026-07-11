@@ -1,0 +1,86 @@
+/* Admin area styles. Deliberately not sharing static/css/base.css with the
+   public site — see CLAUDE.md: the login page must look plain and
+   unbranded, giving no hint about what it guards. */
+*, *::before, *::after { box-sizing: border-box; }
+body.admin-body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--navy);
+  background: var(--sand);
+  line-height: 1.5;
+}
+a { color: var(--teal); }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.7rem 1.4rem;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+.btn-primary { background: var(--teal); color: #fff; }
+.btn-primary:hover { background: #0c7676; }
+
+/* Login ------------------------------------------------------------------ */
+.login-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+.login-card {
+  background: var(--card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.login-card label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.login-card input {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(var(--navy-rgb), 0.2);
+}
+.login-card input:focus { outline: 2px solid var(--teal); outline-offset: 1px; }
+.login-submit { margin-top: 0.5rem; }
+.login-error {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #b3261e;
+  background: rgba(179, 38, 30, 0.08);
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+}
+
+/* Authenticated shell (dashboard stub for now; full build in next step) -- */
+.admin-topbar {
+  background: var(--navy);
+  color: #fff;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.admin-topbar a { color: rgba(255, 255, 255, 0.8); font-size: 0.9rem; }
+.admin-topbar a:hover { color: #fff; }
+.admin-topbar-brand { font-family: var(--font-heading); font-weight: 700; }
+.admin-main .container { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; }

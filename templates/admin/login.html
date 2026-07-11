@@ -1,0 +1,21 @@
+{% extends "base_admin.html" %}
+
+{% block title %}Sign in{% endblock %}
+
+{% block content %}
+<div class="login-shell">
+  <form class="login-card" method="post" action="{{ url_for('admin.login') }}" autocomplete="off">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    {% if error %}<p class="login-error">{{ error }}</p>{% endif %}
+    <label>
+      <span>Username</span>
+      <input type="text" name="username" required autofocus autocapitalize="off" spellcheck="false">
+    </label>
+    <label>
+      <span>Password</span>
+      <input type="password" name="password" required>
+    </label>
+    <button type="submit" class="btn btn-primary login-submit">Sign in</button>
+  </form>
+</div>
+{% endblock %}

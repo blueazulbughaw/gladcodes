@@ -1,0 +1,18 @@
+{% extends "base_admin.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block admin_nav %}
+<header class="admin-topbar">
+  <span class="admin-topbar-brand">gc-admin</span>
+  <a href="{{ url_for('admin.logout') }}">Log out</a>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>Welcome, {{ user }}</h1>
+  <p>The full CMS dashboard — overview cards, metrics snapshot, and all
+     Phase 1 editors — lands in the next step.</p>
+</div>
+{% endblock %}
