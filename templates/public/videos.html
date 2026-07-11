@@ -1,0 +1,61 @@
+{% extends "base_public.html" %}
+
+{% block title %}Videos — GladCodes{% endblock %}
+{% block description %}Videos and Instagram/Reels from the GladCodes journey.{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">Watch</span>
+    <h1>Videos</h1>
+    <p>Talks, walkthroughs, and short-form clips from building in public.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    {% if videos %}
+    <div class="video-grid">
+      {% for video in videos %}
+      <div class="card video-card reveal">
+        {% set embed_url = video.youtube_url|youtube_embed %}
+        {% if embed_url %}
+        <div class="video-embed"><iframe src="{{ embed_url }}" title="{{ video.title }}" frameborder="0" allowfullscreen loading="lazy"></iframe></div>
+        {% endif %}
+        <h3>{{ video.title }}</h3>
+        {% if video.description %}<p>{{ video.description }}</p>{% endif %}
+        <span class="journal-date">{{ video.published_at|human_date if video.published_at else '' }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state"><p>No videos posted yet — check back soon.</p></div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="section section--sand">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="eyebrow">Short-form</span>
+      <h2>Instagram / Reels</h2>
+    </div>
+    {% if instagram_posts %}
+    <div class="instagram-grid">
+      {% for post in instagram_posts %}
+      <div class="card instagram-card reveal">
+        {{ post.embed_code|safe }}
+        {% if post.caption %}<p>{{ post.caption }}</p>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state"><p>No Instagram posts added yet.</p></div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

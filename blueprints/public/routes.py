@@ -261,6 +261,59 @@ def contact():
     return render_template("contact.html", subjects=CONTACT_SUBJECTS, form={})
 
 
+@public_bp.route("/tutorials")
+def tutorials_index():
+    series = request.args.get("series", "").strip()
+
+    sql = "SELECT * FROM tutorials WHERE status = 'published'"
+    params = []
+    if series:
+        sql += " AND series_name = %s"
+        params.append(series)
+    sql += " ORDER BY published_at DESC"
+    tutorials = query(sql, tuple(params))
+
+    series_rows = query(
+        "SELECT DISTINCT series_name FROM tutorials WHERE status = 'published' AND series_name IS NOT NULL AND series_name != ''"
+    )
+    all_series = sorted(row["series_name"] for row in series_rows)
+
+    return render_template("tutorials_index.html", tutorials=tutorials, all_series=all_series, active_series=series)
+
+
+@public_bp.route("/tutorials/<slug>")
+def tutorial_detail(slug):
+    tutorial = query_one(
+        "SELECT * FROM tutorials WHERE slug = %s AND status = 'published'",
+        (slug,),
+    )
+    if not tutorial:
+        abort(404)
+    content_html = render_markdown(tutorial["content_markdown"])
+
+    series_tutorials = []
+    if tutorial["series_name"]:
+        series_tutorials = query(
+            """
+            SELECT title, slug FROM tutorials
+            WHERE series_name = %s AND status = 'published'
+            ORDER BY published_at ASC
+            """,
+            (tutorial["series_name"],),
+        )
+
+    return render_template(
+        "tutorial_detail.html", tutorial=tutorial, content_html=content_html, series_tutorials=series_tutorials
+    )
+
+
+@public_bp.route("/videos")
+def videos_index():
+    videos = query("SELECT * FROM videos ORDER BY published_at DESC, sort_order")
+    instagram_posts = query("SELECT * FROM instagram_posts ORDER BY posted_at DESC, sort_order")
+    return render_template("videos.html", videos=videos, instagram_posts=instagram_posts)
+
+
 @public_bp.route("/about")
 def about():
     return render_template("about.html")
@@ -268,7 +321,14 @@ def about():
 
 @public_bp.route("/resources")
 def resources():
-    return render_template("resources.html")
+    pdf_assets = query("SELECT * FROM pdf_assets ORDER BY created_at DESC")
+    latest_tutorials = query(
+        "SELECT title, slug, excerpt FROM tutorials WHERE status = 'published' ORDER BY published_at DESC LIMIT 3"
+    )
+    latest_videos = query("SELECT title, youtube_url FROM videos ORDER BY published_at DESC, sort_order LIMIT 3")
+    return render_template(
+        "resources.html", pdf_assets=pdf_assets, latest_tutorials=latest_tutorials, latest_videos=latest_videos
+    )
 
 
 @public_bp.route("/newsletter/subscribe", methods=["POST"])
@@ -298,6 +358,7 @@ def sitemap():
         "public.home", "public.journal_index", "public.projects_index",
         "public.dashboard", "public.resume", "public.speaking",
         "public.lets_connect", "public.contact", "public.about", "public.resources",
+        "public.tutorials_index", "public.videos_index",
     ]
     urls = [{"loc": base_url + url_for(endpoint), "lastmod": None} for endpoint in static_endpoints]
 
@@ -305,6 +366,12 @@ def sitemap():
     urls += [
         {"loc": f"{base_url}{url_for('public.journal_post', slug=post['slug'])}", "lastmod": post["updated_at"]}
         for post in posts
+    ]
+
+    tutorials = query("SELECT slug, updated_at FROM tutorials WHERE status = 'published'")
+    urls += [
+        {"loc": f"{base_url}{url_for('public.tutorial_detail', slug=tutorial['slug'])}", "lastmod": tutorial["updated_at"]}
+        for tutorial in tutorials
     ]
 
     xml = render_template("sitemap.xml", urls=urls)

@@ -20,10 +20,10 @@
     <a href="{{ url_for('admin.subscribers_index') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('admin.subscribers') }}">Subscribers</a>
     <a href="{{ url_for('admin.settings_editor') }}" class="{{ 'active' if request.endpoint == 'admin.settings_editor' }}">Settings</a>
     <hr>
-    <span class="admin-nav-phase2">Tutorials <em>Soon</em></span>
-    <span class="admin-nav-phase2">Videos <em>Soon</em></span>
-    <span class="admin-nav-phase2">Instagram/Reels <em>Soon</em></span>
-    <span class="admin-nav-phase2">PDF library <em>Soon</em></span>
+    <a href="{{ url_for('admin.tutorials_index') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('admin.tutorials') }}">Tutorials</a>
+    <a href="{{ url_for('admin.simple_list', resource='videos') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'videos' }}">Videos</a>
+    <a href="{{ url_for('admin.simple_list', resource='instagram') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'instagram' }}">Instagram/Reels</a>
+    <a href="{{ url_for('admin.pdf_library_index') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('admin.pdf_library') }}">PDF Library</a>
     <span class="admin-nav-phase2">API keys <em>Soon</em></span>
     <hr>
     <a href="{{ url_for('admin.logout') }}">Log out</a>

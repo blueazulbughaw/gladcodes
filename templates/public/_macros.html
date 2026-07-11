@@ -30,6 +30,18 @@
 </div>
 {% endmacro %}
 
+{% macro tutorial_card(tutorial, reveal=True) %}
+<div class="card card--hover journal-card{{ ' reveal' if reveal }}">
+  <div class="journal-date">
+    {{ tutorial.published_at|human_date }}
+    {% if tutorial.series_name %}<span class="tag-pill">{{ tutorial.series_name }}</span>{% endif %}
+  </div>
+  <h3>{{ tutorial.title }}</h3>
+  <p class="journal-excerpt">{{ tutorial.excerpt }}</p>
+  <a class="journal-read-more" href="{{ url_for('public.tutorial_detail', slug=tutorial.slug) }}">Read more &rarr;</a>
+</div>
+{% endmacro %}
+
 {#
   Brand/logo icons (GitHub, LinkedIn, Instagram), hand-embedded rather than
   pulled from an icon library — Lucide dropped brand logos entirely in a

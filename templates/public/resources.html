@@ -1,7 +1,7 @@
 {% extends "base_public.html" %}
 
 {% block title %}Resources — GladCodes{% endblock %}
-{% block description %}Tutorials, videos, and tools — coming soon from GladCodes.{% endblock %}
+{% block description %}Tutorials, videos, and a PDF library from GladCodes — some free, some available to purchase.{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
@@ -9,15 +9,77 @@
 
 {% block content %}
 <section class="page-hero">
-  <div class="container placeholder-hero">
-    <span class="badge badge--experimental">Phase 2 — coming soon</span>
+  <div class="container">
     <span class="eyebrow">Resources</span>
-    <h1>Tutorials, videos, and tools</h1>
-    <p>
-      This is where long-form tutorials, recorded talks, and downloadable
-      guides will live once they're ready. For now, the fastest way to follow
-      what I'm learning and building is the <a href="{{ url_for('public.journal_index') }}">journal</a>.
-    </p>
+    <h1>Tutorials, videos, and downloads</h1>
+    <p>Everything I've put together to help you build — guides, walkthroughs, and downloadable PDFs.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="eyebrow">Downloads</span>
+      <h2>PDF Library</h2>
+    </div>
+    {% if pdf_assets %}
+    <div class="pdf-grid">
+      {% for asset in pdf_assets %}
+      <div class="card card--hover pdf-card reveal">
+        <div class="pdf-card-header">
+          <h3>{{ asset.title }}</h3>
+          {% if asset.is_product %}<span class="badge badge--experimental">${{ '%.2f' % asset.price }}</span>{% endif %}
+        </div>
+        {% if asset.description %}<p>{{ asset.description }}</p>{% endif %}
+        {% if asset.is_product %}
+        <a class="project-link" href="{{ url_for('public.contact') }}">Interested? Send a message &rarr;</a>
+        {% else %}
+        <a class="project-link" href="{{ url_for('static', filename='uploads/' + asset.file_path) }}" download>Download PDF &rarr;</a>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state"><p>No PDFs available yet — check back soon.</p></div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="section section--sand">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="eyebrow">Learn</span>
+      <h2>Latest tutorials</h2>
+    </div>
+    {% if latest_tutorials %}
+    <ul class="teaser-list">
+      {% for tutorial in latest_tutorials %}
+      <li><a href="{{ url_for('public.tutorial_detail', slug=tutorial.slug) }}">{{ tutorial.title }}</a></li>
+      {% endfor %}
+    </ul>
+    <div class="section-footer-link reveal"><a href="{{ url_for('public.tutorials_index') }}">See all tutorials &rarr;</a></div>
+    {% else %}
+    <div class="empty-state"><p>No tutorials published yet.</p></div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="eyebrow">Watch</span>
+      <h2>Latest videos</h2>
+    </div>
+    {% if latest_videos %}
+    <ul class="teaser-list">
+      {% for video in latest_videos %}
+      <li><a href="{{ video.youtube_url }}" target="_blank" rel="noopener">{{ video.title }}</a></li>
+      {% endfor %}
+    </ul>
+    <div class="section-footer-link reveal"><a href="{{ url_for('public.videos_index') }}">See all videos &rarr;</a></div>
+    {% else %}
+    <div class="empty-state"><p>No videos posted yet.</p></div>
+    {% endif %}
   </div>
 </section>
 {% endblock %}

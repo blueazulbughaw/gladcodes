@@ -133,6 +133,33 @@ RESOURCES = {
             ("sort_order", "int", "Sort order"),
         ],
     },
+    "videos": {
+        "table": "videos",
+        "title": "Videos",
+        "order_by": "sort_order",
+        "fields": [
+            ("title", "text", "Title"),
+            ("youtube_url", "url", "YouTube URL"),
+            ("description", "textarea", "Description"),
+            ("published_at", "date", "Published date"),
+            ("sort_order", "int", "Sort order"),
+        ],
+    },
+    "instagram": {
+        "table": "instagram_posts",
+        "title": "Instagram / Reels",
+        "order_by": "sort_order",
+        "fields": [
+            ("caption", "text", "Caption"),
+            # Instagram's own embed snippet (blockquote + script tag) — kept
+            # as trusted raw HTML, never bleach-sanitized, since sanitizing
+            # would strip the script tag the embed needs to actually render.
+            # Safe because only the authenticated admin can write this field.
+            ("embed_code", "textarea", "Embed code (paste from Instagram's Embed button)"),
+            ("posted_at", "date", "Posted date"),
+            ("sort_order", "int", "Sort order"),
+        ],
+    },
 }
 
 

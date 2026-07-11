@@ -7,6 +7,50 @@
 .page-hero h1 { font-size: clamp(1.9rem, 3.4vw, 2.6rem); }
 .page-hero p { max-width: 56ch; color: rgba(var(--navy-rgb), 0.7); }
 
+/* Series nav (tutorial detail) ------------------------------------------- */
+.series-nav { margin-top: var(--space-xl); padding-top: var(--space-lg); border-top: 1px solid rgba(var(--navy-rgb), 0.1); }
+.series-nav ul { display: flex; flex-direction: column; gap: 0.4rem; }
+.series-nav-current { font-weight: 600; color: var(--teal); }
+
+/* Videos ------------------------------------------------------------------- */
+.video-grid, .instagram-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--space-md);
+}
+.video-embed {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%;
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  margin-bottom: var(--space-sm);
+}
+.video-embed iframe {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border: none;
+}
+.video-card h3 { font-size: 1.05rem; }
+.instagram-card :first-child { margin-top: 0; }
+
+/* PDF library + teaser lists (resources page) ------------------------------ */
+.pdf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-md);
+}
+.pdf-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-sm);
+}
+.pdf-card-header h3 { margin: 0; }
+.teaser-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.teaser-list a { font-weight: 600; }
+
 /* Flash messages on light backgrounds (contact form, etc.) — the newsletter
    card's own message colors are tuned for its dark navy background, so
    this is a separate, light-background-safe variant. ---------------------- */

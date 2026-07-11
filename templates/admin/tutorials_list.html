@@ -1,0 +1,34 @@
+{% extends "admin/_shell.html" %}
+
+{% block title %}Tutorials{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="admin-page-header">
+    <h1>Tutorials</h1>
+    <a class="btn btn-primary" href="{{ url_for('admin.tutorials_new') }}">New tutorial</a>
+  </div>
+  <table class="admin-table">
+    <thead><tr><th>Title</th><th>Series</th><th>Status</th><th>Published</th><th></th></tr></thead>
+    <tbody>
+      {% for tutorial in tutorials %}
+      <tr>
+        <td>{{ tutorial.title }}</td>
+        <td>{{ tutorial.series_name or '—' }}</td>
+        <td><span class="admin-status admin-status--{{ tutorial.status }}">{{ tutorial.status }}</span></td>
+        <td>{{ tutorial.published_at|human_date if tutorial.published_at else '—' }}</td>
+        <td class="admin-table-actions">
+          <a href="{{ url_for('admin.tutorials_edit', tutorial_id=tutorial.id) }}">Edit</a>
+          <form method="post" action="{{ url_for('admin.tutorials_delete', tutorial_id=tutorial.id) }}" onsubmit="return confirm('Delete this tutorial?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn-link btn-link-danger">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" class="admin-empty">No tutorials yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

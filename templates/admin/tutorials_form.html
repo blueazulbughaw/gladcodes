@@ -1,0 +1,71 @@
+{% extends "admin/_shell.html" %}
+
+{% block title %}{{ 'Edit tutorial' if tutorial else 'New tutorial' }}{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="admin-page-header"><h1>{{ 'Edit tutorial' if tutorial else 'New tutorial' }}</h1></div>
+  {% if error %}<p class="admin-error">{{ error }}</p>{% endif %}
+  <form method="post" enctype="multipart/form-data" class="admin-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label class="admin-field"><span>Title</span><input type="text" name="title" value="{{ tutorial.title if tutorial else '' }}" required></label>
+    <label class="admin-field"><span>Slug (leave blank to auto-generate from title)</span><input type="text" name="slug" value="{{ tutorial.slug if tutorial else '' }}"></label>
+    <label class="admin-field"><span>Series (optional — groups tutorials together)</span><input type="text" name="series_name" value="{{ tutorial.series_name if tutorial else '' }}"></label>
+    <label class="admin-field"><span>Excerpt</span><textarea name="excerpt" rows="2">{{ tutorial.excerpt if tutorial else '' }}</textarea></label>
+    <label class="admin-field">
+      <span>Status</span>
+      <select name="status">
+        <option value="draft" {{ 'selected' if tutorial and tutorial.status == 'draft' }}>Draft</option>
+        <option value="published" {{ 'selected' if tutorial and tutorial.status == 'published' }}>Published</option>
+      </select>
+    </label>
+    <label class="admin-field">
+      <span>Cover image{{ ' (upload to replace)' if tutorial and tutorial.cover_image else '' }}</span>
+      <input type="file" name="cover_image" accept="image/png,image/jpeg,image/webp,image/gif">
+      {% if tutorial and tutorial.cover_image %}<small>Current: {{ tutorial.cover_image }}</small>{% endif %}
+    </label>
+
+    <div class="admin-editor-grid">
+      <label class="admin-field">
+        <span>Content (Markdown — use ``` fenced code blocks for code/terminal snippets)</span>
+        <textarea id="markdownInput" name="content_markdown" rows="18">{{ tutorial.content_markdown if tutorial else '' }}</textarea>
+      </label>
+      <div class="admin-field">
+        <span>Live preview</span>
+        <div id="markdownPreview" class="admin-preview-pane"></div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+  </form>
+  <a class="admin-back-link" href="{{ url_for('admin.tutorials_index') }}">&larr; Back to Tutorials</a>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  var input = document.getElementById("markdownInput");
+  var preview = document.getElementById("markdownPreview");
+  var csrfToken = {{ csrf_token|tojson }};
+  var previewUrl = {{ url_for('admin.journal_preview')|tojson }};
+  var timer = null;
+
+  function updatePreview() {
+    var body = new URLSearchParams();
+    body.set("markdown", input.value);
+    body.set("csrf_token", csrfToken);
+    fetch(previewUrl, { method: "POST", body: body })
+      .then(function (r) { return r.text(); })
+      .then(function (html) { preview.innerHTML = html; });
+  }
+
+  input.addEventListener("input", function () {
+    clearTimeout(timer);
+    timer = setTimeout(updatePreview, 400);
+  });
+
+  updatePreview();
+})();
+</script>
+{% endblock %}

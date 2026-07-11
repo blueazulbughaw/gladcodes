@@ -1,0 +1,48 @@
+{% extends "base_public.html" %}
+{% import "_macros.html" as macros %}
+
+{% block title %}Tutorials — GladCodes{% endblock %}
+{% block description %}Long-form tutorials on engineering, tooling, and building GladCodes itself.{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">Learn</span>
+    <h1>Tutorials</h1>
+    <p>Step-by-step write-ups, including code and terminal snippets, on things I've actually built.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    {% if all_series %}
+    <div class="tag-pills" style="margin-bottom: var(--space-lg);">
+      <a class="tag-pill{{ ' tag-pill--active' if not active_series }}" href="{{ url_for('public.tutorials_index') }}">All</a>
+      {% for series in all_series %}
+      <a class="tag-pill{{ ' tag-pill--active' if series == active_series }}" href="{{ url_for('public.tutorials_index', series=series) }}">{{ series }}</a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if tutorials %}
+    <div class="journal-grid">
+      {% for tutorial in tutorials %}
+      {{ macros.tutorial_card(tutorial, reveal=False) }}
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      {% if active_series %}
+      <p>No tutorials in the &ldquo;{{ active_series }}&rdquo; series yet.</p>
+      {% else %}
+      <p>No tutorials published yet — check back soon.</p>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

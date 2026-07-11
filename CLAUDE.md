@@ -98,17 +98,36 @@ flask run
 return `None`/`[]` and let the caller hide the section — never raise up
 into a page render.
 
-## Phase 2 (schema exists, no UI/logic yet)
+## Phase 2
 
-Visible in admin nav as "Coming soon", backed by real tables already in
-`database/schema.sql`:
+Tutorials, Videos, Instagram/Reels, and the PDF library are fully built
+(admin editors + public pages). Only the API keys panel remains a "Coming
+soon" admin-nav stub with no table of its own — there's no real API surface
+yet to gate access to (`blueprints/api/` is still just stubs).
 
-- Tutorials (long-form, series-capable)
-- Videos (YouTube embed URL + metadata)
-- Instagram/Reels (manual-entry embeds)
-- PDF library (`pdf_assets`, with `is_product`/`price` for future selling —
-  no payment integration yet)
-- API keys panel (`blueprints/api/` currently stubs only)
+- **Tutorials**: same shape as Journal (Markdown + live preview, slug,
+  cover image, draft/published), plus `series_name` for grouping. Public at
+  `/tutorials` (filterable by series) and `/tutorials/<slug>` (shows a
+  "more in this series" list). Code/terminal snippets use ordinary fenced
+  Markdown code blocks — no syntax highlighting, just distinct dark
+  monospace styling via the same `.prose pre/code` rules as Journal.
+- **Videos**: a `simple_crud` resource (title, YouTube URL, description,
+  date, sort order). Public at `/videos`. `services/content.youtube_embed_url()`
+  (exposed as the `|youtube_embed` Jinja filter) turns any common YouTube
+  URL shape into an embeddable `/embed/<id>` URL.
+- **Instagram/Reels**: also a `simple_crud` resource. `embed_code` is
+  rendered with `|safe`, **not** bleach-sanitized — sanitizing would strip
+  the `<script>` tag Instagram's own embed snippet needs to actually
+  render. Safe because only the authenticated admin can write this field
+  (unlike Journal/Tutorial Markdown, which is sanitized as defense in
+  depth even though it's also admin-only). Folded into the `/videos` page
+  as a second section per its own request, not a separate `/instagram` page.
+- **PDF library**: bespoke editor (`blueprints/admin/pdf_library.py`,
+  reuses `uploads.save_resume_pdf` for validation) since `simple_crud`
+  doesn't support file uploads. Public list lives on `/resources`
+  (replacing its old placeholder). `is_product`+`price` items show a price
+  tag and link to `/contact` instead of a real purchase flow — no payment
+  integration yet, so "interested? send a message" is the actual CTA.
 
 ## Where the spec is silent (choices made and why)
 

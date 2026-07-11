@@ -18,3 +18,5 @@ from . import metrics  # noqa: E402,F401
 from . import resume  # noqa: E402,F401
 from . import settings  # noqa: E402,F401
 from . import subscribers  # noqa: E402,F401
+from . import tutorials  # noqa: E402,F401
+from . import pdf_library  # noqa: E402,F401

@@ -2,6 +2,7 @@ from flask import Flask, request
 
 from config import Config
 from database import db
+from services.content import youtube_embed_url
 
 
 def create_app(config_class=Config):
@@ -26,6 +27,8 @@ def create_app(config_class=Config):
         if not value:
             return ""
         return f"{value.strftime('%B')} {value.day}, {value.year}"
+
+    app.jinja_env.filters["youtube_embed"] = youtube_embed_url
 
     @app.after_request
     def add_admin_noindex_header(response):

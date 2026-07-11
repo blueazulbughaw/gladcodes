@@ -1,0 +1,47 @@
+{% extends "base_public.html" %}
+
+{% block title %}{{ tutorial.title }} — GladCodes Tutorials{% endblock %}
+{% block description %}{{ tutorial.excerpt or tutorial.title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div class="post-header">
+      <div class="post-meta">
+        <span>{{ tutorial.published_at|human_date }}</span>
+        {% if tutorial.series_name %}
+        <a class="tag-pill" href="{{ url_for('public.tutorials_index', series=tutorial.series_name) }}">{{ tutorial.series_name }}</a>
+        {% endif %}
+      </div>
+      <h1>{{ tutorial.title }}</h1>
+    </div>
+
+    {% if tutorial.cover_image %}
+    <img class="post-cover" src="{{ url_for('static', filename='uploads/' + tutorial.cover_image) }}" alt="{{ tutorial.title }}">
+    {% endif %}
+
+    <div class="prose">
+      {{ content_html|safe }}
+    </div>
+
+    {% if series_tutorials|length > 1 %}
+    <div class="prose series-nav">
+      <h3>More in &ldquo;{{ tutorial.series_name }}&rdquo;</h3>
+      <ul>
+        {% for t in series_tutorials %}
+        <li{{ ' class="series-nav-current"'|safe if t.slug == tutorial.slug }}>
+          {% if t.slug == tutorial.slug %}{{ t.title }} (you are here){% else %}<a href="{{ url_for('public.tutorial_detail', slug=t.slug) }}">{{ t.title }}</a>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <a class="post-back-link" href="{{ url_for('public.tutorials_index') }}">&larr; Back to all tutorials</a>
+  </div>
+</section>
+{% endblock %}

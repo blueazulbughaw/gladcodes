@@ -32,3 +32,16 @@ def slugify(text: str) -> str:
     text = (text or "").lower().strip()
     text = re.sub(r"[^a-z0-9]+", "-", text)
     return text.strip("-")
+
+
+YOUTUBE_ID_RE = re.compile(r"(?:youtu\.be/|youtube\.com/(?:watch\?v=|embed/|shorts/))([a-zA-Z0-9_-]{11})")
+
+
+def youtube_embed_url(url: str):
+    """Accepts any common YouTube URL shape (watch/short-link/embed/shorts)
+    and returns an embeddable https://www.youtube.com/embed/<id> URL, or
+    None if it doesn't look like a YouTube URL at all."""
+    if not url:
+        return None
+    match = YOUTUBE_ID_RE.search(url)
+    return f"https://www.youtube.com/embed/{match.group(1)}" if match else None

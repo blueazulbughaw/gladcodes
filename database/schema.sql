@@ -326,7 +326,8 @@ SELECT * FROM (SELECT 'github_username' AS setting_key, 'blueazulbughaw' AS sett
 WHERE NOT EXISTS (SELECT 1 FROM site_settings);
 
 -- ============================================================================
--- Phase 2 stub tables (schema only; admin nav marks these "Coming soon")
+-- Phase 2 (Tutorials/Videos/Instagram/PDF library are fully built; API keys
+-- panel remains a "Coming soon" admin-nav stub with no table of its own).
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS tutorials (
@@ -334,11 +335,22 @@ CREATE TABLE IF NOT EXISTS tutorials (
     title VARCHAR(255) NOT NULL,
     slug VARCHAR(255) NOT NULL UNIQUE,
     series_name VARCHAR(255),
+    excerpt TEXT,
     content_markdown LONGTEXT,
+    cover_image VARCHAR(500),
     status ENUM('draft', 'published') NOT NULL DEFAULT 'draft',
+    published_at DATETIME,
     sort_order INT NOT NULL DEFAULT 0,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Idempotent upgrade path for installs that already have the old, narrower
+-- tutorials table (CREATE TABLE IF NOT EXISTS above is a no-op for them).
+ALTER TABLE tutorials ADD COLUMN IF NOT EXISTS excerpt TEXT AFTER series_name;
+ALTER TABLE tutorials ADD COLUMN IF NOT EXISTS cover_image VARCHAR(500) AFTER content_markdown;
+ALTER TABLE tutorials ADD COLUMN IF NOT EXISTS published_at DATETIME AFTER status;
+ALTER TABLE tutorials ADD COLUMN IF NOT EXISTS updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER created_at;
 
 CREATE TABLE IF NOT EXISTS videos (
     id INT AUTO_INCREMENT PRIMARY KEY,
