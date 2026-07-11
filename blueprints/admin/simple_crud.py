@@ -17,10 +17,16 @@ from . import admin_bp
 
 ICON_CHOICES = [
     "rocket", "activity", "heart-handshake", "code-2", "flask-conical",
-    "bar-chart-3", "pen-tool", "github", "star", "book-open", "terminal",
-    "database", "cloud", "zap", "target", "compass", "lightbulb", "wrench",
-    "users", "globe", "coffee", "camera", "mic", "graduation-cap", "circle",
+    "bar-chart-3", "pen-tool", "github", "linkedin", "instagram", "star",
+    "book-open", "terminal", "database", "cloud", "zap", "target", "compass",
+    "lightbulb", "wrench", "users", "globe", "coffee", "camera", "mic",
+    "graduation-cap", "circle",
 ]
+# "github"/"linkedin"/"instagram" are hand-embedded SVGs (see
+# templates/public/_macros.html::dynamic_icon), not real Lucide icon names —
+# Lucide dropped brand logos entirely. Every renderer of a user-picked icon
+# (projects, toolbox, community) must go through dynamic_icon(), never a
+# bare <i data-lucide="...">, or these three will silently render nothing.
 
 RESOURCES = {
     "timeline": {

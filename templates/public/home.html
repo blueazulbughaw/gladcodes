@@ -174,7 +174,7 @@
     <div class="toolbox-grid">
       {% for tool in toolbox %}
       <a class="card card--hover toolbox-item reveal" href="{{ tool.url or '#' }}" {{ 'target="_blank" rel="noopener"'|safe if tool.url }}>
-        <div class="toolbox-item-icon"><i data-lucide="{{ tool.icon }}" width="20" height="20"></i></div>
+        <div class="toolbox-item-icon">{{ macros.dynamic_icon(tool.icon, 20) }}</div>
         <span>{{ tool.name }}</span>
       </a>
       {% endfor %}
@@ -221,7 +221,7 @@
     <div class="community-grid">
       {% for org in community %}
       <a class="community-item reveal" href="{{ org.url }}" target="_blank" rel="noopener">
-        <div class="community-item-icon"><i data-lucide="{{ org.icon }}" width="18" height="18"></i></div>
+        <div class="community-item-icon">{{ macros.dynamic_icon(org.icon, 18) }}</div>
         <span>{{ org.org_name }}</span>
       </a>
       {% endfor %}
