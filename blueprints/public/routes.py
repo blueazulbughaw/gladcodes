@@ -1,12 +1,15 @@
+import re
 from collections import OrderedDict
 from datetime import datetime, timezone
 
-from flask import abort, render_template, request
+from flask import abort, flash, redirect, render_template, request, url_for
 
-from database.db import query, query_one
+from database.db import execute, query, query_one
 from services.content import render_markdown
 from services.github import get_profile_summary
 from services.metrics import get_chart_series
+
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 from . import public_bp
 
@@ -164,3 +167,23 @@ def about():
 @public_bp.route("/resources")
 def resources():
     return render_template("resources.html")
+
+
+@public_bp.route("/newsletter/subscribe", methods=["POST"])
+def newsletter_subscribe():
+    email = request.form.get("email", "").strip().lower()
+    if not EMAIL_RE.match(email):
+        flash("Please enter a valid email address.", "error")
+        return redirect(url_for("public.home") + "#newsletter")
+
+    # Dedupe via ON DUPLICATE KEY UPDATE against the unique email column —
+    # re-subscribing just reactivates instead of erroring or double-inserting.
+    execute(
+        """
+        INSERT INTO subscribers (email, is_active) VALUES (%s, 1)
+        ON DUPLICATE KEY UPDATE is_active = 1
+        """,
+        (email,),
+    )
+    flash("Thanks for subscribing — you're on the list.", "success")
+    return redirect(url_for("public.home") + "#newsletter")

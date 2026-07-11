@@ -17,3 +17,4 @@ from . import journal  # noqa: E402,F401
 from . import metrics  # noqa: E402,F401
 from . import resume  # noqa: E402,F401
 from . import settings  # noqa: E402,F401
+from . import subscribers  # noqa: E402,F401
