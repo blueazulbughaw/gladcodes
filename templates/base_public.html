@@ -42,8 +42,8 @@
       </ul>
       <div class="nav-right">
         <div class="nav-socials">
-          {% if settings.get('github_username') %}
-          <a href="https://github.com/{{ settings.github_username }}" aria-label="GitHub" target="_blank" rel="noopener">
+          {% if github_url %}
+          <a href="{{ github_url }}" aria-label="GitHub" target="_blank" rel="noopener">
             <i data-lucide="github" width="20" height="20"></i>
           </a>
           {% endif %}
@@ -94,10 +94,16 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <span>&copy; {{ current_year }} Glad.</span>
+        <span>{{ settings.get('footer_copyright') or ('© ' ~ current_year ~ ' Glad.') }}</span>
+        {% if settings.get('footer_extra_1') or settings.get('footer_extra_2') %}
+        <div class="footer-extra">
+          {% if settings.get('footer_extra_1') %}<span>{{ settings.footer_extra_1 }}</span>{% endif %}
+          {% if settings.get('footer_extra_2') %}<span>{{ settings.footer_extra_2 }}</span>{% endif %}
+        </div>
+        {% endif %}
         <div class="footer-socials">
-          {% if settings.get('github_username') %}
-          <a href="https://github.com/{{ settings.github_username }}" aria-label="GitHub" target="_blank" rel="noopener"><i data-lucide="github" width="18" height="18"></i></a>
+          {% if github_url %}
+          <a href="{{ github_url }}" aria-label="GitHub" target="_blank" rel="noopener"><i data-lucide="github" width="18" height="18"></i></a>
           {% endif %}
           {% if settings.get('linkedin_url') %}
           <a href="{{ settings.linkedin_url }}" aria-label="LinkedIn" target="_blank" rel="noopener"><i data-lucide="linkedin" width="18" height="18"></i></a>
@@ -110,13 +116,13 @@
     </div>
   </footer>
 
-  <script src="https://unpkg.com/lucide@latest" defer></script>
+  <script src="https://unpkg.com/lucide@1.24.0" defer></script>
   <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
   <script src="{{ url_for('static', filename='js/animations.js') }}" defer></script>
   {% block extra_scripts %}{% endblock %}
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      if (window.lucide) { window.lucide.createIcons(); }
+      if (window.lucide) { window.lucide.createIcons({ icons: window.lucide.icons }); }
     });
   </script>
 </body>

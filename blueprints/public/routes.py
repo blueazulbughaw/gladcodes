@@ -34,15 +34,29 @@ def inject_globals():
     return {"current_year": datetime.now(timezone.utc).year}
 
 
+def _normalize_github_username(value):
+    """github_username is meant to be a bare username, but admins sometimes
+    paste the full profile URL instead — accept both so a data-entry slip
+    doesn't break the profile link or the GitHub API call."""
+    if not value:
+        return None
+    value = value.strip().rstrip("/")
+    if value.startswith("http://") or value.startswith("https://"):
+        value = value.rsplit("/", 1)[-1]
+    return value or None
+
+
 @public_bp.context_processor
 def inject_site_globals():
     rows = query("SELECT setting_key, setting_value FROM site_settings")
     settings_map = {row["setting_key"]: row["setting_value"] for row in rows}
     base_url = current_app.config["PUBLIC_SITE_URL"].rstrip("/")
+    github_username = _normalize_github_username(settings_map.get("github_username"))
+    github_url = f"https://github.com/{github_username}" if github_username else None
 
     same_as = [settings_map[k] for k in ("linkedin_url", "instagram_url") if settings_map.get(k)]
-    if settings_map.get("github_username"):
-        same_as.append(f"https://github.com/{settings_map['github_username']}")
+    if github_url:
+        same_as.append(github_url)
 
     person_ld = {
         "@context": "https://schema.org",
@@ -62,6 +76,7 @@ def inject_site_globals():
     return {
         "settings": settings_map,
         "site_url": base_url,
+        "github_url": github_url,
         "person_ld": person_ld,
         "website_ld": website_ld,
     }
@@ -91,7 +106,8 @@ def home():
         timeline_by_month.setdefault(milestone["month_label"], []).append(milestone)
 
     github_row = query_one("SELECT setting_value FROM site_settings WHERE setting_key = 'github_username'")
-    github = get_profile_summary(github_row["setting_value"] if github_row else None)
+    github_username = _normalize_github_username(github_row["setting_value"] if github_row else None)
+    github = get_profile_summary(github_username)
     if github:
         for repo in github["repos"]:
             if repo.get("pushed_at"):

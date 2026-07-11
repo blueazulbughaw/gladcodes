@@ -320,7 +320,8 @@ SELECT * FROM (SELECT 'github_username' AS setting_key, 'blueazulbughaw' AS sett
     SELECT 'site_title', 'GladCodes — Software Engineer, TPM, Founder Who Ships' UNION ALL
     SELECT 'site_description', 'Building in public: a founder platform tracking projects, metrics, and lessons from an engineer-turned-founder.' UNION ALL
     SELECT 'contact_email', 'glad.cedeno@gmail.com' UNION ALL
-    SELECT 'hero_bio', 'Software engineer turned founder, writing down every project, metric, and lesson in the open — from shipping code across Japan and Hong Kong to building GladCodes from a blank folder.'
+    SELECT 'hero_bio', 'Software engineer turned founder, writing down every project, metric, and lesson in the open — from shipping code across Japan and Hong Kong to building GladCodes from a blank folder.' UNION ALL
+    SELECT 'footer_copyright', '© 2026 Glad.'
 ) AS tmp
 WHERE NOT EXISTS (SELECT 1 FROM site_settings);
 
