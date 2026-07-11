@@ -5,6 +5,7 @@ from flask import abort, render_template, request
 
 from database.db import query, query_one
 from services.content import render_markdown
+from services.github import get_profile_summary
 
 from . import public_bp
 
@@ -62,6 +63,13 @@ def home():
     for milestone in milestones:
         timeline_by_month.setdefault(milestone["month_label"], []).append(milestone)
 
+    github_row = query_one("SELECT setting_value FROM site_settings WHERE setting_key = 'github_username'")
+    github = get_profile_summary(github_row["setting_value"] if github_row else None)
+    if github:
+        for repo in github["repos"]:
+            if repo.get("pushed_at"):
+                repo["pushed_at_parsed"] = datetime.fromisoformat(repo["pushed_at"].replace("Z", "+00:00"))
+
     return render_template(
         "home.html",
         now=now,
@@ -73,6 +81,7 @@ def home():
         toolbox=toolbox,
         community=community,
         coding_hours=coding_hours,
+        github=github,
     )
 
 

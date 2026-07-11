@@ -186,6 +186,36 @@
   </div>
 </section>
 
+{% if github %}
+<section class="section">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="eyebrow">On GitHub</span>
+      <h2>Recent repos</h2>
+      <p>Live from the GitHub API, cached for an hour so this never slows the page down.</p>
+    </div>
+    <div class="github-grid">
+      {% for repo in github.repos %}
+      <a class="card card--hover github-repo-card reveal" href="{{ repo.html_url }}" target="_blank" rel="noopener">
+        <div class="github-repo-header">
+          <h3>{{ repo.name }}</h3>
+          <span class="github-repo-stars"><i data-lucide="star" width="14" height="14"></i> {{ repo.stargazers_count }}</span>
+        </div>
+        {% if repo.description %}<p>{{ repo.description }}</p>{% endif %}
+        <div class="github-repo-meta">
+          {% if repo.language %}<span class="github-repo-lang">{{ repo.language }}</span>{% endif %}
+          {% if repo.pushed_at_parsed %}<span>Updated {{ repo.pushed_at_parsed|human_date }}</span>{% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    <div class="section-footer-link reveal">
+      <a href="{{ github.profile.html_url }}" target="_blank" rel="noopener">View GitHub profile &rarr;</a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
 <section class="section section--sand">
   <div class="container">
     <div class="section-header reveal">

@@ -120,6 +120,48 @@
   justify-content: center;
 }
 
+/* GitHub -------------------------------------------------------------------- */
+.github-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-md);
+}
+.github-repo-card { display: block; color: var(--navy); }
+.github-repo-card:hover { text-decoration: none; }
+.github-repo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-sm);
+}
+.github-repo-header h3 { font-size: 1rem; margin: 0; }
+.github-repo-stars {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--warn);
+  white-space: nowrap;
+}
+.github-repo-card p {
+  font-size: 0.85rem;
+  color: rgba(var(--navy-rgb), 0.65);
+  margin: 0.4rem 0;
+}
+.github-repo-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: rgba(var(--navy-rgb), 0.5);
+  margin-top: var(--space-sm);
+}
+.github-repo-lang {
+  background: rgba(63, 136, 197, 0.12);
+  color: var(--ocean);
+  padding: 0.1rem 0.5rem;
+  border-radius: var(--radius-pill);
+}
+
 /* Community ----------------------------------------------------------------- */
 .community-grid {
   display: grid;

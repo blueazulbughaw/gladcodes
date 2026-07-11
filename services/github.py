@@ -1,9 +1,5 @@
-"""GitHub API client, cached (Phase 1 step 5 wires this into the home page).
-
-Kept as a minimal, honest stub for now: the function signature and cache
-table (github_cache) are final, but the real fetch/cache logic lands when
-the home page GitHub section is built. Never let a GitHub failure break a
-page — callers must treat a None/[] return as "hide this section".
+"""GitHub API client, cached. Never let a GitHub failure break a page —
+callers must treat a None return as "hide this section".
 """
 import json
 from datetime import datetime, timedelta, timezone
@@ -38,10 +34,15 @@ def get_cached(cache_key: str):
 
 
 def set_cached(cache_key: str, payload) -> None:
+    # UTC_TIMESTAMP(), not NOW(): NOW() returns the DB server's local time,
+    # and get_cached() below compares fetched_at against datetime.now(utc).
+    # If the server isn't configured for UTC, that mismatch makes the TTL
+    # check wrong in either direction (cache never hits, or serves stale
+    # data far past 1 hour).
     execute(
         """
         INSERT INTO github_cache (cache_key, payload, fetched_at)
-        VALUES (%s, %s, NOW())
+        VALUES (%s, %s, UTC_TIMESTAMP())
         ON DUPLICATE KEY UPDATE payload = VALUES(payload), fetched_at = VALUES(fetched_at)
         """,
         (cache_key, json.dumps(payload)),
@@ -49,7 +50,14 @@ def set_cached(cache_key: str, payload) -> None:
 
 
 def get_profile_summary(username: str):
-    """Return {repos: [...], profile: {...}} or None on any failure."""
+    """Return {"profile": {...}, "repos": [...]} or None on any failure.
+
+    Repos are the 6 most recently pushed-to, non-fork repos. Cached (github_cache,
+    1 hour TTL) so a page render never blocks on the GitHub API.
+    """
+    if not username:
+        return None
+
     cache_key = f"profile:{username}"
     cached = get_cached(cache_key)
     if cached is not None:
@@ -60,14 +68,36 @@ def get_profile_summary(username: str):
         repos_resp = requests.get(
             f"{GITHUB_API_BASE}/users/{username}/repos",
             headers=_headers(),
-            params={"sort": "updated", "per_page": 6},
+            params={"sort": "pushed", "per_page": 10},
             timeout=5,
         )
         profile_resp.raise_for_status()
         repos_resp.raise_for_status()
-        payload = {"profile": profile_resp.json(), "repos": repos_resp.json()}
+        profile_json = profile_resp.json()
+        repos_json = [r for r in repos_resp.json() if not r.get("fork")][:6]
     except requests.RequestException:
         return None
+
+    payload = {
+        "profile": {
+            "login": profile_json.get("login"),
+            "avatar_url": profile_json.get("avatar_url"),
+            "html_url": profile_json.get("html_url"),
+            "public_repos": profile_json.get("public_repos"),
+            "followers": profile_json.get("followers"),
+        },
+        "repos": [
+            {
+                "name": repo.get("name"),
+                "html_url": repo.get("html_url"),
+                "description": repo.get("description"),
+                "stargazers_count": repo.get("stargazers_count", 0),
+                "language": repo.get("language"),
+                "pushed_at": repo.get("pushed_at"),
+            }
+            for repo in repos_json
+        ],
+    }
 
     set_cached(cache_key, payload)
     return payload
