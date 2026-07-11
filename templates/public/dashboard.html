@@ -1,0 +1,67 @@
+{% extends "base_public.html" %}
+
+{% block title %}Dashboard — GladCodes{% endblock %}
+{% block description %}The public founder metrics dashboard: coding hours, features shipped, beta users, and learning progress, updated as I build in public.{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">Founder metrics</span>
+    <h1>Dashboard</h1>
+    <p>Every number here is real and pulled straight from the same database that powers the rest of the site.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="stats-strip">
+      {% for stat in stats %}
+      <div class="stat-tile reveal">
+        <span class="stat-value" data-count-to="{{ stat.value }}" data-count-suffix="{{ stat.suffix }}">0{{ stat.suffix }}</span>
+        <div class="stat-label">{{ stat.label }}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="charts-grid">
+      <div class="card chart-card reveal">
+        <h3>Coding hours per week</h3>
+        <canvas id="codingHoursChart" height="220"></canvas>
+      </div>
+      <div class="card chart-card reveal">
+        <h3>Features shipped per month</h3>
+        <canvas id="featuresChart" height="220"></canvas>
+      </div>
+      <div class="card chart-card reveal">
+        <h3>Learning hours by skill</h3>
+        <canvas id="learningChart" height="220"></canvas>
+      </div>
+      <div class="card chart-card beta-card reveal">
+        <h3>Beta users</h3>
+        <div class="beta-progress-numbers">{{ beta_current|int }} <span>/ {{ beta_target|int }} target</span></div>
+        <div class="progress-track">
+          <div class="progress-fill reveal" data-progress="{{ beta_pct }}"></div>
+        </div>
+        <p class="stat-label">{{ beta_pct }}% of the way to the beta target</p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}" defer></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    if (!window.GladCharts) return;
+    GladCharts.lineChart("codingHoursChart", {{ coding_hours.labels|tojson }}, {{ coding_hours.data|tojson }}, "Coding hours");
+    GladCharts.barChart("featuresChart", {{ features_shipped.labels|tojson }}, {{ features_shipped.data|tojson }}, "Features shipped");
+    GladCharts.barChart("learningChart", {{ learning_metrics.labels|tojson }}, {{ learning_metrics.data|tojson }}, "Hours studied");
+  });
+</script>
+{% endblock %}

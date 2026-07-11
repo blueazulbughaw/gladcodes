@@ -24,6 +24,21 @@ def inject_site_settings():
     return {"settings": {row["setting_key"]: row["setting_value"] for row in rows}}
 
 
+def get_chart_series(metric_key):
+    """labels/values pair for one chart_metrics series, in sort_order."""
+    rows = query(
+        "SELECT period_label, value FROM chart_metrics WHERE metric_key = %s ORDER BY sort_order",
+        (metric_key,),
+    )
+    # Key is "data", not "values" — dict has a builtin .values() method, and
+    # Jinja's attribute-access fallback (foo.values) would silently return
+    # that bound method instead of the dict item.
+    return {
+        "labels": [row["period_label"] for row in rows],
+        "data": [float(row["value"]) for row in rows],
+    }
+
+
 @public_bp.route("/")
 def home():
     now = query_one("SELECT * FROM now_card WHERE id = 1")
@@ -38,6 +53,10 @@ def home():
         """
     )
     milestones = query("SELECT * FROM timeline_milestones ORDER BY sort_order")
+    learning = query("SELECT * FROM learning_progress ORDER BY sort_order")
+    toolbox = query("SELECT * FROM toolbox_items ORDER BY sort_order")
+    community = query("SELECT * FROM community_links ORDER BY sort_order")
+    coding_hours = get_chart_series("coding_hours_weekly")
 
     timeline_by_month = OrderedDict()
     for milestone in milestones:
@@ -50,6 +69,35 @@ def home():
         projects=projects,
         journal_posts=journal_posts,
         timeline_by_month=list(timeline_by_month.items()),
+        learning=learning,
+        toolbox=toolbox,
+        community=community,
+        coding_hours=coding_hours,
+    )
+
+
+@public_bp.route("/dashboard")
+def dashboard():
+    stats = query("SELECT * FROM stat_counters ORDER BY sort_order")
+    coding_hours = get_chart_series("coding_hours_weekly")
+    features_shipped = get_chart_series("features_shipped_monthly")
+    learning_metrics = get_chart_series("learning_metrics")
+
+    beta_rows = query("SELECT period_label, value FROM chart_metrics WHERE metric_key = 'beta_users'")
+    beta = {row["period_label"]: float(row["value"]) for row in beta_rows}
+    beta_current = beta.get("current", 0)
+    beta_target = beta.get("target", 0)
+    beta_pct = round(beta_current / beta_target * 100) if beta_target else 0
+
+    return render_template(
+        "dashboard.html",
+        stats=stats,
+        coding_hours=coding_hours,
+        features_shipped=features_shipped,
+        learning_metrics=learning_metrics,
+        beta_current=beta_current,
+        beta_target=beta_target,
+        beta_pct=beta_pct,
     )
 
 

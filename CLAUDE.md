@@ -120,3 +120,16 @@ Visible in admin nav as "Coming soon", backed by real tables already in
 - Blueprint template folders are namespaced (`templates/public/`,
   `templates/admin/`) to keep admin and public markup from ever
   accidentally sharing a template file.
+- The build order's step 4 only named "the home-page dashboard teaser", but
+  three home-page sections (Currently Learning, Toolbox, Community) were
+  never assigned to any explicit step. They're simple DB-driven lists with
+  no backend dependency (unlike the dashboard/GitHub/newsletter sections,
+  which need Chart.js, an external API, and a capture endpoint
+  respectively), so they were folded into step 4 to bring the home page to
+  full completeness before moving on to auth/admin work.
+- Chart data passed to templates is always shaped `{"labels": [...], "data": [...]}`,
+  never `{"values": [...]}`. Jinja's `foo.values` resolves to Python's
+  `dict.values()` bound method before it falls back to `foo["values"]`, so a
+  `values` key silently renders a function object instead of the data —
+  this broke the dashboard once already. Keep the same `data`-keyed shape
+  for the GitHub commit-activity series when it lands in step 5.

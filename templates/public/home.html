@@ -130,4 +130,88 @@
   </div>
 </section>
 
+<section class="section">
+  <div class="container">
+    <div class="dashboard-teaser-layout">
+      <div>
+        <span class="eyebrow">Founder metrics</span>
+        <h2>The numbers behind the building</h2>
+        <p>Coding hours, features shipped, and beta progress — tracked in the open on the full dashboard.</p>
+        <a class="btn btn-primary" href="{{ url_for('public.dashboard') }}">See full dashboard &rarr;</a>
+      </div>
+      <div class="card chart-card reveal">
+        <h3>Coding hours per week</h3>
+        <canvas id="teaserCodingHoursChart" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section--sand">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="eyebrow">Always learning</span>
+      <h2>Currently learning</h2>
+    </div>
+    <div class="learning-list">
+      {% for skill in learning %}
+      <div class="reveal">
+        <div class="learning-item-label">
+          <span>{{ skill.skill }}</span>
+          <span>{{ skill.progress_pct }}%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill reveal" data-progress="{{ skill.progress_pct }}"></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="eyebrow">Daily drivers</span>
+      <h2>My toolbox</h2>
+    </div>
+    <div class="toolbox-grid">
+      {% for tool in toolbox %}
+      <a class="card card--hover toolbox-item reveal" href="{{ tool.url or '#' }}" {{ 'target="_blank" rel="noopener"'|safe if tool.url }}>
+        <div class="toolbox-item-icon"><i data-lucide="{{ tool.icon }}" width="20" height="20"></i></div>
+        <span>{{ tool.name }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section section--sand">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="eyebrow">Showing up</span>
+      <h2>Community</h2>
+    </div>
+    <div class="community-grid">
+      {% for org in community %}
+      <a class="community-item reveal" href="{{ org.url }}" target="_blank" rel="noopener">
+        <div class="community-item-icon"><i data-lucide="{{ org.icon }}" width="18" height="18"></i></div>
+        <span>{{ org.org_name }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}" defer></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    if (!window.GladCharts) return;
+    GladCharts.lineChart("teaserCodingHoursChart", {{ coding_hours.labels|tojson }}, {{ coding_hours.data|tojson }}, "Coding hours");
+  });
+</script>
 {% endblock %}

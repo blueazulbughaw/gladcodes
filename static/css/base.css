@@ -195,6 +195,52 @@ p { margin: 0 0 var(--space-sm); }
 .footer-socials a { color: rgba(255, 255, 255, 0.75); display: flex; }
 .footer-socials a:hover { color: #fff; }
 
+/* Stat counters (used on home + dashboard) -------------------------------- */
+.stats-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-md);
+  padding: var(--space-lg) 0;
+}
+.stat-tile {
+  text-align: center;
+  padding: var(--space-lg) var(--space-sm);
+}
+.stat-value {
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 3.5vw, 2.75rem);
+  font-weight: 700;
+  color: var(--teal);
+  display: block;
+}
+.stat-label {
+  font-size: 0.9rem;
+  color: rgba(var(--navy-rgb), 0.65);
+  margin-top: 0.25rem;
+}
+@media (max-width: 760px) {
+  .stats-strip { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Charts (used on home teaser + dashboard) -------------------------------- */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+.chart-card h3 { font-size: 1rem; margin-bottom: var(--space-sm); }
+.chart-card canvas { max-height: 280px; }
+.beta-card { text-align: center; }
+.beta-progress-numbers {
+  font-family: var(--font-heading);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--teal);
+  margin-bottom: 0.5rem;
+}
+.beta-progress-numbers span { color: rgba(var(--navy-rgb), 0.4); font-size: 1.1rem; font-weight: 500; }
+
 /* Reveal / count-up / progress-fill animation hooks ---------------------- */
 .reveal {
   opacity: 0;
