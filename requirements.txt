@@ -1,0 +1,10 @@
+# Pinned for Python 3.11 (Namecheap shared hosting) and verified working on
+# newer local dev interpreters (3.12+/3.14).
+Flask==3.0.3
+PyMySQL==1.1.1
+bcrypt==4.2.0
+PyJWT==2.9.0
+python-dotenv==1.0.1
+requests==2.32.3
+Markdown==3.7
+bleach==6.1.0
