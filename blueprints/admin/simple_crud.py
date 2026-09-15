@@ -7,7 +7,7 @@ RESOURCES dict below — it is never concatenated into SQL directly. The
 table/column identifiers that DO get interpolated into SQL always come
 from RESOURCES, a fixed dict defined in this file, never from user input.
 """
-from datetime import date
+from datetime import date, time
 
 from flask import abort, redirect, render_template, request, url_for
 
@@ -115,15 +115,23 @@ RESOURCES = {
     "events": {
         "table": "attending_events",
         "title": "Events",
-        "order_by": "event_date ASC",
+        # Nearest date first; rows with no date_from sort after every dated
+        # row instead of floating to the top as MySQL's NULL-first default.
+        "order_by": "date_from IS NULL, date_from ASC",
         "fields": [
             ("event_name", "text", "Event"),
-            ("event_date", "date", "Date"),
+            ("attending_as", "text", "Attending As"),
+            ("date_from", "date", "From"),
+            ("date_to", "date", "To"),
+            ("time_from", "time", "Time from"),
+            ("time_to", "time", "Time to"),
+            ("status", "select", "Status"),
             ("location", "text", "Location"),
             ("link", "url", "Link"),
             ("description", "textarea", "Description"),
             ("sort_order", "int", "Sort order"),
         ],
+        "select_options": {"status": ["tentative", "confirmed"]},
     },
     "stats": {
         "table": "stat_counters",
@@ -195,6 +203,11 @@ def _parse_field(config, field_name, field_type):
     if field_type == "date":
         try:
             return date.fromisoformat(raw) if raw else None
+        except ValueError:
+            return None
+    if field_type == "time":
+        try:
+            return time.fromisoformat(raw) if raw else None
         except ValueError:
             return None
     if field_type == "select":

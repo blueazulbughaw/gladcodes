@@ -204,7 +204,9 @@ def speaking():
 @public_bp.route("/events")
 def events_index():
     # Events I'm attending, not speaking at — a separate list from /speaking.
-    events = query("SELECT * FROM attending_events ORDER BY event_date ASC")
+    # Nearest date first; undated rows sort to the bottom instead of the top
+    # (MySQL's default for ORDER BY ... ASC on a nullable column).
+    events = query("SELECT * FROM attending_events ORDER BY date_from IS NULL, date_from ASC")
     return render_template("events.html", events=events)
 
 

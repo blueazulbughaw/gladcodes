@@ -22,10 +22,23 @@
     <div class="event-list">
       {% for event in events %}
       <div class="card card--hover event-item reveal">
-        <div class="event-item-date">{{ event.event_date|human_date if event.event_date else 'TBA' }}</div>
+        <div class="event-item-date">
+          {% if event.date_from %}
+            {{ event.date_from|human_date }}{% if event.date_to and event.date_to != event.date_from %} &ndash; {{ event.date_to|human_date }}{% endif %}
+          {% else %}
+            TBA
+          {% endif %}
+          {% if event.time_from %}
+          <div class="event-item-time">{{ event.time_from|human_time }}{% if event.time_to %} &ndash; {{ event.time_to|human_time }}{% endif %}</div>
+          {% endif %}
+        </div>
         <div class="event-item-body">
-          {% if event.location %}<div class="event-item-location">{{ event.location }}</div>{% endif %}
+          <div class="event-item-meta">
+            {% if event.location %}<span class="event-item-location">{{ event.location }}</span>{% endif %}
+            {% if event.status %}<span class="event-status event-status--{{ event.status }}">{{ event.status|capitalize }}</span>{% endif %}
+          </div>
           <h3>{{ event.event_name }}</h3>
+          {% if event.attending_as %}<p class="event-item-attending-as">Attending as: {{ event.attending_as }}</p>{% endif %}
           {% if event.description %}<p>{{ event.description }}</p>{% endif %}
           {% if event.link %}<a href="{{ event.link }}" target="_blank" rel="noopener">Event details &rarr;</a>{% endif %}
         </div>

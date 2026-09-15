@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from flask import Flask, request
 
 from config import Config
@@ -27,6 +29,25 @@ def create_app(config_class=Config):
         if not value:
             return ""
         return f"{value.strftime('%B')} {value.day}, {value.year}"
+
+    @app.template_filter("human_time")
+    def human_time(value):
+        """12-hour time display (e.g. '6:00 PM').
+
+        PyMySQL decodes a TIME column as a datetime.timedelta, not a
+        datetime.time (TIME is a duration type in MySQL, so it can exceed
+        24h) — accept either so this works whether the value came straight
+        from a query or was built in Python.
+        """
+        if value is None:
+            return ""
+        if isinstance(value, timedelta):
+            hour, minute = divmod(int(value.total_seconds() // 60), 60)
+        else:
+            hour, minute = value.hour, value.minute
+        period = "AM" if hour < 12 else "PM"
+        hour_12 = hour % 12 or 12
+        return f"{hour_12}:{minute:02d} {period}"
 
     app.jinja_env.filters["youtube_embed"] = youtube_embed_url
 
