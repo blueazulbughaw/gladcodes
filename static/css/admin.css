@@ -203,6 +203,38 @@ body.admin-body { display: flex; min-height: 100vh; align-items: stretch; }
 }
 .admin-status--draft { background: rgba(231, 169, 60, 0.16); color: #9a6c14; }
 .admin-status--published { background: rgba(59, 165, 93, 0.16); color: var(--success); }
+.admin-status--tentative { background: rgba(231, 169, 60, 0.16); color: #9a6c14; }
+.admin-status--confirmed { background: rgba(59, 165, 93, 0.16); color: var(--success); }
+
+/* Card list (resources with too many columns to read as a table) --------- */
+.admin-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.admin-card-item {
+  background: var(--card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.admin-card-item-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; }
+.admin-card-item-header h3 { margin: 0; font-size: 1.05rem; font-family: var(--font-heading); }
+.admin-card-item-row { font-size: 0.85rem; color: rgba(var(--navy-rgb), 0.75); }
+.admin-card-item-row strong { color: var(--navy); }
+.admin-card-item-desc { font-size: 0.85rem; color: rgba(var(--navy-rgb), 0.65); margin: 0.25rem 0 0; }
+.admin-card-item-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(var(--navy-rgb), 0.08);
+}
 
 /* Forms -------------------------------------------------------------------- */
 .admin-form { display: flex; flex-direction: column; gap: 1rem; max-width: 640px; }

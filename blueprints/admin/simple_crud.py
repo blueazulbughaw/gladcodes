@@ -118,6 +118,12 @@ RESOURCES = {
         # Nearest date first; rows with no date_from sort after every dated
         # row instead of floating to the top as MySQL's NULL-first default.
         "order_by": "date_from IS NULL, date_from ASC",
+        # Events has too many columns (11) for a readable table — render the
+        # list as cards instead. simple_list.html's card branch is written
+        # against this resource's specific field names, not generic like the
+        # table branch, so this flag only makes sense for a resource shaped
+        # like this one.
+        "list_view": "cards",
         "fields": [
             ("event_name", "text", "Event"),
             ("attending_as", "text", "Attending As"),
