@@ -189,6 +189,23 @@
 .speaking-item-body { flex: 1; min-width: 240px; }
 .speaking-item-event { font-size: 0.85rem; color: rgba(var(--navy-rgb), 0.55); text-transform: uppercase; letter-spacing: 0.04em; }
 
+/* Events (attending) ------------------------------------------------------- */
+.event-list { display: flex; flex-direction: column; gap: var(--space-md); }
+.event-item {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+.event-item-date {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--teal);
+  white-space: nowrap;
+}
+.event-item-body { flex: 1; min-width: 240px; }
+.event-item-location { font-size: 0.85rem; color: rgba(var(--navy-rgb), 0.55); text-transform: uppercase; letter-spacing: 0.04em; }
+
 /* Links (linktree) --------------------------------------------------------- */
 .headshot-photo {
   display: block;

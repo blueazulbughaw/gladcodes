@@ -201,6 +201,13 @@ def speaking():
     return render_template("speaking.html", events=events)
 
 
+@public_bp.route("/events")
+def events_index():
+    # Events I'm attending, not speaking at — a separate list from /speaking.
+    events = query("SELECT * FROM attending_events ORDER BY event_date ASC")
+    return render_template("events.html", events=events)
+
+
 @public_bp.route("/lets-connect")
 def lets_connect():
     links = query("SELECT * FROM page_links WHERE is_visible = 1 ORDER BY sort_order")
@@ -356,7 +363,7 @@ def sitemap():
     base_url = current_app.config["PUBLIC_SITE_URL"].rstrip("/")
     static_endpoints = [
         "public.home", "public.journal_index", "public.projects_index",
-        "public.dashboard", "public.resume", "public.speaking",
+        "public.dashboard", "public.resume", "public.speaking", "public.events_index",
         "public.lets_connect", "public.contact", "public.about", "public.resources",
         "public.tutorials_index", "public.videos_index",
     ]

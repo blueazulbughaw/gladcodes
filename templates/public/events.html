@@ -1,0 +1,40 @@
+{% extends "base_public.html" %}
+
+{% block title %}Events — GladCodes{% endblock %}
+{% block description %}Meetups, conferences, and community events I'll be attending.{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <span class="eyebrow">Community</span>
+    <h1>Events</h1>
+    <p>Meetups and conferences I'm planning to attend — come say hi.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    {% if events %}
+    <div class="event-list">
+      {% for event in events %}
+      <div class="card card--hover event-item reveal">
+        <div class="event-item-date">{{ event.event_date|human_date if event.event_date else 'TBA' }}</div>
+        <div class="event-item-body">
+          {% if event.location %}<div class="event-item-location">{{ event.location }}</div>{% endif %}
+          <h3>{{ event.event_name }}</h3>
+          {% if event.description %}<p>{{ event.description }}</p>{% endif %}
+          {% if event.link %}<a href="{{ event.link }}" target="_blank" rel="noopener">Event details &rarr;</a>{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state"><p>No upcoming events listed yet — check back soon.</p></div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

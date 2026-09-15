@@ -252,6 +252,32 @@ SELECT * FROM (SELECT
 ) AS tmp
 WHERE NOT EXISTS (SELECT 1 FROM speaking_events);
 
+-- Events I plan to attend (as opposed to speaking_events, which are talks I'm
+-- giving) — a separate table/page since the two lists don't overlap.
+CREATE TABLE IF NOT EXISTS attending_events (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    event_name VARCHAR(255) NOT NULL,
+    event_date DATE,
+    location VARCHAR(255),
+    link VARCHAR(500),
+    description TEXT,
+    sort_order INT NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO attending_events (event_name, event_date, location, link, description, sort_order)
+SELECT * FROM (SELECT
+    'PyCon Philippines' AS event_name,
+    '2026-05-14' AS event_date,
+    'Manila, Philippines' AS location,
+    NULL AS link,
+    'Attending to scout talks on developer tooling and meet other solo builders.' AS description,
+    1 AS sort_order
+    UNION ALL SELECT
+    'Google I/O Extended Manila', '2026-07-09', 'Manila, Philippines', NULL,
+    'Local watch party and networking event for the year''s I/O announcements.', 2
+) AS tmp
+WHERE NOT EXISTS (SELECT 1 FROM attending_events);
+
 CREATE TABLE IF NOT EXISTS resume_meta (
     id INT PRIMARY KEY,
     file_path VARCHAR(500),

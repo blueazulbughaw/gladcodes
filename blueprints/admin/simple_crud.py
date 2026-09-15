@@ -1,6 +1,6 @@
 """Generic CRUD engine for flat, sort_order-based admin tables: timeline
 milestones, projects, learning progress, toolbox, community links, page
-links, speaking events, and stat counters.
+links, speaking events, events attending, and stat counters.
 
 `resource` (the URL segment) is only ever used as a lookup key into the
 RESOURCES dict below — it is never concatenated into SQL directly. The
@@ -107,6 +107,19 @@ RESOURCES = {
             ("title", "text", "Title"),
             ("event_name", "text", "Event"),
             ("event_date", "date", "Date"),
+            ("link", "url", "Link"),
+            ("description", "textarea", "Description"),
+            ("sort_order", "int", "Sort order"),
+        ],
+    },
+    "events": {
+        "table": "attending_events",
+        "title": "Events",
+        "order_by": "event_date ASC",
+        "fields": [
+            ("event_name", "text", "Event"),
+            ("event_date", "date", "Date"),
+            ("location", "text", "Location"),
             ("link", "url", "Link"),
             ("description", "textarea", "Description"),
             ("sort_order", "int", "Sort order"),
