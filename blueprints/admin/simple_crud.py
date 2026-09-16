@@ -7,11 +7,11 @@ RESOURCES dict below — it is never concatenated into SQL directly. The
 table/column identifiers that DO get interpolated into SQL always come
 from RESOURCES, a fixed dict defined in this file, never from user input.
 """
-from datetime import date, time
+from datetime import date, datetime, time
 
 from flask import abort, redirect, render_template, request, url_for
 
-from database.db import execute, query, query_one
+from database.db import execute, query, query_one, utc_now
 
 from . import admin_bp
 
@@ -115,27 +115,30 @@ RESOURCES = {
     "events": {
         "table": "attending_events",
         "title": "Events",
-        # Nearest date first; rows with no date_from sort after every dated
-        # row instead of floating to the top as MySQL's NULL-first default.
-        "order_by": "date_from IS NULL, date_from ASC",
-        # Events has too many columns (11) for a readable table — render the
-        # list as cards instead. simple_list.html's card branch is written
+        # Nearest date first; rows with no datetime_from sort after every
+        # dated row instead of floating to the top as MySQL's NULL-first
+        # default.
+        "order_by": "datetime_from IS NULL, datetime_from ASC",
+        # Events has too many columns for a readable table — render the list
+        # as cards instead. simple_list.html's card branch is written
         # against this resource's specific field names, not generic like the
         # table branch, so this flag only makes sense for a resource shaped
         # like this one.
         "list_view": "cards",
+        # sort_order isn't in this list on purpose — events are ordered by
+        # datetime_from (see order_by above), never manually reordered, so
+        # exposing the column would just be a confusing no-op field. The
+        # underlying attending_events.sort_order column stays (defaults to
+        # 0 on every insert here) rather than being dropped.
         "fields": [
             ("event_name", "text", "Event"),
             ("attending_as", "text", "Attending As"),
-            ("date_from", "date", "From"),
-            ("date_to", "date", "To"),
-            ("time_from", "time", "Time from"),
-            ("time_to", "time", "Time to"),
+            ("datetime_from", "datetime", "Start"),
+            ("datetime_to", "datetime", "End"),
             ("status", "select", "Status"),
             ("location", "text", "Location"),
             ("link", "url", "Link"),
             ("description", "textarea", "Description"),
-            ("sort_order", "int", "Sort order"),
         ],
         "select_options": {"status": ["tentative", "confirmed"]},
     },
@@ -216,6 +219,13 @@ def _parse_field(config, field_name, field_type):
             return time.fromisoformat(raw) if raw else None
         except ValueError:
             return None
+    if field_type == "datetime":
+        # <input type="datetime-local"> posts "YYYY-MM-DDTHH:MM" (no
+        # seconds) — fromisoformat accepts that directly.
+        try:
+            return datetime.fromisoformat(raw) if raw else None
+        except ValueError:
+            return None
     if field_type == "select":
         options = config.get("select_options", {}).get(field_name, [])
         return raw if raw in options else (options[0] if options else raw)
@@ -227,13 +237,27 @@ def _parse_field(config, field_name, field_type):
     return raw.strip()
 
 
+def _split_upcoming_past(rows):
+    """Split date-ordered rows into upcoming (including undated/TBA) and
+    past, nearest-first in both directions — events-only (list_view: cards),
+    same as the card template's field names."""
+    now = utc_now()
+    upcoming, past = [], []
+    for row in rows:
+        end = row["datetime_to"] or row["datetime_from"]
+        (upcoming if end is None or end >= now else past).append(row)
+    past.reverse()
+    return upcoming, past
+
+
 @admin_bp.route("/<resource>")
 def simple_list(resource):
     config = _get_resource(resource)
     rows = query(f"SELECT * FROM {config['table']} ORDER BY {config['order_by']}")
-    return render_template(
-        "simple_list.html", resource=resource, config=config, rows=rows, icon_choices=ICON_CHOICES
-    )
+    context = {"resource": resource, "config": config, "rows": rows, "icon_choices": ICON_CHOICES}
+    if config.get("list_view") == "cards":
+        context["upcoming_rows"], context["past_rows"] = _split_upcoming_past(rows)
+    return render_template("simple_list.html", **context)
 
 
 @admin_bp.route("/<resource>/create", methods=["POST"])

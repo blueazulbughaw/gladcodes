@@ -258,10 +258,8 @@ CREATE TABLE IF NOT EXISTS attending_events (
     id INT AUTO_INCREMENT PRIMARY KEY,
     event_name VARCHAR(255) NOT NULL,
     attending_as VARCHAR(255),
-    date_from DATE,
-    date_to DATE,
-    time_from TIME,
-    time_to TIME,
+    datetime_from DATETIME,
+    datetime_to DATETIME,
     status ENUM('tentative', 'confirmed') NOT NULL DEFAULT 'confirmed',
     location VARCHAR(255),
     link VARCHAR(500),
@@ -269,35 +267,42 @@ CREATE TABLE IF NOT EXISTS attending_events (
     sort_order INT NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Idempotent upgrade path for installs that already have the old, narrower
--- attending_events table (single event_date column) — CREATE TABLE above is
--- a no-op for them. event_date itself is left in place, unused, rather than
--- dropped (schema.sql never removes columns or tables, only adds).
+-- Idempotent upgrade path for installs that already have an older, narrower
+-- attending_events table — CREATE TABLE above is a no-op for them. Older
+-- columns (event_date, then date_from/date_to/time_from/time_to) are left
+-- in place, unused, rather than dropped (schema.sql never removes columns
+-- or tables, only adds).
 ALTER TABLE attending_events ADD COLUMN IF NOT EXISTS attending_as VARCHAR(255) AFTER event_name;
 ALTER TABLE attending_events ADD COLUMN IF NOT EXISTS date_from DATE AFTER attending_as;
 ALTER TABLE attending_events ADD COLUMN IF NOT EXISTS date_to DATE AFTER date_from;
 ALTER TABLE attending_events ADD COLUMN IF NOT EXISTS time_from TIME AFTER date_to;
 ALTER TABLE attending_events ADD COLUMN IF NOT EXISTS time_to TIME AFTER time_from;
 ALTER TABLE attending_events ADD COLUMN IF NOT EXISTS status ENUM('tentative', 'confirmed') NOT NULL DEFAULT 'confirmed' AFTER time_to;
+ALTER TABLE attending_events ADD COLUMN IF NOT EXISTS datetime_from DATETIME AFTER time_to;
+ALTER TABLE attending_events ADD COLUMN IF NOT EXISTS datetime_to DATETIME AFTER datetime_from;
 
--- One-time backfill for rows written before date_from/date_to existed.
+-- One-time backfills, oldest column generation to newest.
 UPDATE attending_events SET date_from = event_date WHERE date_from IS NULL AND event_date IS NOT NULL;
+-- A NULL time_from/time_to meant "time TBA" under the old split fields;
+-- collapsed into a single datetime it becomes midnight, and the admin cards
+-- / public events page treat a midnight time as "no time given" so that
+-- meaning isn't lost.
+UPDATE attending_events SET datetime_from = TIMESTAMP(date_from, COALESCE(time_from, '00:00:00')) WHERE datetime_from IS NULL AND date_from IS NOT NULL;
+UPDATE attending_events SET datetime_to = TIMESTAMP(date_to, COALESCE(time_to, '00:00:00')) WHERE datetime_to IS NULL AND date_to IS NOT NULL;
 
-INSERT INTO attending_events (event_name, attending_as, date_from, date_to, time_from, time_to, status, location, link, description, sort_order)
+INSERT INTO attending_events (event_name, attending_as, datetime_from, datetime_to, status, location, link, description, sort_order)
 SELECT * FROM (SELECT
     'PyCon Philippines' AS event_name,
     'Attendee' AS attending_as,
-    '2026-05-14' AS date_from,
-    '2026-05-16' AS date_to,
-    NULL AS time_from,
-    NULL AS time_to,
+    '2026-05-14 00:00:00' AS datetime_from,
+    '2026-05-16 00:00:00' AS datetime_to,
     'confirmed' AS status,
     'Manila, Philippines' AS location,
     NULL AS link,
     'Attending to scout talks on developer tooling and meet other solo builders.' AS description,
     1 AS sort_order
     UNION ALL SELECT
-    'Google I/O Extended Manila', 'Attendee', '2026-07-09', '2026-07-09', '18:00:00', '21:00:00', 'tentative',
+    'Google I/O Extended Manila', 'Attendee', '2026-07-09 18:00:00', '2026-07-09 21:00:00', 'tentative',
     'Manila, Philippines', NULL,
     'Local watch party and networking event for the year''s I/O announcements.', 2
 ) AS tmp

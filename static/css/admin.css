@@ -229,7 +229,7 @@ body.admin-body { display: flex; min-height: 100vh; align-items: stretch; }
 .admin-card-item-desc { font-size: 0.85rem; color: rgba(var(--navy-rgb), 0.65); margin: 0.25rem 0 0; }
 .admin-card-item-footer {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   margin-top: auto;
   padding-top: 0.6rem;

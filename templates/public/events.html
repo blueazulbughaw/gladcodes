@@ -1,4 +1,5 @@
 {% extends "base_public.html" %}
+{% import "_macros.html" as macros %}
 
 {% block title %}Events — GladCodes{% endblock %}
 {% block description %}Meetups, conferences, and community events I'll be attending.{% endblock %}
@@ -18,35 +19,34 @@
 
 <section class="section">
   <div class="container">
-    {% if events %}
+    <div class="section-header reveal">
+      <h2>Upcoming</h2>
+    </div>
+    {% if upcoming_events %}
     <div class="event-list">
-      {% for event in events %}
-      <div class="card card--hover event-item reveal">
-        <div class="event-item-date">
-          {% if event.date_from %}
-            {{ event.date_from|human_date }}{% if event.date_to and event.date_to != event.date_from %} &ndash; {{ event.date_to|human_date }}{% endif %}
-          {% else %}
-            TBA
-          {% endif %}
-          {% if event.time_from %}
-          <div class="event-item-time">{{ event.time_from|human_time }}{% if event.time_to %} &ndash; {{ event.time_to|human_time }}{% endif %}</div>
-          {% endif %}
-        </div>
-        <div class="event-item-body">
-          <div class="event-item-meta">
-            {% if event.location %}<span class="event-item-location">{{ event.location }}</span>{% endif %}
-            {% if event.status %}<span class="event-status event-status--{{ event.status }}">{{ event.status|capitalize }}</span>{% endif %}
-          </div>
-          <h3>{{ event.event_name }}</h3>
-          {% if event.attending_as %}<p class="event-item-attending-as">Attending as: {{ event.attending_as }}</p>{% endif %}
-          {% if event.description %}<p>{{ event.description }}</p>{% endif %}
-          {% if event.link %}<a href="{{ event.link }}" target="_blank" rel="noopener">Event details &rarr;</a>{% endif %}
-        </div>
-      </div>
+      {% for event in upcoming_events %}
+      {{ macros.event_card(event) }}
       {% endfor %}
     </div>
     {% else %}
     <div class="empty-state"><p>No upcoming events listed yet — check back soon.</p></div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="section section--sand">
+  <div class="container">
+    <div class="section-header reveal">
+      <h2>Past</h2>
+    </div>
+    {% if past_events %}
+    <div class="event-list">
+      {% for event in past_events %}
+      {{ macros.event_card(event) }}
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state"><p>No past events yet.</p></div>
     {% endif %}
   </div>
 </section>

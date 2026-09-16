@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 from flask import Response, abort, current_app, flash, redirect, render_template, request, url_for
 
-from database.db import execute, query, query_one
+from database.db import execute, query, query_one, utc_now
 from services.content import render_markdown
 from services.github import get_profile_summary
 from services.mail import send_contact_email
@@ -206,8 +206,19 @@ def events_index():
     # Events I'm attending, not speaking at — a separate list from /speaking.
     # Nearest date first; undated rows sort to the bottom instead of the top
     # (MySQL's default for ORDER BY ... ASC on a nullable column).
-    events = query("SELECT * FROM attending_events ORDER BY date_from IS NULL, date_from ASC")
-    return render_template("events.html", events=events)
+    events = query("SELECT * FROM attending_events ORDER BY datetime_from IS NULL, datetime_from ASC")
+
+    # Split into Upcoming (including undated/TBA rows — better to surface
+    # them than bury them under events that already happened) and Past
+    # (nearest-first, so reverse the ascending order above).
+    now = utc_now()
+    upcoming_events, past_events = [], []
+    for event in events:
+        end = event["datetime_to"] or event["datetime_from"]
+        (upcoming_events if end is None or end >= now else past_events).append(event)
+    past_events.reverse()
+
+    return render_template("events.html", upcoming_events=upcoming_events, past_events=past_events)
 
 
 @public_bp.route("/lets-connect")

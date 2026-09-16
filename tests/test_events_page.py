@@ -1,5 +1,5 @@
 import unittest
-from datetime import date
+from datetime import date, datetime
 from unittest.mock import patch
 
 from app import create_app
@@ -38,10 +38,8 @@ class EventsPageTests(unittest.TestCase):
                     "id": 1,
                     "event_name": "PyCon Philippines",
                     "attending_as": "Attendee",
-                    "date_from": date(2026, 5, 14),
-                    "date_to": date(2026, 5, 16),
-                    "time_from": None,
-                    "time_to": None,
+                    "datetime_from": datetime(2026, 5, 14),
+                    "datetime_to": datetime(2026, 5, 16),
                     "status": "confirmed",
                     "location": "Manila, Philippines",
                     "link": None,
@@ -52,10 +50,8 @@ class EventsPageTests(unittest.TestCase):
                     "id": 2,
                     "event_name": "Undated meetup",
                     "attending_as": "Attendee",
-                    "date_from": None,
-                    "date_to": None,
-                    "time_from": None,
-                    "time_to": None,
+                    "datetime_from": None,
+                    "datetime_to": None,
                     "status": "tentative",
                     "location": None,
                     "link": None,
@@ -72,8 +68,8 @@ class EventsPageTests(unittest.TestCase):
         self.assertIn(b"PyCon Philippines", response.data)
         self.assertIn(b"Confirmed", response.data)
         # Undated row still renders (it's on the caller/DB to order it last
-        # via "date_from IS NULL, date_from ASC" — the route just displays
-        # whatever order the query returns).
+        # via "datetime_from IS NULL, datetime_from ASC" — the route just
+        # displays whatever order the query returns).
         self.assertIn(b"Undated meetup", response.data)
 
     @patch("blueprints.public.routes.query")
@@ -85,8 +81,8 @@ class EventsPageTests(unittest.TestCase):
         events_sql = next(
             call.args[0] for call in mock_query.call_args_list if "attending_events" in call.args[0]
         )
-        self.assertIn("date_from IS NULL", events_sql)
-        self.assertIn("date_from ASC", events_sql)
+        self.assertIn("datetime_from IS NULL", events_sql)
+        self.assertIn("datetime_from ASC", events_sql)
 
     @patch("blueprints.public.routes.query")
     def test_speaking_page_still_renders_on_its_own(self, mock_query):

@@ -42,6 +42,32 @@
 </div>
 {% endmacro %}
 
+{% macro event_card(event, reveal=True) %}
+<div class="card card--hover event-item{{ ' reveal' if reveal }}">
+  <div class="event-item-date">
+    {% if event.datetime_from %}
+      {{ event.datetime_from|human_date }}{% if event.datetime_to and event.datetime_to.date() != event.datetime_from.date() %} &ndash; {{ event.datetime_to|human_date }}{% endif %}
+    {% else %}
+      TBA
+    {% endif %}
+    {# A midnight time means no time was given — treat it as "time TBA" rather than showing a misleading 12:00 AM. #}
+    {% if event.datetime_from and (event.datetime_from.hour or event.datetime_from.minute) %}
+    <div class="event-item-time">{{ event.datetime_from|human_time }}{% if event.datetime_to and (event.datetime_to.hour or event.datetime_to.minute) %} &ndash; {{ event.datetime_to|human_time }}{% endif %}</div>
+    {% endif %}
+  </div>
+  <div class="event-item-body">
+    <div class="event-item-meta">
+      {% if event.location %}<span class="event-item-location">{{ event.location }}</span>{% endif %}
+      {% if event.status %}<span class="event-status event-status--{{ event.status }}">{{ event.status|capitalize }}</span>{% endif %}
+    </div>
+    <h3>{{ event.event_name }}</h3>
+    {% if event.attending_as %}<p class="event-item-attending-as">Attending as: {{ event.attending_as }}</p>{% endif %}
+    {% if event.description %}<p>{{ event.description }}</p>{% endif %}
+    {% if event.link %}<a href="{{ event.link }}" target="_blank" rel="noopener">Event details &rarr;</a>{% endif %}
+  </div>
+</div>
+{% endmacro %}
+
 {#
   Brand/logo icons (GitHub, LinkedIn, Instagram), hand-embedded rather than
   pulled from an icon library — Lucide dropped brand logos entirely in a

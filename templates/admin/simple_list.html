@@ -13,37 +13,47 @@
      field names rather than looping config.fields generically like the
      table branch below — extend this block by hand if another resource
      ever opts into list_view: 'cards'. #}
-  <div class="admin-card-grid">
-    {% for row in rows %}
-    <div class="card admin-card-item">
-      <div class="admin-card-item-header">
-        <h3>{{ row.event_name }}</h3>
-        {% if row.status %}<span class="admin-status admin-status--{{ row.status }}">{{ row.status }}</span>{% endif %}
-      </div>
-      {% if row.attending_as %}<div class="admin-card-item-row"><strong>Attending as:</strong> {{ row.attending_as }}</div>{% endif %}
-      <div class="admin-card-item-row">
-        <strong>Dates:</strong>
-        {% if row.date_from %}{{ row.date_from|human_date }}{% if row.date_to and row.date_to != row.date_from %} &ndash; {{ row.date_to|human_date }}{% endif %}{% else %}TBA{% endif %}
-      </div>
-      {% if row.time_from is not none %}
-      <div class="admin-card-item-row"><strong>Time:</strong> {{ row.time_from|human_time }}{% if row.time_to is not none %} &ndash; {{ row.time_to|human_time }}{% endif %}</div>
-      {% endif %}
-      {% if row.location %}<div class="admin-card-item-row"><strong>Location:</strong> {{ row.location }}</div>{% endif %}
-      {% if row.link %}<div class="admin-card-item-row"><a href="{{ row.link }}" target="_blank" rel="noopener">Event link &rarr;</a></div>{% endif %}
-      {% if row.description %}<p class="admin-card-item-desc">{{ row.description }}</p>{% endif %}
-      <div class="admin-card-item-footer">
-        <span class="admin-meta">Sort order: {{ row.sort_order }}</span>
-        <div class="admin-table-actions">
-          <a href="{{ url_for('admin.simple_edit', resource=resource, row_id=row.id) }}">Edit</a>
-          <form method="post" action="{{ url_for('admin.simple_delete', resource=resource, row_id=row.id) }}" onsubmit="return confirm('Delete this entry?');">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <button type="submit" class="btn-link btn-link-danger">Delete</button>
-          </form>
-        </div>
+  {% macro event_card(row) %}
+  <div class="card admin-card-item">
+    <div class="admin-card-item-header">
+      <h3>{{ row.event_name }}</h3>
+      {% if row.status %}<span class="admin-status admin-status--{{ row.status }}">{{ row.status }}</span>{% endif %}
+    </div>
+    {% if row.attending_as %}<div class="admin-card-item-row"><strong>Attending as:</strong> {{ row.attending_as }}</div>{% endif %}
+    <div class="admin-card-item-row">
+      <strong>Dates:</strong>
+      {% if row.datetime_from %}{{ row.datetime_from|human_date }}{% if row.datetime_to and row.datetime_to.date() != row.datetime_from.date() %} &ndash; {{ row.datetime_to|human_date }}{% endif %}{% else %}TBA{% endif %}
+    </div>
+    {# A midnight time means no time was given (see schema.sql's datetime_from/datetime_to backfill) — treat it as "time TBA" rather than showing a misleading 12:00 AM. #}
+    {% if row.datetime_from and (row.datetime_from.hour or row.datetime_from.minute) %}
+    <div class="admin-card-item-row"><strong>Time:</strong> {{ row.datetime_from|human_time }}{% if row.datetime_to and (row.datetime_to.hour or row.datetime_to.minute) %} &ndash; {{ row.datetime_to|human_time }}{% endif %}</div>
+    {% endif %}
+    {% if row.location %}<div class="admin-card-item-row"><strong>Location:</strong> {{ row.location }}</div>{% endif %}
+    {% if row.link %}<div class="admin-card-item-row"><a href="{{ row.link }}" target="_blank" rel="noopener">Event link &rarr;</a></div>{% endif %}
+    {% if row.description %}<p class="admin-card-item-desc">{{ row.description }}</p>{% endif %}
+    <div class="admin-card-item-footer">
+      <div class="admin-table-actions">
+        <a href="{{ url_for('admin.simple_edit', resource=resource, row_id=row.id) }}">Edit</a>
+        <form method="post" action="{{ url_for('admin.simple_delete', resource=resource, row_id=row.id) }}" onsubmit="return confirm('Delete this entry?');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button type="submit" class="btn-link btn-link-danger">Delete</button>
+        </form>
       </div>
     </div>
-    {% else %}
-    <p class="admin-empty">Nothing here yet.</p>
+  </div>
+  {% endmacro %}
+
+  <h2 class="admin-subheading">Upcoming</h2>
+  <div class="admin-card-grid">
+    {% for row in upcoming_rows %}{{ event_card(row) }}{% else %}
+    <p class="admin-empty">Nothing upcoming.</p>
+    {% endfor %}
+  </div>
+
+  <h2 class="admin-subheading">Past</h2>
+  <div class="admin-card-grid">
+    {% for row in past_rows %}{{ event_card(row) }}{% else %}
+    <p class="admin-empty">No past events yet.</p>
     {% endfor %}
   </div>
   {% else %}
