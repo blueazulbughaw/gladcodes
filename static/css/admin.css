@@ -278,6 +278,9 @@ body.admin-body { display: flex; min-height: 100vh; align-items: stretch; }
 }
 .admin-card-item-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; }
 .admin-card-item-header h3 { margin: 0; font-size: 1.05rem; font-family: var(--font-heading); }
+.admin-card-item-title { display: flex; align-items: center; gap: 0.5rem; }
+.admin-card-item-icon { display: flex; flex-shrink: 0; color: var(--teal); }
+.admin-card-item-icon svg { width: 18px; height: 18px; }
 .admin-card-item-row { font-size: 0.85rem; color: rgba(var(--navy-rgb), 0.75); }
 .admin-card-item-row strong { color: var(--navy); }
 .admin-card-item-desc { font-size: 0.85rem; color: rgba(var(--navy-rgb), 0.65); margin: 0.25rem 0 0; }

@@ -65,10 +65,13 @@
   {% macro generic_card(row) %}
   <div class="card admin-card-item"{% if config.reorderable %} data-id="{{ row.id }}"{% endif %}>
     <div class="admin-card-item-header">
-      <h3>{{ row[config.card_title_field] }}</h3>
+      <div class="admin-card-item-title">
+        {% for name, ftype, label in config.fields %}{% if ftype == 'icon' and row[name] %}<span class="admin-card-item-icon">{{ fm.admin_icon(row[name], 18) }}</span>{% endif %}{% endfor %}
+        <h3>{{ row[config.card_title_field] }}</h3>
+      </div>
     </div>
     {% for name, ftype, label in config.fields %}
-      {% if name == config.card_title_field %}
+      {% if name == config.card_title_field or ftype == 'icon' %}
       {% elif ftype == 'textarea' %}
         {% if row[name] %}<p class="admin-card-item-desc">{{ row[name] }}</p>{% endif %}
       {% elif ftype == 'checkbox' %}
