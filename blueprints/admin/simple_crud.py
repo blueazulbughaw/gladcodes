@@ -1,6 +1,6 @@
 """Generic CRUD engine for flat, sort_order-based admin tables: timeline
 milestones, projects, learning progress, toolbox, community links, page
-links, speaking events, events attending, and stat counters.
+links, events attending, and stat counters.
 
 `resource` (the URL segment) is only ever used as a lookup key into the
 RESOURCES dict below — it is never concatenated into SQL directly. The
@@ -99,19 +99,6 @@ RESOURCES = {
             ("is_visible", "checkbox", "Visible"),
         ],
     },
-    "speaking": {
-        "table": "speaking_events",
-        "title": "Speaking",
-        "order_by": "event_date DESC",
-        "fields": [
-            ("title", "text", "Title"),
-            ("event_name", "text", "Event"),
-            ("event_date", "date", "Date"),
-            ("link", "url", "Link"),
-            ("description", "textarea", "Description"),
-            ("sort_order", "int", "Sort order"),
-        ],
-    },
     "events": {
         "table": "attending_events",
         "title": "Events",
@@ -125,6 +112,11 @@ RESOURCES = {
         # table branch, so this flag only makes sense for a resource shaped
         # like this one.
         "list_view": "cards",
+        # Adding an event opens its own page (like the bespoke Journal/
+        # Tutorials editors) instead of an inline form at the bottom of the
+        # list — the list is a wall of cards, not a short table, so an
+        # inline form there is easy to miss and awkward to scroll to.
+        "add_via_page": True,
         # sort_order isn't in this list on purpose — events are ordered by
         # datetime_from (see order_by above), never manually reordered, so
         # exposing the column would just be a confusing no-op field. The
@@ -132,7 +124,7 @@ RESOURCES = {
         # 0 on every insert here) rather than being dropped.
         "fields": [
             ("event_name", "text", "Event"),
-            ("attending_as", "text", "Attending As"),
+            ("attending_as", "select", "Attending As"),
             ("datetime_from", "datetime", "Start"),
             ("datetime_to", "datetime", "End"),
             ("status", "select", "Status"),
@@ -140,7 +132,10 @@ RESOURCES = {
             ("link", "url", "Link"),
             ("description", "textarea", "Description"),
         ],
-        "select_options": {"status": ["tentative", "confirmed"]},
+        "select_options": {
+            "attending_as": ["Volunteer", "Speaker", "Attendee", "Organizer"],
+            "status": ["tentative", "confirmed"],
+        },
     },
     "stats": {
         "table": "stat_counters",
@@ -260,9 +255,16 @@ def simple_list(resource):
     return render_template("simple_list.html", **context)
 
 
-@admin_bp.route("/<resource>/create", methods=["POST"])
+@admin_bp.route("/<resource>/create", methods=["GET", "POST"])
 def simple_create(resource):
     config = _get_resource(resource)
+    if request.method == "GET":
+        # Only resources with add_via_page (currently just Events) link here
+        # for GET — others still use the inline form on simple_list.html —
+        # but the route itself works generically for any resource.
+        return render_template(
+            "simple_new.html", resource=resource, config=config, icon_choices=ICON_CHOICES
+        )
     columns = [name for name, _, _ in config["fields"]]
     values = [_parse_field(config, name, ftype) for name, ftype, _ in config["fields"]]
     placeholders = ", ".join(["%s"] * len(columns))

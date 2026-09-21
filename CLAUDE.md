@@ -160,9 +160,9 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   to produce a matching field value. Every admin form needs that hidden
   field or its POST gets a flat 400.
 - `blueprints/admin/simple_crud.py` is one generic, whitelisted CRUD engine
-  covering 8 flat sort_order-based tables (timeline, projects, learning,
-  toolbox, community, links, speaking, stats) instead of 8 near-identical
-  route files. `resource` (the URL segment) is only ever used as a
+  covering flat sort_order-based tables (timeline, projects, learning,
+  toolbox, community, links, stats) instead of one near-identical route
+  file per table. `resource` (the URL segment) is only ever used as a
   `RESOURCES` dict lookup key — never concatenated into SQL — so the
   dynamic table/column names in its generated SQL can't be
   attacker-influenced even though they aren't parameterized (SQL can't

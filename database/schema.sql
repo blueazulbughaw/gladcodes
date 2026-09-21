@@ -228,32 +228,12 @@ SELECT * FROM (SELECT 'GitHub' AS label, 'https://github.com/blueazulbughaw' AS 
 ) AS tmp
 WHERE NOT EXISTS (SELECT 1 FROM page_links);
 
-CREATE TABLE IF NOT EXISTS speaking_events (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    event_name VARCHAR(255) NOT NULL,
-    event_date DATE,
-    link VARCHAR(500),
-    description TEXT,
-    sort_order INT NOT NULL DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-INSERT INTO speaking_events (title, event_name, event_date, link, description, sort_order)
-SELECT * FROM (SELECT
-    'Building in public as a solo founder' AS title,
-    'GDG Manila Meetup' AS event_name,
-    '2026-04-18' AS event_date,
-    NULL AS link,
-    'A talk on why publishing metrics and journal entries in public builds trust faster than a polished landing page.' AS description,
-    1 AS sort_order
-    UNION ALL SELECT
-    'From engineer to TPM to founder', 'Women Techmakers Manila', '2026-06-05', NULL,
-    'Panel discussion on nonlinear career paths in tech.', 2
-) AS tmp
-WHERE NOT EXISTS (SELECT 1 FROM speaking_events);
-
--- Events I plan to attend (as opposed to speaking_events, which are talks I'm
--- giving) — a separate table/page since the two lists don't overlap.
+-- The standalone "Speaking" feature (speaking_events table + /speaking page)
+-- was removed in favor of folding talks into this table via the
+-- attending_as dropdown's "Speaker" option — one events list instead of two
+-- overlapping ones. speaking_events itself is intentionally not dropped
+-- here (schema.sql never removes tables), so any install that already
+-- created it keeps its old rows on disk, just unused by the app now.
 CREATE TABLE IF NOT EXISTS attending_events (
     id INT AUTO_INCREMENT PRIMARY KEY,
     event_name VARCHAR(255) NOT NULL,

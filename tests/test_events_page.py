@@ -1,5 +1,5 @@
 import unittest
-from datetime import date, datetime
+from datetime import datetime
 from unittest.mock import patch
 
 from app import create_app
@@ -21,9 +21,9 @@ def _query_side_effect(rows_for_route):
 
 
 class EventsPageTests(unittest.TestCase):
-    """/speaking (talks I'm giving) and /events (events I'm attending) are
-    separate pages backed by separate tables — neither redirects to the
-    other."""
+    """/events lists everything I'm attending, volunteering at, organizing,
+    or speaking at — the old standalone /speaking page was folded in via
+    the attending_as dropdown."""
 
     def setUp(self):
         app = create_app()
@@ -84,27 +84,9 @@ class EventsPageTests(unittest.TestCase):
         self.assertIn("datetime_from IS NULL", events_sql)
         self.assertIn("datetime_from ASC", events_sql)
 
-    @patch("blueprints.public.routes.query")
-    def test_speaking_page_still_renders_on_its_own(self, mock_query):
-        mock_query.side_effect = _query_side_effect(
-            [
-                {
-                    "id": 1,
-                    "title": "Building in public as a solo founder",
-                    "event_name": "GDG Manila Meetup",
-                    "event_date": date(2026, 4, 18),
-                    "link": None,
-                    "description": "A talk on shipping in public.",
-                    "sort_order": 1,
-                }
-            ]
-        )
-
-        response = self.client.get("/speaking", follow_redirects=False)
-
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Speaking", response.data)
-        self.assertIn(b"Building in public as a solo founder", response.data)
+    def test_speaking_route_removed(self):
+        response = self.client.get("/speaking")
+        self.assertEqual(response.status_code, 404)
 
 
 if __name__ == "__main__":

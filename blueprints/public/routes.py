@@ -195,15 +195,11 @@ def projects_index():
     return render_template("projects.html", projects=projects)
 
 
-@public_bp.route("/speaking")
-def speaking():
-    events = query("SELECT * FROM speaking_events ORDER BY event_date DESC")
-    return render_template("speaking.html", events=events)
-
-
 @public_bp.route("/events")
 def events_index():
-    # Events I'm attending, not speaking at — a separate list from /speaking.
+    # Every event I'm involved in — attending, volunteering, organizing, or
+    # speaking at (see attending_as) — now lives in one list; the separate
+    # /speaking page was folded in here.
     # Nearest date first; undated rows sort to the bottom instead of the top
     # (MySQL's default for ORDER BY ... ASC on a nullable column).
     events = query("SELECT * FROM attending_events ORDER BY datetime_from IS NULL, datetime_from ASC")
@@ -376,7 +372,7 @@ def sitemap():
     base_url = current_app.config["PUBLIC_SITE_URL"].rstrip("/")
     static_endpoints = [
         "public.home", "public.journal_index", "public.projects_index",
-        "public.dashboard", "public.resume", "public.speaking", "public.events_index",
+        "public.dashboard", "public.resume", "public.events_index",
         "public.lets_connect", "public.contact", "public.about", "public.resources",
         "public.tutorials_index", "public.videos_index",
     ]

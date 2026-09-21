@@ -5,7 +5,12 @@
 
 {% block content %}
 <div class="container">
-  <div class="admin-page-header"><h1>{{ config.title }}</h1></div>
+  <div class="admin-page-header">
+    <h1>{{ config.title }}</h1>
+    {% if config.add_via_page %}
+    <a class="btn btn-primary" href="{{ url_for('admin.simple_create', resource=resource) }}">Add an Event</a>
+    {% endif %}
+  </div>
 
   {% if config.list_view == 'cards' %}
   {# Card layout for resources with too many columns to read comfortably as
@@ -90,11 +95,13 @@
   </table>
   {% endif %}
 
+  {% if not config.add_via_page %}
   <h2 class="admin-subheading">Add new</h2>
   <form method="post" action="{{ url_for('admin.simple_create', resource=resource) }}" class="admin-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     {{ fm.render_fields(config, icon_choices) }}
     <button type="submit" class="btn btn-primary">Add</button>
   </form>
+  {% endif %}
 </div>
 {% endblock %}

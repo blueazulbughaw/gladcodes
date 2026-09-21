@@ -1,4 +1,4 @@
-/* Shared chrome for interior pages (journal, projects, speaking, links,
+/* Shared chrome for interior pages (journal, projects, events, links,
    resume, about, resources) — anything not specific to the home page. */
 
 .page-hero {
@@ -171,23 +171,6 @@
 }
 .prose img { border-radius: var(--radius-card); }
 .post-back-link { display: block; max-width: 720px; margin: var(--space-lg) auto 0; }
-
-/* Speaking ---------------------------------------------------------------- */
-.speaking-list { display: flex; flex-direction: column; gap: var(--space-md); }
-.speaking-item {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-md);
-  flex-wrap: wrap;
-}
-.speaking-item-date {
-  font-family: var(--font-heading);
-  font-weight: 700;
-  color: var(--teal);
-  white-space: nowrap;
-}
-.speaking-item-body { flex: 1; min-width: 240px; }
-.speaking-item-event { font-size: 0.85rem; color: rgba(var(--navy-rgb), 0.55); text-transform: uppercase; letter-spacing: 0.04em; }
 
 /* Events (attending) ------------------------------------------------------- */
 .event-list { display: flex; flex-direction: column; gap: var(--space-md); }

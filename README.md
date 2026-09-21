@@ -10,13 +10,13 @@ CMS at `/gc-admin/`. See [CLAUDE.md](CLAUDE.md) for architecture rules.
   timeline, projects, journal preview, dashboard teaser, currently
   learning, toolbox, live GitHub repos, community, newsletter),
   `/journal` (search + tag filter) and `/journal/<slug>`, `/projects`,
-  `/dashboard` (Chart.js), `/resume`, `/speaking`, `/lets-connect`, `/about`
+  `/dashboard` (Chart.js), `/resume`, `/events`, `/lets-connect`, `/about`
   and `/resources` (Phase 2 placeholders).
 - **Admin CMS** at `/gc-admin/` (never linked publicly — see CLAUDE.md):
   JWT-cookie auth with a silent-redirect gate, CSRF-protected editors for
   every Phase 1 content type (NOW card, timeline, projects, journal with
   live Markdown preview, metrics, learning, toolbox, community, links,
-  resume upload, speaking, subscribers + CSV export, settings), and a
+  resume upload, events, subscribers + CSV export, settings), and a
   Phase 2 nav marked "Coming soon" (tutorials, videos, Instagram/Reels,
   PDF library, API keys — schema exists, no UI yet).
 - **SEO**: JSON-LD (Person + WebSite), Open Graph/Twitter tags,
