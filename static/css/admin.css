@@ -73,19 +73,17 @@ a { color: var(--teal); }
 
 /* Authenticated shell -------------------------------------------------- */
 body.admin-body { display: flex; min-height: 100vh; align-items: stretch; }
-/* The sidebar's nav list is hidden behind the hamburger toggle by default,
-   at every screen size — not just mobile. Collapsed, the sidebar is just
-   the brand row (its width shrinks to fit that content, since there's no
-   fixed width unless .is-open); expanded it's a normal vertical link list,
-   never an icon-only grid. */
+/* The toggle behaves oppositely by default on desktop vs. mobile, but both
+   just flip the same .nav-toggled class — desktop starts expanded (nav +
+   greeting visible) and toggling collapses down to just the hamburger
+   button; mobile starts collapsed (hamburger only) and toggling reveals
+   the nav as a vertical list. The greeting only ever hides on desktop —
+   on mobile it stays put regardless of nav state. */
 .admin-sidebar {
   flex-shrink: 0;
   background: var(--navy);
   color: #fff;
   padding: 1.5rem 1rem;
-}
-@media (min-width: 861px) {
-  .admin-sidebar.is-open { width: 220px; }
 }
 .admin-sidebar-brand {
   font-family: var(--font-heading);
@@ -105,7 +103,13 @@ body.admin-body { display: flex; min-height: 100vh; align-items: stretch; }
   padding: 0.25rem;
 }
 .admin-sidebar nav { display: none; flex-direction: column; gap: 0.3rem; margin-top: 1.5rem; }
-.admin-sidebar.is-open nav { display: flex; }
+@media (min-width: 861px) {
+  .admin-sidebar { width: 220px; }
+  .admin-sidebar nav { display: flex; }
+  .admin-sidebar.nav-toggled { width: auto; }
+  .admin-sidebar.nav-toggled .admin-sidebar-greeting { display: none; }
+  .admin-sidebar.nav-toggled nav { display: none; }
+}
 .admin-sidebar nav a {
   display: flex;
   align-items: center;
@@ -147,6 +151,7 @@ body.admin-body { display: flex; min-height: 100vh; align-items: stretch; }
 @media (max-width: 860px) {
   body.admin-body { flex-direction: column; }
   .admin-sidebar { width: 100%; padding: 1rem 1.25rem; }
+  .admin-sidebar.nav-toggled nav { display: flex; }
   .admin-main .container { padding: 1.5rem 1rem; }
 }
 
