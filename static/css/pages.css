@@ -202,6 +202,12 @@
 }
 .event-status--confirmed { background: rgba(59, 165, 93, 0.15); color: var(--success); }
 .event-status--tentative { background: rgba(231, 169, 60, 0.18); color: var(--warn); }
+@media (max-width: 480px) {
+  /* A long multi-day range ("September 24, 2026 – September 26, 2026") can
+     be wider than a narrow phone screen — let it wrap instead of forcing
+     horizontal scroll. */
+  .event-item-date, .event-item-time { white-space: normal; }
+}
 
 /* Links (linktree) --------------------------------------------------------- */
 .headshot-photo {

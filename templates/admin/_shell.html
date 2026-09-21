@@ -2,31 +2,36 @@
 
 {% block admin_nav %}
 <aside class="admin-sidebar">
-  <div class="admin-sidebar-brand">gc-admin</div>
+  <div class="admin-sidebar-brand">
+    <span>gc-admin</span>
+    <button type="button" class="admin-nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
+  </div>
   <nav>
-    <a href="{{ url_for('admin.index') }}" class="{{ 'active' if request.endpoint == 'admin.index' }}">Dashboard</a>
-    <a href="{{ url_for('admin.now_card_editor') }}" class="{{ 'active' if request.endpoint == 'admin.now_card_editor' }}">NOW card</a>
-    <a href="{{ url_for('admin.simple_list', resource='timeline') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'timeline' }}">Timeline</a>
-    <a href="{{ url_for('admin.simple_list', resource='projects') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'projects' }}">Projects</a>
-    <a href="{{ url_for('admin.journal_index') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('admin.journal') }}">Journal</a>
-    <a href="{{ url_for('admin.metrics_index') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('admin.metrics') }}">Metrics</a>
-    <a href="{{ url_for('admin.simple_list', resource='learning') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'learning' }}">Learning</a>
-    <a href="{{ url_for('admin.simple_list', resource='toolbox') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'toolbox' }}">Toolbox</a>
-    <a href="{{ url_for('admin.simple_list', resource='community') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'community' }}">Community</a>
-    <a href="{{ url_for('admin.simple_list', resource='links') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'links' }}">Links</a>
-    <a href="{{ url_for('admin.resume_editor') }}" class="{{ 'active' if request.endpoint == 'admin.resume_editor' }}">Resume</a>
-    <a href="{{ url_for('admin.simple_list', resource='skills') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'skills' }}">Skills</a>
-    <a href="{{ url_for('admin.simple_list', resource='events') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'events' }}">Events</a>
-    <a href="{{ url_for('admin.subscribers_index') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('admin.subscribers') }}">Subscribers</a>
-    <a href="{{ url_for('admin.settings_editor') }}" class="{{ 'active' if request.endpoint == 'admin.settings_editor' }}">Settings</a>
+    <a href="{{ url_for('admin.index') }}" class="{{ 'active' if request.endpoint == 'admin.index' }}"><i data-lucide="home"></i><span>Dashboard</span></a>
+    <a href="{{ url_for('admin.now_card_editor') }}" class="{{ 'active' if request.endpoint == 'admin.now_card_editor' }}"><i data-lucide="clock"></i><span>NOW card</span></a>
+    <a href="{{ url_for('admin.simple_list', resource='timeline') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'timeline' }}"><i data-lucide="flag"></i><span>Timeline</span></a>
+    <a href="{{ url_for('admin.simple_list', resource='projects') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'projects' }}"><i data-lucide="folder"></i><span>Projects</span></a>
+    <a href="{{ url_for('admin.journal_index') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('admin.journal') }}"><i data-lucide="book-open"></i><span>Journal</span></a>
+    <a href="{{ url_for('admin.metrics_index') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('admin.metrics') }}"><i data-lucide="bar-chart-3"></i><span>Metrics</span></a>
+    <a href="{{ url_for('admin.simple_list', resource='learning') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'learning' }}"><i data-lucide="graduation-cap"></i><span>Learning</span></a>
+    <a href="{{ url_for('admin.simple_list', resource='toolbox') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'toolbox' }}"><i data-lucide="wrench"></i><span>Toolbox</span></a>
+    <a href="{{ url_for('admin.simple_list', resource='community') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'community' }}"><i data-lucide="users"></i><span>Community</span></a>
+    <a href="{{ url_for('admin.simple_list', resource='links') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'links' }}"><i data-lucide="link"></i><span>Links</span></a>
+    <a href="{{ url_for('admin.resume_editor') }}" class="{{ 'active' if request.endpoint == 'admin.resume_editor' }}"><i data-lucide="file-text"></i><span>Resume</span></a>
+    <a href="{{ url_for('admin.simple_list', resource='skills') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'skills' }}"><i data-lucide="star"></i><span>Skills</span></a>
+    <a href="{{ url_for('admin.simple_list', resource='events') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'events' }}"><i data-lucide="calendar"></i><span>Events</span></a>
+    <a href="{{ url_for('admin.subscribers_index') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('admin.subscribers') }}"><i data-lucide="mail"></i><span>Subscribers</span></a>
+    <a href="{{ url_for('admin.settings_editor') }}" class="{{ 'active' if request.endpoint == 'admin.settings_editor' }}"><i data-lucide="settings"></i><span>Settings</span></a>
     <hr>
-    <a href="{{ url_for('admin.tutorials_index') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('admin.tutorials') }}">Tutorials</a>
-    <a href="{{ url_for('admin.simple_list', resource='videos') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'videos' }}">Videos</a>
-    <a href="{{ url_for('admin.simple_list', resource='instagram') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'instagram' }}">Instagram/Reels</a>
-    <a href="{{ url_for('admin.pdf_library_index') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('admin.pdf_library') }}">PDF Library</a>
-    <span class="admin-nav-phase2">API keys <em>Soon</em></span>
+    <a href="{{ url_for('admin.tutorials_index') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('admin.tutorials') }}"><i data-lucide="book"></i><span>Tutorials</span></a>
+    <a href="{{ url_for('admin.simple_list', resource='videos') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'videos' }}"><i data-lucide="video"></i><span>Videos</span></a>
+    <a href="{{ url_for('admin.simple_list', resource='instagram') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'instagram' }}"><i data-lucide="image"></i><span>Instagram/Reels</span></a>
+    <a href="{{ url_for('admin.pdf_library_index') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('admin.pdf_library') }}"><i data-lucide="folder-open"></i><span>PDF Library</span></a>
+    <span class="admin-nav-phase2"><i data-lucide="key"></i><span>API keys</span> <em>Soon</em></span>
     <hr>
-    <a href="{{ url_for('admin.logout') }}">Log out</a>
+    <a href="{{ url_for('admin.logout') }}"><i data-lucide="log-out"></i><span>Log out</span></a>
   </nav>
 </aside>
 {% endblock %}

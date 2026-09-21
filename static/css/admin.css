@@ -80,14 +80,33 @@ body.admin-body { display: flex; min-height: 100vh; align-items: stretch; }
   color: #fff;
   padding: 1.5rem 1rem;
 }
-.admin-sidebar-brand { font-family: var(--font-heading); font-weight: 700; margin-bottom: 1.5rem; }
+.admin-sidebar-brand {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.admin-nav-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 0.25rem;
+}
 .admin-sidebar nav { display: flex; flex-direction: column; gap: 0.3rem; }
 .admin-sidebar nav a {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
   color: rgba(255, 255, 255, 0.75);
   padding: 0.5rem 0.6rem;
   border-radius: 8px;
   font-size: 0.9rem;
 }
+.admin-sidebar nav a svg { flex-shrink: 0; width: 18px; height: 18px; }
 .admin-sidebar nav a:hover, .admin-sidebar nav a.active {
   background: rgba(255, 255, 255, 0.12);
   color: #fff;
@@ -99,18 +118,63 @@ body.admin-body { display: flex; min-height: 100vh; align-items: stretch; }
   font-size: 0.8rem;
   padding: 0.4rem 0.6rem;
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
 }
+.admin-nav-phase2 svg { flex-shrink: 0; width: 18px; height: 18px; }
 .admin-nav-phase2 em {
   font-style: normal;
   background: rgba(255, 255, 255, 0.1);
   padding: 0.05rem 0.4rem;
   border-radius: 6px;
   font-size: 0.7rem;
+  margin-left: auto;
 }
 
 .admin-main { flex: 1; min-width: 0; }
 .admin-main .container { max-width: 1000px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+/* Mobile: sidebar nav defaults to a compact icon-only strip instead of the
+   full ~20-link list, which would push page content (e.g. Settings) way
+   below the fold on a phone. The toggle expands it to icons + labels;
+   collapsed, the icons alone stay visible so each section is still
+   identifiable without opening the menu. */
+@media (max-width: 860px) {
+  body.admin-body { flex-direction: column; }
+  .admin-sidebar { width: 100%; padding: 1rem 1.25rem; }
+  .admin-sidebar-brand { margin-bottom: 0; }
+  .admin-nav-toggle { display: flex; }
+
+  .admin-sidebar nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-top: 0.75rem;
+  }
+  .admin-sidebar nav a {
+    flex-direction: column;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    padding: 0.4rem;
+    gap: 0.15rem;
+  }
+  .admin-sidebar nav a span { display: none; }
+  .admin-sidebar hr, .admin-nav-phase2 { display: none; }
+
+  .admin-sidebar.is-open nav { flex-direction: column; flex-wrap: nowrap; }
+  .admin-sidebar.is-open nav a {
+    flex-direction: row;
+    justify-content: flex-start;
+    width: auto;
+    height: auto;
+    padding: 0.5rem 0.6rem;
+  }
+  .admin-sidebar.is-open nav a span { display: inline; }
+  .admin-sidebar.is-open hr, .admin-sidebar.is-open .admin-nav-phase2 { display: flex; }
+
+  .admin-main .container { padding: 1.5rem 1rem; }
+}
 
 .admin-page-header {
   display: flex;
@@ -180,6 +244,14 @@ body.admin-body { display: flex; min-height: 100vh; align-items: stretch; }
 .admin-table tr:last-child td { border-bottom: none; }
 .admin-table-compact th, .admin-table-compact td { padding: 0.5rem 0.7rem; font-size: 0.85rem; }
 .admin-table-actions { display: flex; gap: 0.75rem; align-items: center; white-space: nowrap; }
+/* Scroll sideways instead of squeezing columns unreadably thin or breaking
+   the page layout — every admin list table (Journal, Tutorials, PDF
+   Library, Subscribers, and every simple_crud table-view resource) uses
+   this one class, so this covers all of them without touching each
+   template. */
+@media (max-width: 700px) {
+  .admin-table { display: block; overflow-x: auto; white-space: nowrap; }
+}
 
 .btn-link {
   background: none;
@@ -243,6 +315,8 @@ body.admin-body { display: flex; min-height: 100vh; align-items: stretch; }
 .admin-field input[type="url"],
 .admin-field input[type="number"],
 .admin-field input[type="date"],
+.admin-field input[type="time"],
+.admin-field input[type="datetime-local"],
 .admin-field input[type="file"],
 .admin-field select,
 .admin-field textarea {
