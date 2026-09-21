@@ -73,30 +73,39 @@ a { color: var(--teal); }
 
 /* Authenticated shell -------------------------------------------------- */
 body.admin-body { display: flex; min-height: 100vh; align-items: stretch; }
+/* The sidebar's nav list is hidden behind the hamburger toggle by default,
+   at every screen size — not just mobile. Collapsed, the sidebar is just
+   the brand row (its width shrinks to fit that content, since there's no
+   fixed width unless .is-open); expanded it's a normal vertical link list,
+   never an icon-only grid. */
 .admin-sidebar {
-  width: 220px;
   flex-shrink: 0;
   background: var(--navy);
   color: #fff;
   padding: 1.5rem 1rem;
 }
+@media (min-width: 861px) {
+  .admin-sidebar.is-open { width: 220px; }
+}
 .admin-sidebar-brand {
   font-family: var(--font-heading);
   font-weight: 700;
-  margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
+  white-space: nowrap;
 }
 .admin-nav-toggle {
-  display: none;
+  display: flex;
   background: none;
   border: none;
   color: #fff;
   cursor: pointer;
   padding: 0.25rem;
 }
-.admin-sidebar nav { display: flex; flex-direction: column; gap: 0.3rem; }
+.admin-sidebar nav { display: none; flex-direction: column; gap: 0.3rem; margin-top: 1.5rem; }
+.admin-sidebar.is-open nav { display: flex; }
 .admin-sidebar nav a {
   display: flex;
   align-items: center;
@@ -105,6 +114,7 @@ body.admin-body { display: flex; min-height: 100vh; align-items: stretch; }
   padding: 0.5rem 0.6rem;
   border-radius: 8px;
   font-size: 0.9rem;
+  white-space: nowrap;
 }
 .admin-sidebar nav a svg { flex-shrink: 0; width: 18px; height: 18px; }
 .admin-sidebar nav a:hover, .admin-sidebar nav a.active {
@@ -134,45 +144,9 @@ body.admin-body { display: flex; min-height: 100vh; align-items: stretch; }
 .admin-main { flex: 1; min-width: 0; }
 .admin-main .container { max-width: 1000px; margin: 0 auto; padding: 2rem 1.5rem; }
 
-/* Mobile: sidebar nav defaults to a compact icon-only strip instead of the
-   full ~20-link list, which would push page content (e.g. Settings) way
-   below the fold on a phone. The toggle expands it to icons + labels;
-   collapsed, the icons alone stay visible so each section is still
-   identifiable without opening the menu. */
 @media (max-width: 860px) {
   body.admin-body { flex-direction: column; }
   .admin-sidebar { width: 100%; padding: 1rem 1.25rem; }
-  .admin-sidebar-brand { margin-bottom: 0; }
-  .admin-nav-toggle { display: flex; }
-
-  .admin-sidebar nav {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-    margin-top: 0.75rem;
-  }
-  .admin-sidebar nav a {
-    flex-direction: column;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    padding: 0.4rem;
-    gap: 0.15rem;
-  }
-  .admin-sidebar nav a span { display: none; }
-  .admin-sidebar hr, .admin-nav-phase2 { display: none; }
-
-  .admin-sidebar.is-open nav { flex-direction: column; flex-wrap: nowrap; }
-  .admin-sidebar.is-open nav a {
-    flex-direction: row;
-    justify-content: flex-start;
-    width: auto;
-    height: auto;
-    padding: 0.5rem 0.6rem;
-  }
-  .admin-sidebar.is-open nav a span { display: inline; }
-  .admin-sidebar.is-open hr, .admin-sidebar.is-open .admin-nav-phase2 { display: flex; }
-
   .admin-main .container { padding: 1.5rem 1rem; }
 }
 
