@@ -63,12 +63,12 @@
   {# Generic card layout, driven entirely by config.fields + card_title_field
      — works for any simple_crud resource without per-resource markup. #}
   {% macro generic_card(row) %}
-  <div class="card admin-card-item">
+  <div class="card admin-card-item"{% if config.reorderable %} data-id="{{ row.id }}"{% endif %}>
     <div class="admin-card-item-header">
       <h3>{{ row[config.card_title_field] }}</h3>
     </div>
     {% for name, ftype, label in config.fields %}
-      {% if name == config.card_title_field or name == 'sort_order' %}
+      {% if name == config.card_title_field %}
       {% elif ftype == 'textarea' %}
         {% if row[name] %}<p class="admin-card-item-desc">{{ row[name] }}</p>{% endif %}
       {% elif ftype == 'checkbox' %}
@@ -84,7 +84,6 @@
       {% endif %}
     {% endfor %}
     <div class="admin-card-item-footer">
-      <span class="admin-meta">Sort order: {{ row.sort_order }}</span>
       <div class="admin-table-actions">
         <a href="{{ url_for('admin.simple_edit', resource=resource, row_id=row.id) }}">Edit</a>
         <form method="post" action="{{ url_for('admin.simple_delete', resource=resource, row_id=row.id) }}" onsubmit="return confirm('Delete this entry?');">
@@ -96,7 +95,9 @@
   </div>
   {% endmacro %}
 
-  <div class="admin-card-grid">
+  {% if config.reorderable %}<p class="admin-meta admin-reorder-hint">Drag cards to reorder.</p>{% endif %}
+  <div class="admin-card-grid{{ ' admin-card-grid--reorderable' if config.reorderable }}"
+       {% if config.reorderable %}data-reorder-url="{{ url_for('admin.simple_reorder', resource=resource) }}" data-csrf-token="{{ csrf_token }}"{% endif %}>
     {% for row in rows %}{{ generic_card(row) }}{% else %}
     <p class="admin-empty">Nothing here yet.</p>
     {% endfor %}
@@ -144,4 +145,11 @@
   </form>
   {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if config.reorderable %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js" defer></script>
+<script src="{{ url_for('static', filename='js/admin-reorder.js') }}" defer></script>
+{% endif %}
 {% endblock %}

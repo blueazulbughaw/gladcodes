@@ -11,7 +11,7 @@ from datetime import date, datetime, time
 
 from flask import abort, redirect, render_template, request, url_for
 
-from database.db import execute, query, query_one, utc_now
+from database.db import execute, query, query_one, transaction, utc_now
 
 from . import admin_bp
 
@@ -36,12 +36,15 @@ RESOURCES = {
         "list_view": "cards",
         "add_via_page": True,
         "card_title_field": "title",
+        # Drag cards to reorder instead of typing a sort_order number — see
+        # simple_reorder() below. The column itself stays (schema.sql never
+        # drops columns); it's just no longer a form field.
+        "reorderable": True,
         "fields": [
             ("month_label", "text", "Month label"),
             ("title", "text", "Title"),
             ("description", "textarea", "Description"),
             ("is_done", "checkbox", "Done"),
-            ("sort_order", "int", "Sort order"),
         ],
     },
     "projects": {
@@ -51,6 +54,7 @@ RESOURCES = {
         "list_view": "cards",
         "add_via_page": True,
         "card_title_field": "title",
+        "reorderable": True,
         "fields": [
             ("title", "text", "Title"),
             ("description", "textarea", "Description"),
@@ -58,7 +62,6 @@ RESOURCES = {
             ("status", "select", "Status"),
             ("progress_pct", "int", "Progress %"),
             ("url", "url", "Link"),
-            ("sort_order", "int", "Sort order"),
         ],
         "select_options": {"status": ["in_progress", "experimental", "launched"]},
     },
@@ -69,10 +72,10 @@ RESOURCES = {
         "list_view": "cards",
         "add_via_page": True,
         "card_title_field": "skill",
+        "reorderable": True,
         "fields": [
             ("skill", "text", "Skill"),
             ("progress_pct", "int", "Progress %"),
-            ("sort_order", "int", "Sort order"),
         ],
     },
     "toolbox": {
@@ -82,11 +85,11 @@ RESOURCES = {
         "list_view": "cards",
         "add_via_page": True,
         "card_title_field": "name",
+        "reorderable": True,
         "fields": [
             ("name", "text", "Name"),
             ("icon", "icon", "Icon"),
             ("url", "url", "URL"),
-            ("sort_order", "int", "Sort order"),
         ],
     },
     "community": {
@@ -96,11 +99,11 @@ RESOURCES = {
         "list_view": "cards",
         "add_via_page": True,
         "card_title_field": "org_name",
+        "reorderable": True,
         "fields": [
             ("org_name", "text", "Organization"),
             ("url", "url", "URL"),
             ("icon", "icon", "Icon"),
-            ("sort_order", "int", "Sort order"),
         ],
     },
     "links": {
@@ -110,10 +113,10 @@ RESOURCES = {
         "list_view": "cards",
         "add_via_page": True,
         "card_title_field": "label",
+        "reorderable": True,
         "fields": [
             ("label", "text", "Label"),
             ("url", "url", "URL"),
-            ("sort_order", "int", "Sort order"),
             ("is_visible", "checkbox", "Visible"),
         ],
     },
@@ -173,10 +176,10 @@ RESOURCES = {
         "list_view": "cards",
         "add_via_page": True,
         "card_title_field": "skill_name",
+        "reorderable": True,
         "fields": [
             ("category", "text", "Category (e.g. Engineering)"),
             ("skill_name", "text", "Skill"),
-            ("sort_order", "int", "Sort order"),
         ],
     },
     "videos": {
@@ -186,12 +189,12 @@ RESOURCES = {
         "list_view": "cards",
         "add_via_page": True,
         "card_title_field": "title",
+        "reorderable": True,
         "fields": [
             ("title", "text", "Title"),
             ("youtube_url", "url", "YouTube URL"),
             ("description", "textarea", "Description"),
             ("published_at", "date", "Published date"),
-            ("sort_order", "int", "Sort order"),
         ],
     },
     "instagram": {
@@ -324,3 +327,20 @@ def simple_delete(resource, row_id):
     config = _get_resource(resource)
     execute(f"DELETE FROM {config['table']} WHERE id = %s", (row_id,))
     return redirect(url_for("admin.simple_list", resource=resource))
+
+
+@admin_bp.route("/<resource>/reorder", methods=["POST"])
+def simple_reorder(resource):
+    """Persists a drag-and-drop card reorder as new sort_order values —
+    the dragged-to DOM order, sent as repeated `id` fields, becomes each
+    row's new sort_order (0-indexed)."""
+    config = _get_resource(resource)
+    if not config.get("reorderable"):
+        abort(404)
+    ids = request.form.getlist("id")
+    with transaction() as cursor:
+        for index, row_id in enumerate(ids):
+            cursor.execute(
+                f"UPDATE {config['table']} SET sort_order = %s WHERE id = %s", (index, row_id)
+            )
+    return ("", 204)

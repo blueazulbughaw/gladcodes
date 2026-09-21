@@ -289,6 +289,10 @@ body.admin-body { display: flex; min-height: 100vh; align-items: stretch; }
   padding-top: 0.6rem;
   border-top: 1px solid rgba(var(--navy-rgb), 0.08);
 }
+.admin-reorder-hint { margin: 0 0 1rem; }
+.admin-card-grid--reorderable .admin-card-item { cursor: grab; }
+.admin-card-grid--reorderable .admin-card-item:active { cursor: grabbing; }
+.admin-card-item--ghost { opacity: 0.4; }
 
 /* Forms -------------------------------------------------------------------- */
 .admin-form { display: flex; flex-direction: column; gap: 1rem; max-width: 640px; }
