@@ -100,7 +100,6 @@ def index():
 
     return render_template(
         "index.html",
-        user=g.admin_user,
         token_exp=g.token_exp,
         post_count=post_count,
         subscriber_count=subscriber_count,
