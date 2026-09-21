@@ -8,16 +8,14 @@
   <div class="admin-page-header">
     <h1>{{ config.title }}</h1>
     {% if config.add_via_page %}
-    <a class="btn btn-primary" href="{{ url_for('admin.simple_create', resource=resource) }}">Add an Event</a>
+    <a class="btn btn-primary" href="{{ url_for('admin.simple_create', resource=resource) }}">{{ config.add_button_label or ('Add ' ~ config.title) }}</a>
     {% endif %}
   </div>
 
-  {% if config.list_view == 'cards' %}
-  {# Card layout for resources with too many columns to read comfortably as
-     a table (currently just Events). Written against this resource's exact
-     field names rather than looping config.fields generically like the
-     table branch below — extend this block by hand if another resource
-     ever opts into list_view: 'cards'. #}
+  {% if config.list_view == 'event_cards' %}
+  {# Events-only: has its own upcoming/past split and TBA-date handling
+     that the generic card macro below can't express, so it's still
+     written against this resource's exact field names. #}
   {% macro event_card(row) %}
   <div class="card admin-card-item">
     <div class="admin-card-item-header">
@@ -59,6 +57,48 @@
   <div class="admin-card-grid">
     {% for row in past_rows %}{{ event_card(row) }}{% else %}
     <p class="admin-empty">No past events yet.</p>
+    {% endfor %}
+  </div>
+  {% elif config.list_view == 'cards' %}
+  {# Generic card layout, driven entirely by config.fields + card_title_field
+     — works for any simple_crud resource without per-resource markup. #}
+  {% macro generic_card(row) %}
+  <div class="card admin-card-item">
+    <div class="admin-card-item-header">
+      <h3>{{ row[config.card_title_field] }}</h3>
+    </div>
+    {% for name, ftype, label in config.fields %}
+      {% if name == config.card_title_field or name == 'sort_order' %}
+      {% elif ftype == 'textarea' %}
+        {% if row[name] %}<p class="admin-card-item-desc">{{ row[name] }}</p>{% endif %}
+      {% elif ftype == 'checkbox' %}
+        <div class="admin-card-item-row"><strong>{{ label }}:</strong> {{ 'Yes' if row[name] else 'No' }}</div>
+      {% elif ftype == 'url' %}
+        {% if row[name] %}<div class="admin-card-item-row"><a href="{{ row[name] }}" target="_blank" rel="noopener">{{ label }} &rarr;</a></div>{% endif %}
+      {% elif ftype == 'date' %}
+        {% if row[name] %}<div class="admin-card-item-row"><strong>{{ label }}:</strong> {{ row[name]|human_date }}</div>{% endif %}
+      {% elif ftype == 'select' %}
+        {% if row[name] %}<span class="admin-status admin-status--{{ row[name] }}">{{ row[name].replace('_', ' ') }}</span>{% endif %}
+      {% else %}
+        {% if row[name] is not none and row[name] != '' %}<div class="admin-card-item-row"><strong>{{ label }}:</strong> {{ row[name] }}</div>{% endif %}
+      {% endif %}
+    {% endfor %}
+    <div class="admin-card-item-footer">
+      <span class="admin-meta">Sort order: {{ row.sort_order }}</span>
+      <div class="admin-table-actions">
+        <a href="{{ url_for('admin.simple_edit', resource=resource, row_id=row.id) }}">Edit</a>
+        <form method="post" action="{{ url_for('admin.simple_delete', resource=resource, row_id=row.id) }}" onsubmit="return confirm('Delete this entry?');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button type="submit" class="btn-link btn-link-danger">Delete</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endmacro %}
+
+  <div class="admin-card-grid">
+    {% for row in rows %}{{ generic_card(row) }}{% else %}
+    <p class="admin-empty">Nothing here yet.</p>
     {% endfor %}
   </div>
   {% else %}

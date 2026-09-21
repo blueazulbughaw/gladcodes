@@ -33,6 +33,9 @@ RESOURCES = {
         "table": "timeline_milestones",
         "title": "Timeline",
         "order_by": "sort_order",
+        "list_view": "cards",
+        "add_via_page": True,
+        "card_title_field": "title",
         "fields": [
             ("month_label", "text", "Month label"),
             ("title", "text", "Title"),
@@ -45,6 +48,9 @@ RESOURCES = {
         "table": "projects",
         "title": "Projects",
         "order_by": "sort_order",
+        "list_view": "cards",
+        "add_via_page": True,
+        "card_title_field": "title",
         "fields": [
             ("title", "text", "Title"),
             ("description", "textarea", "Description"),
@@ -60,6 +66,9 @@ RESOURCES = {
         "table": "learning_progress",
         "title": "Currently Learning",
         "order_by": "sort_order",
+        "list_view": "cards",
+        "add_via_page": True,
+        "card_title_field": "skill",
         "fields": [
             ("skill", "text", "Skill"),
             ("progress_pct", "int", "Progress %"),
@@ -70,6 +79,9 @@ RESOURCES = {
         "table": "toolbox_items",
         "title": "Toolbox",
         "order_by": "sort_order",
+        "list_view": "cards",
+        "add_via_page": True,
+        "card_title_field": "name",
         "fields": [
             ("name", "text", "Name"),
             ("icon", "icon", "Icon"),
@@ -81,6 +93,9 @@ RESOURCES = {
         "table": "community_links",
         "title": "Community",
         "order_by": "sort_order",
+        "list_view": "cards",
+        "add_via_page": True,
+        "card_title_field": "org_name",
         "fields": [
             ("org_name", "text", "Organization"),
             ("url", "url", "URL"),
@@ -92,6 +107,9 @@ RESOURCES = {
         "table": "page_links",
         "title": "Links",
         "order_by": "sort_order",
+        "list_view": "cards",
+        "add_via_page": True,
+        "card_title_field": "label",
         "fields": [
             ("label", "text", "Label"),
             ("url", "url", "URL"),
@@ -106,17 +124,17 @@ RESOURCES = {
         # dated row instead of floating to the top as MySQL's NULL-first
         # default.
         "order_by": "datetime_from IS NULL, datetime_from ASC",
-        # Events has too many columns for a readable table — render the list
-        # as cards instead. simple_list.html's card branch is written
-        # against this resource's specific field names, not generic like the
-        # table branch, so this flag only makes sense for a resource shaped
-        # like this one.
-        "list_view": "cards",
+        # Events has its own upcoming/past split and TBA-date handling that
+        # the generic "cards" card (used by Timeline, Projects, etc.) can't
+        # express, so it gets a distinct list_view with hand-written markup
+        # in simple_list.html rather than the generic card macro.
+        "list_view": "event_cards",
         # Adding an event opens its own page (like the bespoke Journal/
         # Tutorials editors) instead of an inline form at the bottom of the
         # list — the list is a wall of cards, not a short table, so an
         # inline form there is easy to miss and awkward to scroll to.
         "add_via_page": True,
+        "add_button_label": "Add an Event",
         # sort_order isn't in this list on purpose — events are ordered by
         # datetime_from (see order_by above), never manually reordered, so
         # exposing the column would just be a confusing no-op field. The
@@ -152,6 +170,9 @@ RESOURCES = {
         "table": "skills",
         "title": "Skills",
         "order_by": "sort_order",
+        "list_view": "cards",
+        "add_via_page": True,
+        "card_title_field": "skill_name",
         "fields": [
             ("category", "text", "Category (e.g. Engineering)"),
             ("skill_name", "text", "Skill"),
@@ -162,6 +183,9 @@ RESOURCES = {
         "table": "videos",
         "title": "Videos",
         "order_by": "sort_order",
+        "list_view": "cards",
+        "add_via_page": True,
+        "card_title_field": "title",
         "fields": [
             ("title", "text", "Title"),
             ("youtube_url", "url", "YouTube URL"),
@@ -234,8 +258,8 @@ def _parse_field(config, field_name, field_type):
 
 def _split_upcoming_past(rows):
     """Split date-ordered rows into upcoming (including undated/TBA) and
-    past, nearest-first in both directions — events-only (list_view: cards),
-    same as the card template's field names."""
+    past, nearest-first in both directions — events-only
+    (list_view: event_cards), same as the card template's field names."""
     now = utc_now()
     upcoming, past = [], []
     for row in rows:
@@ -250,7 +274,7 @@ def simple_list(resource):
     config = _get_resource(resource)
     rows = query(f"SELECT * FROM {config['table']} ORDER BY {config['order_by']}")
     context = {"resource": resource, "config": config, "rows": rows, "icon_choices": ICON_CHOICES}
-    if config.get("list_view") == "cards":
+    if config.get("list_view") == "event_cards":
         context["upcoming_rows"], context["past_rows"] = _split_upcoming_past(rows)
     return render_template("simple_list.html", **context)
 

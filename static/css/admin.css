@@ -251,6 +251,9 @@ body.admin-body { display: flex; min-height: 100vh; align-items: stretch; }
 .admin-status--published { background: rgba(59, 165, 93, 0.16); color: var(--success); }
 .admin-status--tentative { background: rgba(231, 169, 60, 0.16); color: #9a6c14; }
 .admin-status--confirmed { background: rgba(59, 165, 93, 0.16); color: var(--success); }
+.admin-status--in_progress { background: rgba(63, 136, 197, 0.16); color: var(--ocean); }
+.admin-status--experimental { background: rgba(231, 169, 60, 0.16); color: #9a6c14; }
+.admin-status--launched { background: rgba(59, 165, 93, 0.16); color: var(--success); }
 
 /* Card list (resources with too many columns to read as a table) --------- */
 .admin-card-grid {

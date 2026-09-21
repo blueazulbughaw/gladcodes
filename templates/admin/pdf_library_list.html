@@ -8,27 +8,29 @@
     <h1>PDF Library</h1>
     <a class="btn btn-primary" href="{{ url_for('admin.pdf_library_new') }}">Upload PDF</a>
   </div>
-  <table class="admin-table">
-    <thead><tr><th>Title</th><th>Product?</th><th>Price</th><th>File</th><th></th></tr></thead>
-    <tbody>
-      {% for asset in assets %}
-      <tr>
-        <td>{{ asset.title }}</td>
-        <td>{{ 'Yes' if asset.is_product else 'No (free)' }}</td>
-        <td>{{ '$%.2f' % asset.price if asset.price is not none else '—' }}</td>
-        <td><a href="{{ url_for('static', filename='uploads/' + asset.file_path) }}" target="_blank" rel="noopener">view</a></td>
-        <td class="admin-table-actions">
+  <div class="admin-card-grid">
+    {% for asset in assets %}
+    <div class="card admin-card-item">
+      <div class="admin-card-item-header">
+        <h3>{{ asset.title }}</h3>
+      </div>
+      <div class="admin-card-item-row"><strong>Product?</strong> {{ 'Yes' if asset.is_product else 'No (free)' }}</div>
+      {% if asset.price is not none %}<div class="admin-card-item-row"><strong>Price:</strong> ${{ '%.2f' % asset.price }}</div>{% endif %}
+      <div class="admin-card-item-row"><a href="{{ url_for('static', filename='uploads/' + asset.file_path) }}" target="_blank" rel="noopener">View file &rarr;</a></div>
+      {% if asset.description %}<p class="admin-card-item-desc">{{ asset.description }}</p>{% endif %}
+      <div class="admin-card-item-footer">
+        <div class="admin-table-actions">
           <a href="{{ url_for('admin.pdf_library_edit', asset_id=asset.id) }}">Edit</a>
           <form method="post" action="{{ url_for('admin.pdf_library_delete', asset_id=asset.id) }}" onsubmit="return confirm('Delete this PDF?');">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <button type="submit" class="btn-link btn-link-danger">Delete</button>
           </form>
-        </td>
-      </tr>
-      {% else %}
-      <tr><td colspan="5" class="admin-empty">No PDFs uploaded yet.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <p class="admin-empty">No PDFs uploaded yet.</p>
+    {% endfor %}
+  </div>
 </div>
 {% endblock %}

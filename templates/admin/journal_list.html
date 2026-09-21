@@ -8,27 +8,29 @@
     <h1>Journal</h1>
     <a class="btn btn-primary" href="{{ url_for('admin.journal_new') }}">New post</a>
   </div>
-  <table class="admin-table">
-    <thead><tr><th>Title</th><th>Status</th><th>Published</th><th>Tags</th><th></th></tr></thead>
-    <tbody>
-      {% for post in posts %}
-      <tr>
-        <td>{{ post.title }}</td>
-        <td><span class="admin-status admin-status--{{ post.status }}">{{ post.status }}</span></td>
-        <td>{{ post.published_at|human_date if post.published_at else '—' }}</td>
-        <td>{{ post.tags or '' }}</td>
-        <td class="admin-table-actions">
+  <div class="admin-card-grid">
+    {% for post in posts %}
+    <div class="card admin-card-item">
+      <div class="admin-card-item-header">
+        <h3>{{ post.title }}</h3>
+        <span class="admin-status admin-status--{{ post.status }}">{{ post.status }}</span>
+      </div>
+      <div class="admin-card-item-row"><strong>Published:</strong> {{ post.published_at|human_date if post.published_at else '—' }}</div>
+      {% if post.tags %}<div class="admin-card-item-row"><strong>Tags:</strong> {{ post.tags }}</div>{% endif %}
+      {% if post.excerpt %}<p class="admin-card-item-desc">{{ post.excerpt }}</p>{% endif %}
+      <div class="admin-card-item-footer">
+        <div class="admin-table-actions">
           <a href="{{ url_for('admin.journal_edit', post_id=post.id) }}">Edit</a>
           <form method="post" action="{{ url_for('admin.journal_delete', post_id=post.id) }}" onsubmit="return confirm('Delete this post?');">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <button type="submit" class="btn-link btn-link-danger">Delete</button>
           </form>
-        </td>
-      </tr>
-      {% else %}
-      <tr><td colspan="5" class="admin-empty">No posts yet.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <p class="admin-empty">No posts yet.</p>
+    {% endfor %}
+  </div>
 </div>
 {% endblock %}
