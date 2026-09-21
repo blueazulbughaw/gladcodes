@@ -14,6 +14,14 @@
   Sortable.create(grid, {
     animation: 150,
     ghostClass: "admin-card-item--ghost",
+    // Touch-drag starting instantly hijacks normal page scrolling (a swipe
+    // on a card becomes a drag instead of a scroll) — require a long press
+    // before a touch drag begins. Mouse users aren't affected: clicking
+    // and holding was never how they scroll, so delayOnTouchOnly keeps
+    // mouse drags starting immediately.
+    delay: 200,
+    delayOnTouchOnly: true,
+    touchStartThreshold: 5,
     onEnd: function () {
       var ids = Array.prototype.map.call(
         grid.querySelectorAll(".admin-card-item"),
