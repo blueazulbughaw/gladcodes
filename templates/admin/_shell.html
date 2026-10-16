@@ -20,6 +20,7 @@
     <a href="{{ url_for('admin.simple_list', resource='community') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'community' }}"><i data-lucide="users"></i><span>Community</span></a>
     <a href="{{ url_for('admin.simple_list', resource='links') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'links' }}"><i data-lucide="link"></i><span>Links</span></a>
     <a href="{{ url_for('admin.resume_editor') }}" class="{{ 'active' if request.endpoint == 'admin.resume_editor' }}"><i data-lucide="file-text"></i><span>Resume</span></a>
+    <a href="{{ url_for('admin.simple_list', resource='resume_timeline') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'resume_timeline' }}"><i data-lucide="history"></i><span>Resume Timeline</span></a>
     <a href="{{ url_for('admin.simple_list', resource='skills') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'skills' }}"><i data-lucide="star"></i><span>Skills</span></a>
     <a href="{{ url_for('admin.simple_list', resource='events') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'events' }}"><i data-lucide="calendar"></i><span>Events</span></a>
     <a href="{{ url_for('admin.subscribers_index') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('admin.subscribers') }}"><i data-lucide="mail"></i><span>Subscribers</span></a>

@@ -298,6 +298,71 @@ INSERT INTO resume_meta (id, file_path, last_updated)
 SELECT * FROM (SELECT 1 AS id, NULL AS file_path, '2026-06-01' AS last_updated) AS tmp
 WHERE NOT EXISTS (SELECT 1 FROM resume_meta WHERE id = 1);
 
+-- Career history for the /resume animated timeline. entry_type is purely
+-- presentational (dot color + icon) — "side_venture" rows (WanderDeals,
+-- GoGoBaon) are deliberately listed after the day job they ran alongside
+-- rather than strictly by start date, since they read as a parallel track,
+-- not the next sequential job.
+CREATE TABLE IF NOT EXISTS resume_timeline (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    period_label VARCHAR(100) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    company VARCHAR(255) NOT NULL,
+    entry_type ENUM('education', 'full_time', 'contract', 'side_venture', 'gap') NOT NULL DEFAULT 'full_time',
+    summary TEXT,
+    sort_order INT NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO resume_timeline (period_label, title, company, entry_type, summary, sort_order)
+SELECT * FROM (SELECT
+    '2002 - 2007' AS period_label,
+    'B.S. Computer Engineering' AS title,
+    'Mapua Institute of Technology' AS company,
+    'education' AS entry_type,
+    'Where it all started - the engineering fundamentals I still lean on today.' AS summary,
+    1 AS sort_order
+    UNION ALL SELECT
+    'Jun 2007 - Sep 2007', 'Associate Consultant, Developer', 'Oracle (Philippines) Corporation', 'full_time',
+    'Selected for a competitive developer training program, learning COBOL and the Oracle Customer Care and Billing platform from the ground up.', 2
+    UNION ALL SELECT
+    'Mar 2008 - Dec 2008', 'IT Engineer / Software Programmer', 'Digital Information Technology (Japan)', 'full_time',
+    'Led small teams building an exam system, a social networking site, and a Visual C++ data-comparison tool for hospital equipment - entirely in Japanese. The contract wound down with the 2008 financial crisis.', 3
+    UNION ALL SELECT
+    'May 2009 - Aug 2009', 'Japanese SAP Support Engineer', 'Hewlett-Packard Philippines', 'contract',
+    'Supported SAP issues for Japanese enterprise clients.', 4
+    UNION ALL SELECT
+    'Aug 2009 - Mar 2011', 'Programmer (Web Developer)', 'Mozcom Inc.', 'full_time',
+    'Built Drupal and OSCommerce sites for well-known Philippine brands, working directly with clients from requirements to launch.', 5
+    UNION ALL SELECT
+    'Mar 2011 - Aug 2014', 'euHReka Software Engineer', 'NGA Human Resources (NorthgateArinso)', 'full_time',
+    'Front-end engineer on a global cloud HR platform. Built the Enterprise Content Management and Recruitment modules, and mentored junior engineers.', 6
+    UNION ALL SELECT
+    '2014 - 2016', 'Web Developer / Technical Support Engineer', 'Freelance + NetSuite Philippines', 'contract',
+    'Freelanced on WordPress and Drupal builds for US and Australian clients, while supporting the NetSuite e-commerce platform for UK retailers.', 7
+    UNION ALL SELECT
+    'May 2016 - Feb 2021', 'Engineer II - Technical Program Manager and Engineering Lead', 'American Express International, Inc.', 'full_time',
+    'Grew from hands-on engineer into leading delivery for about 15 engineers across 5 time zones - scrum master, AEM migration lead, and the one presenting results to directors and the VP of Technology. Earned multiple Blue Rewards along the way. Relocated during COVID-19.', 8
+    UNION ALL SELECT
+    'May 2016 - Jul 2017', 'CTO', 'WanderDeals (side venture)', 'side_venture',
+    'Sole technical lead on a travel-activities booking platform, built alongside the day job.', 9
+    UNION ALL SELECT
+    'May 2018 - Jul 2019', 'CTO', 'GoGoBaon (side venture)', 'side_venture',
+    'Built the website, ordering system, and payment integration for a home-cook meal delivery business in Hong Kong.', 10
+    UNION ALL SELECT
+    'Jun 2021 - Jun 2022', 'Relocation and Professional Development', 'United States', 'gap',
+    'Relocated to the US and spent the year leveling up - React, Node.js, and planning what came next.', 11
+    UNION ALL SELECT
+    'Apr 2023 - Jun 2023', 'CRM Architect', 'Confidential Legal Funding Company (NDA)', 'contract',
+    'Architected a Zoho CRM build-out with Twilio SMS integration, and co-built a WordPress provider directory used by personal-injury attorneys - during a CPT-authorized period of the MBA.', 12
+    UNION ALL SELECT
+    'Oct 2024 - Jun 2026', 'MBA, Management Information Systems', 'International American University', 'education',
+    'Paired the engineering background with a business lens - the final step before going out on my own.', 13
+    UNION ALL SELECT
+    'Jul 2026 - Present', 'Founder and Principal Consultant', 'Genri Labs LLC', 'full_time',
+    'Now running my own consultancy - CRM architecture and automation for Hi-Tech Builders, e-commerce operations for Knobhill Corporation, plus my own products, including this site.', 14
+) AS tmp
+WHERE NOT EXISTS (SELECT 1 FROM resume_timeline);
+
 -- Flat, category+skill_name rows — grouped by category (in sort_order,
 -- first-appearance order) when rendered, same pattern as timeline_milestones
 -- grouping by month. Admin can add a brand-new category just by typing one

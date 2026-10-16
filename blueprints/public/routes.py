@@ -228,13 +228,16 @@ def lets_connect():
 @public_bp.route("/resume")
 def resume():
     meta = query_one("SELECT * FROM resume_meta WHERE id = 1")
+    timeline = query("SELECT * FROM resume_timeline ORDER BY sort_order")
 
     skill_rows = query("SELECT * FROM skills ORDER BY sort_order")
     skills_by_category = OrderedDict()
     for row in skill_rows:
         skills_by_category.setdefault(row["category"], []).append(row["skill_name"])
 
-    return render_template("resume.html", meta=meta, skills_by_category=skills_by_category)
+    return render_template(
+        "resume.html", meta=meta, timeline=timeline, skills_by_category=skills_by_category
+    )
 
 
 @public_bp.route("/contact", methods=["GET", "POST"])

@@ -247,42 +247,83 @@
 }
 .link-button:hover { transform: translateY(-2px); box-shadow: var(--shadow-card-hover); text-decoration: none; }
 
-/* Resume ------------------------------------------------------------------- */
-.resume-layout {
-  display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap: var(--space-lg);
-  align-items: start;
+/* Resume: career timeline ------------------------------------------------- */
+.career-timeline {
+  position: relative;
+  max-width: 880px;
+  margin: 0 auto;
+  padding-top: var(--space-xs);
 }
-.resume-preview {
-  border-radius: var(--radius-card);
-  overflow: hidden;
-  box-shadow: var(--shadow-card);
-  min-height: 480px;
-  background: var(--card);
+.career-timeline::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 19px;
+  width: 2px;
+  background: rgba(var(--navy-rgb), 0.12);
 }
-.resume-preview iframe { width: 100%; height: 640px; border: none; display: block; }
-.resume-placeholder {
+.career-timeline-item {
+  position: relative;
+  padding-left: 56px;
+  margin-bottom: var(--space-md);
+}
+.career-timeline-item:last-child { margin-bottom: 0; }
+.career-timeline-dot {
+  position: absolute;
+  top: 1.4rem;
+  left: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--teal);
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 480px;
-  color: rgba(var(--navy-rgb), 0.5);
-  text-align: center;
-  padding: var(--space-lg);
+  box-shadow: 0 0 0 4px var(--cream);
+  z-index: 1;
 }
-.resume-sidebar .card { margin-bottom: var(--space-md); }
-.skills-matrix { display: grid; gap: var(--space-md); }
-.skills-group h4 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--teal); margin-bottom: 0.4rem; }
+.career-timeline-item--side_venture .career-timeline-dot { background: var(--aqua); }
+.career-timeline-item--education .career-timeline-dot { background: var(--ocean); }
+.career-timeline-item--gap .career-timeline-dot { background: rgba(var(--navy-rgb), 0.4); }
+.career-timeline-card { padding: 1.25rem 1.5rem; }
+.career-timeline-period {
+  display: inline-block;
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--teal);
+  margin-bottom: 0.3rem;
+}
+.career-timeline-card h3 { margin: 0 0 0.15rem; font-size: 1.1rem; }
+.career-timeline-company { font-size: 0.9rem; font-weight: 600; color: rgba(var(--navy-rgb), 0.6); margin: 0 0 0.5rem; }
+.career-timeline-card p:last-child { margin-bottom: 0; color: rgba(var(--navy-rgb), 0.8); }
+
+@media (min-width: 760px) {
+  .career-timeline::before { left: 50%; margin-left: -1px; }
+  .career-timeline-item { width: 50%; padding-left: 0; padding-right: 56px; }
+  .career-timeline-item:nth-child(even) { margin-left: 50%; padding-right: 0; padding-left: 56px; }
+  .career-timeline-dot { left: auto; right: -20px; }
+  .career-timeline-item:nth-child(even) .career-timeline-dot { left: -20px; right: auto; }
+}
+
+/* Resume: skills ------------------------------------------------------------ */
+.skills-matrix {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-md);
+}
+.skills-group { padding: 1.5rem; }
+.skills-group h4 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--teal); margin-bottom: 0.6rem; }
 .skills-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .skills-tags span {
   font-size: 0.8rem;
   padding: 0.25rem 0.7rem;
   border-radius: var(--radius-pill);
   background: rgba(var(--navy-rgb), 0.06);
-}
-@media (max-width: 820px) {
-  .resume-layout { grid-template-columns: 1fr; }
 }
 
 /* Placeholder pages (about/resources) -------------------------------------- */

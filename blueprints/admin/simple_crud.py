@@ -169,6 +169,25 @@ RESOURCES = {
             ("sort_order", "int", "Sort order"),
         ],
     },
+    "resume_timeline": {
+        "table": "resume_timeline",
+        "title": "Resume Timeline",
+        "order_by": "sort_order",
+        "list_view": "cards",
+        "add_via_page": True,
+        "card_title_field": "title",
+        "reorderable": True,
+        "fields": [
+            ("period_label", "text", "Period (e.g. Jun 2007 - Sep 2007)"),
+            ("title", "text", "Title"),
+            ("company", "text", "Company"),
+            ("entry_type", "select", "Type"),
+            ("summary", "textarea", "Summary"),
+        ],
+        "select_options": {
+            "entry_type": ["education", "full_time", "contract", "side_venture", "gap"],
+        },
+    },
     "skills": {
         "table": "skills",
         "title": "Skills",
