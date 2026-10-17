@@ -54,17 +54,15 @@
           <input type="text" id="company" name="company" tabindex="-1" autocomplete="off">
         </div>
 
-        <fieldset class="contact-subjects">
-          <legend>What's this about?</legend>
-          <div class="contact-chips">
+        <label class="form-field">
+          <span>What's this about?</span>
+          <select name="subject" required>
+            <option value="" disabled {{ 'selected' if not form.get('subject') }}>Choose one&hellip;</option>
             {% for subject in subjects %}
-            <label class="contact-chip">
-              <input type="radio" name="subject" value="{{ subject }}" required {{ 'checked' if form.get('subject') == subject }}>
-              <span>{{ subject }}</span>
-            </label>
+            <option value="{{ subject }}" {{ 'selected' if form.get('subject') == subject }}>{{ subject }}</option>
             {% endfor %}
-          </div>
-        </fieldset>
+          </select>
+        </label>
 
         <div class="contact-row">
           <label class="form-field">

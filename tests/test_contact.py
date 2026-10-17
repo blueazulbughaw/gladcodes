@@ -62,11 +62,12 @@ class ContactPageTests(unittest.TestCase):
         app.config["TESTING"] = True
         self.client = app.test_client()
 
-    def test_page_uses_subject_chips_and_card_layout(self):
+    def test_page_uses_subject_dropdown_and_card_layout(self):
         with patch("blueprints.public.routes.query", return_value=[{"setting_key": "contact_email", "setting_value": "glad@example.com"}]):
             body = self.client.get("/contact").get_data(as_text=True)
-        self.assertIn('class="contact-chip"', body)
-        self.assertIn('type="radio" name="subject" value="I Have a Job for You"', body)
+        self.assertIn('<select name="subject" required>', body)
+        self.assertIn('<option value="I Have a Job for You" >', body)
+        self.assertNotIn("contact-chip", body)
         self.assertIn('href="mailto:glad@example.com"', body)
         self.assertNotIn('class="closing-cta"', body)
         self.assertNotIn("gc-admin", body)
