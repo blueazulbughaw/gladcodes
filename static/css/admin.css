@@ -591,3 +591,8 @@ body.admin-body { display: flex; min-height: 100vh; align-items: stretch; }
   .personal-tracking-grid { grid-template-columns: 1fr; }
   .checkin-tracked { grid-template-columns: 1fr; }
 }
+.personal-ideas li a { display: flex; flex-direction: column; color: var(--navy); }
+.personal-ideas li a:hover { text-decoration: none; color: var(--teal); }
+.personal-ideas li span { font-size: 0.82rem; color: rgba(var(--navy-rgb), 0.6); white-space: pre-line; }
+.checkin-card > a.admin-meta { display: inline-flex; align-items: center; gap: 0.35rem; }
+.checkin-card > a.admin-meta svg { width: 15px; height: 15px; }

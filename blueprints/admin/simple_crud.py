@@ -241,6 +241,21 @@ RESOURCES = {
             "frequency": ["daily", "every_other_day", "weekly", "as_needed"],
         },
     },
+    # Personal idea bank (private), listed on /gc-admin/me.
+    "app_ideas": {
+        "table": "app_ideas",
+        "title": "App ideas",
+        "add_button_label": "Add idea",
+        "order_by": "sort_order, id DESC",
+        "list_view": "cards",
+        "add_via_page": True,
+        "card_title_field": "idea",
+        "reorderable": True,
+        "fields": [
+            ("idea", "text", "Idea"),
+            ("details", "textarea", "Details (who it's for, what it does, why now)"),
+        ],
+    },
     "instagram": {
         "table": "instagram_posts",
         "title": "Instagram / Reels",

@@ -646,3 +646,24 @@ CREATE TABLE IF NOT EXISTS app_sessions (
 -- Secret the phone automations send as "Authorization: Bearer <token>".
 -- Generated on first start like the VAPID keys; shown on /gc-admin/me.
 ALTER TABLE checkin_app_state ADD COLUMN IF NOT EXISTS ingest_token VARCHAR(64);
+
+-- Check-in v2.1: a daily "what did you learn today?" answer. App ideas are
+-- no longer a daily question; they're a standalone list (app_ideas below).
+ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS learnings TEXT AFTER reading;
+
+-- Idea bank, edited via the `app_ideas` simple_crud resource and listed on
+-- /gc-admin/me. Private: never shown on the public site.
+CREATE TABLE IF NOT EXISTS app_ideas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    idea VARCHAR(255) NOT NULL,
+    details TEXT,
+    sort_order INT NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Carry over any ideas typed into the old daily question (idempotent: an
+-- idea already in the list isn't copied again).
+INSERT INTO app_ideas (idea, created_at)
+SELECT LEFT(d.app_ideas, 255), d.checkin_date FROM daily_checkins d
+WHERE d.app_ideas IS NOT NULL AND d.app_ideas <> ''
+  AND NOT EXISTS (SELECT 1 FROM app_ideas a WHERE a.idea = LEFT(d.app_ideas, 255));

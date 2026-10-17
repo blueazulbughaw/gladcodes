@@ -71,7 +71,7 @@ class TodayPageTests(unittest.TestCase):
         mock_query_one.return_value = {
             "mood": 4, "mood_reason": "Slept well", "energy": 3, "morning_prayer": 1, "night_prayer": 0,
             "exercised": 0, "period_day": 0, "reading": "DDIA", "bible_passage": "Psalm 23",
-            "grateful": "Coffee", "app_ideas": "Habit app", "win": None, "notes": None,
+            "grateful": "Coffee", "learnings": "Flask url_defaults", "win": None, "notes": None,
         }
         mock_tracking.active_medications.return_value = [
             {"id": 7, "name": "Vitamin D", "notes": "with food", "frequency": "daily", "doses_per_day": 3, "start_date": None},
@@ -89,11 +89,13 @@ class TodayPageTests(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         body = resp.get_data(as_text=True)
         for text in ("Good morning, Glad", "Morning prayer", "Night prayer", "Why do you feel that way?",
-                     "What Bible passage did you read today?", "Psalm 23", "Any app ideas today?",
+                     "What Bible passage did you read today?", "Psalm 23", "What did you learn today?", "Flask url_defaults",
                      "Period day", "Vitamin D", "7h 15m", "23 min", "Saves automatically"):
             self.assertIn(text, body)
         self.assertNotIn("Weekly pill", body)  # due Wednesdays, today is Friday
         self.assertEqual(body.count('class="dose-box"'), 3)
+        self.assertNotIn("Any app ideas today?", body)  # ideas are a list now, not a daily question
+        self.assertIn("/gc-admin/app_ideas/create", body)
         self.assertNotIn("Hours slept", body)
         self.assertNotIn("Minutes scrolling", body)
         self.assertNotIn('type="submit" class="btn btn-primary">Save check-in', body)
@@ -105,7 +107,7 @@ class TodayPageTests(unittest.TestCase):
         resp = self.client.post("/gc-admin/today", headers={"X-Requested-With": "fetch"}, data={
             "csrf_token": "test-csrf", "checkin_date": "2026-10-16",
             "mood": "9", "energy": "4", "morning_prayer": "1", "period_day": "1",
-            "mood_reason": "  Good sleep  ", "bible_passage": "John 15",
+            "mood_reason": "  Good sleep  ", "bible_passage": "John 15", "learnings": "Jinja macros",
         })
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.get_json(), {"ok": True})
@@ -119,6 +121,8 @@ class TodayPageTests(unittest.TestCase):
         self.assertEqual(fields["night_prayer"], 0)
         self.assertEqual(fields["period_day"], 1)
         self.assertEqual(fields["bible_passage"], "John 15")
+        self.assertEqual(fields["learnings"], "Jinja macros")
+        self.assertNotIn("app_ideas", fields)
 
     @patch("blueprints.admin.checkin.saved_timezone", return_value=None)
     @patch("blueprints.admin.checkin.tracking.set_dose")

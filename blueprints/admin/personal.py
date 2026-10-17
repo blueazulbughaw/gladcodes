@@ -1,7 +1,7 @@
 """Personal dashboard (/gc-admin/me): everything from the daily check-in
 and the phone, kept separate from the website CMS dashboard (/gc-admin/).
 Mood + reasons, prayers, medicines, sleep, Instagram time, period cycle,
-and the logs (Bible passages, reading, gratitude, app ideas).
+the logs (Bible passages, learnings, reading, gratitude), and the app idea list.
 
 Also the phone-automation endpoints (/gc-admin/track/*), authenticated by a
 bearer token instead of the JWT cookie, since an iPhone Shortcut / Android
@@ -81,10 +81,11 @@ def personal_dashboard():
 
     logs = [
         ("Bible passages", "book-heart", log("bible_passage")),
+        ("What I learned", "graduation-cap", log("learnings")),
         ("Reading", "book-open", log("reading")),
         ("Thankful for", "heart", log("grateful")),
-        ("App ideas", "lightbulb", log("app_ideas")),
     ]
+    app_ideas = query("SELECT id, idea, details FROM app_ideas ORDER BY sort_order, id DESC")
     mood_reasons = query(
         "SELECT checkin_date, mood, mood_reason FROM daily_checkins WHERE mood IS NOT NULL "
         "ORDER BY checkin_date DESC LIMIT 14"
@@ -113,6 +114,7 @@ def personal_dashboard():
         cycle=cycle,
         mood_reasons=mood_reasons,
         logs=logs,
+        app_ideas=app_ideas,
         token=tracking.ingest_token(),
         site_base=current_app.config["PUBLIC_SITE_URL"].rstrip("/"),
         status=tracking.tracking_status(),

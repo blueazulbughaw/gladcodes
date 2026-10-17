@@ -266,3 +266,7 @@ yet to gate access to (`blueprints/api/` is still just stubs).
 - Period tracking = the `period_day` checkbox; runs of days (bridging one
   forgotten day) become periods in `services/tracking.periods_from_days`,
   with average cycle + predicted next start on My dashboard.
+- App ideas are a standalone list (`app_ideas` simple_crud resource,
+  Personal nav), not a daily question; the old `daily_checkins.app_ideas`
+  column is kept but unused (schema.sql copied its contents over once).
+  The daily "What did you learn today?" answer is `daily_checkins.learnings`.

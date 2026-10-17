@@ -89,14 +89,11 @@
     </section>
 
     <section class="card checkin-card">
-      <h2><i data-lucide="book-heart"></i> Word &amp; reading</h2>
+      <h2><i data-lucide="book-heart"></i> Word &amp; learning</h2>
       {{ textbox('bible_passage', 'What Bible passage did you read today?', placeholder='e.g. Psalm 23, John 15:1-17') }}
       {{ textbox('reading', 'What else did you read?', hint='Book, article, docs: anything counts') }}
-    </section>
-
-    <section class="card checkin-card">
-      <h2><i data-lucide="lightbulb"></i> App ideas</h2>
-      {{ textbox('app_ideas', 'Any app ideas today?', rows=3, hint='Private: only shows on your dashboard') }}
+      {{ textbox('learnings', 'What did you learn today?', rows=3) }}
+      <a class="admin-meta" href="{{ url_for('admin.simple_create', resource='app_ideas') }}"><i data-lucide="lightbulb"></i> Got an app idea? Add it to your list →</a>
     </section>
 
     <section class="card checkin-card">

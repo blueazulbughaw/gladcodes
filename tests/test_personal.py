@@ -111,10 +111,14 @@ class PersonalDashboardTests(unittest.TestCase):
     @patch("blueprints.admin.personal.query")
     def test_dashboard_renders(self, mock_query, mock_tracking, *_):
         def fake_query(sql, *args):
+            if "FROM app_ideas" in sql:
+                return [{"id": 5, "idea": "Prayer streak widget", "details": "Android home screen"}]
             if "period_day = 1" in sql:
                 return [{"checkin_date": date(2026, 9, 18)}, {"checkin_date": date(2026, 9, 19)}]
             if "AS text" in sql:
-                return [{"checkin_date": TODAY, "text": "Psalm 23"}] if "bible_passage" in sql else []
+                if "bible_passage" in sql:
+                    return [{"checkin_date": TODAY, "text": "Psalm 23"}]
+                return [{"checkin_date": TODAY, "text": "Jinja macros"}] if "learnings" in sql else []
             if "mood_reason" in sql and "LIMIT 14" in sql:
                 return [{"checkin_date": TODAY, "mood": 4, "mood_reason": "Good sleep"}]
             return [{"checkin_date": TODAY, "mood": 4, "energy": 3, "morning_prayer": 1, "night_prayer": 1}]
@@ -133,7 +137,8 @@ class PersonalDashboardTests(unittest.TestCase):
         resp = self.client.get("/gc-admin/me")
         self.assertEqual(resp.status_code, 200)
         body = resp.get_data(as_text=True)
-        for text in ("My dashboard", "Good sleep", "Psalm 23", "Sep 18 – Sep 19", "Period cycle",
+        for text in ("My dashboard", "Good sleep", "Psalm 23", "What I learned", "Jinja macros",
+                     "Prayer streak widget", "Android home screen", "/gc-admin/app_ideas/5/edit", "Sep 18 – Sep 19", "Period cycle",
                      "/gc-admin/track/sleep", "7h 00m"):
             self.assertIn(text, body)
         self.assertIn('data-token="secret-token"', body)

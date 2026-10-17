@@ -83,6 +83,18 @@
       {% else %}<p class="admin-meta"><a href="{{ url_for('admin.simple_list', resource='medications') }}">Add your medicines</a> to track them here.</p>{% endif %}
     </section>
 
+    <section class="card">
+      <h2><i data-lucide="lightbulb"></i> App ideas</h2>
+      {% if app_ideas %}
+      <ul class="personal-list personal-ideas">
+        {% for idea in app_ideas %}
+        <li><a href="{{ url_for('admin.simple_edit', resource='app_ideas', row_id=idea.id) }}"><strong>{{ idea.idea }}</strong>{% if idea.details %}<span>{{ idea.details }}</span>{% endif %}</a></li>
+        {% endfor %}
+      </ul>
+      {% else %}<p class="admin-meta">No ideas yet.</p>{% endif %}
+      <a class="admin-meta" href="{{ url_for('admin.simple_create', resource='app_ideas') }}">+ Add idea</a>
+    </section>
+
     {% for title, icon, rows in logs %}
     <section class="card">
       <h2><i data-lucide="{{ icon }}"></i> {{ title }}</h2>
