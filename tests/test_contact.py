@@ -9,7 +9,7 @@ from services import mail
 class ContactEmailTests(unittest.TestCase):
     """The form used to send to hello@gladcodes.com, a domain that doesn't
     exist, so Exim refused every message (550). Mail now goes to the admin
-    Settings "Contact email" unless MAIL_TO overrides it, and failures log."""
+    Settings "Contact email" (MAIL_TO only as fallback), and failures log."""
 
     def setUp(self):
         self.app = create_app()
@@ -19,11 +19,15 @@ class ContactEmailTests(unittest.TestCase):
         with self.app.app_context(), patch("services.mail.query_one", return_value={"setting_value": " glad@example.com "}):
             self.assertEqual(mail.contact_recipient(), "glad@example.com")
 
-    def test_mail_to_env_overrides_settings(self):
-        self.app.config["MAIL_TO"] = "override@example.com"
-        with self.app.app_context(), patch("services.mail.query_one") as q:
-            self.assertEqual(mail.contact_recipient(), "override@example.com")
-            q.assert_not_called()
+    def test_settings_contact_email_beats_a_stale_mail_to(self):
+        self.app.config["MAIL_TO"] = "hello@gladcodes.com"
+        with self.app.app_context(), patch("services.mail.query_one", return_value={"setting_value": "hello@glad.codes"}):
+            self.assertEqual(mail.contact_recipient(), "hello@glad.codes")
+
+    def test_mail_to_is_the_fallback_when_settings_is_empty(self):
+        self.app.config["MAIL_TO"] = "fallback@example.com"
+        with self.app.app_context(), patch("services.mail.query_one", return_value={"setting_value": ""}):
+            self.assertEqual(mail.contact_recipient(), "fallback@example.com")
 
     def test_no_recipient_fails_cleanly_without_smtp(self):
         with self.app.app_context(), patch("services.mail.query_one", return_value=None), \

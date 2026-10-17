@@ -5,10 +5,11 @@ email service (SendGrid/Mailgun/etc.) needed. Never let a delivery failure
 crash the page — the caller shows a friendly error and the sender can
 always fall back to a direct email.
 
-Recipient: the MAIL_TO env var if set, otherwise the admin-editable
-"Contact email" in Settings (site_settings.contact_email). The old
-hardcoded default (hello@gladcodes.com) pointed at a domain that doesn't
-exist, so Exim refused every message with a 550 and the form always failed.
+Recipient: the admin-editable "Contact email" in Settings
+(site_settings.contact_email) always wins; the MAIL_TO env var is only a
+fallback when Settings is empty. (A stale MAIL_TO=hello@gladcodes.com on
+the server, a domain that doesn't exist, used to override everything, so
+Exim refused every message with a 550 and the form always failed.)
 """
 import logging
 import smtplib
@@ -22,11 +23,9 @@ log = logging.getLogger(__name__)
 
 
 def contact_recipient():
-    if current_app.config.get("MAIL_TO"):
-        return current_app.config["MAIL_TO"]
     row = query_one("SELECT setting_value FROM site_settings WHERE setting_key = 'contact_email'")
     value = (row["setting_value"] or "").strip() if row else ""
-    return value or None
+    return value or current_app.config.get("MAIL_TO") or None
 
 
 def send_contact_email(name: str, email: str, subject_choice: str, message: str) -> bool:

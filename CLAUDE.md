@@ -208,10 +208,10 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   `SMTP_HOST`/`SMTP_PORT`/`SMTP_USER`/`SMTP_PASSWORD` env vars for hosts
   that require authenticated submission instead, and always returns
   `False` on any failure (now logged) rather than raising. Messages go to
-  the admin Settings "Contact email" (`site_settings.contact_email`) unless
-  the optional `MAIL_TO` env var overrides it; the old hardcoded default
-  was on gladcodes.com, a domain that doesn't exist, so Exim 550'd every
-  message — the route shows a
+  the admin Settings "Contact email" (`site_settings.contact_email`);
+  `MAIL_TO` is only a fallback when that's empty (a stale server
+  MAIL_TO on gladcodes.com, a domain that doesn't exist, used to override
+  it and Exim 550'd every message) — the route shows a
   friendly error, never a crash. The form also carries a simple
   honeypot field (`company`, absolutely positioned off-screen); a
   filled honeypot silently "succeeds" without sending mail rather than
