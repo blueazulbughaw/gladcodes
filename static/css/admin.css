@@ -613,3 +613,9 @@ body.admin-body { display: flex; min-height: 100vh; align-items: stretch; }
 .personal-ideas li span { font-size: 0.82rem; color: rgba(var(--navy-rgb), 0.6); white-space: pre-line; }
 .checkin-card > a.admin-meta { display: inline-flex; align-items: center; gap: 0.35rem; }
 .checkin-card > a.admin-meta svg { width: 15px; height: 15px; }
+
+/* Grouped card lists (simple_crud group_by, e.g. skills by category). */
+.admin-card-group { margin-bottom: 2rem; }
+.admin-card-group-header { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem; padding-bottom: 0.4rem; border-bottom: 1px solid rgba(var(--navy-rgb), 0.1); }
+.admin-card-group-header h2 { font-size: 1.1rem; margin: 0; display: flex; align-items: center; gap: 0.5rem; }
+.admin-card-group-count { font-family: var(--font-body); font-size: 0.75rem; font-weight: 600; padding: 0.05rem 0.5rem; border-radius: 999px; background: rgba(var(--teal-rgb), 0.12); color: var(--teal); }

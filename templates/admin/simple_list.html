@@ -71,7 +71,7 @@
       </div>
     </div>
     {% for name, ftype, label in config.fields %}
-      {% if name == config.card_title_field or ftype == 'icon' %}
+      {% if name == config.card_title_field or ftype == 'icon' or name == config.group_by %}{# group_by value is already the heading #}
       {% elif ftype == 'textarea' %}
         {% if row[name] %}<p class="admin-card-item-desc">{{ row[name] }}</p>{% endif %}
       {% elif ftype == 'checkbox' %}
@@ -98,6 +98,23 @@
   </div>
   {% endmacro %}
 
+  {% if groups %}
+  {% if config.reorderable %}<p class="admin-meta admin-reorder-hint">Drag cards to reorder within a category.</p>{% endif %}
+  {% for group_name, group_rows in groups %}
+  <section class="admin-card-group">
+    <div class="admin-card-group-header">
+      <h2>{{ group_name }} <span class="admin-card-group-count">{{ group_rows|length }}</span></h2>
+      {% if config.add_via_page %}<a class="btn-link" href="{{ url_for('admin.simple_create', resource=resource, **{config.group_by: group_name}) }}">+ Add to {{ group_name }}</a>{% endif %}
+    </div>
+    <div class="admin-card-grid{{ ' admin-card-grid--reorderable' if config.reorderable }}"
+         {% if config.reorderable %}data-reorder-url="{{ url_for('admin.simple_reorder', resource=resource) }}" data-csrf-token="{{ csrf_token }}"{% endif %}>
+      {% for row in group_rows %}{{ generic_card(row) }}{% endfor %}
+    </div>
+  </section>
+  {% else %}
+  <p class="admin-empty">Nothing here yet.</p>
+  {% endfor %}
+  {% else %}
   {% if config.reorderable %}<p class="admin-meta admin-reorder-hint">Drag cards to reorder.</p>{% endif %}
   <div class="admin-card-grid{{ ' admin-card-grid--reorderable' if config.reorderable }}"
        {% if config.reorderable %}data-reorder-url="{{ url_for('admin.simple_reorder', resource=resource) }}" data-csrf-token="{{ csrf_token }}"{% endif %}>
@@ -105,6 +122,7 @@
     <p class="admin-empty">Nothing here yet.</p>
     {% endfor %}
   </div>
+  {% endif %}
   {% else %}
   <table class="admin-table">
     <thead>

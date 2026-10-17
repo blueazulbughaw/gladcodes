@@ -8,7 +8,7 @@
   <div class="admin-page-header"><h1>Add {{ config.title }}</h1></div>
   <form method="post" action="{{ url_for('admin.simple_create', resource=resource) }}" class="admin-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-    {{ fm.render_fields(config, icon_choices) }}
+    {{ fm.render_fields(config, icon_choices, prefill) }}
     <button type="submit" class="btn btn-primary">Add</button>
   </form>
   <a class="admin-back-link" href="{{ url_for('admin.simple_list', resource=resource) }}">&larr; Back to {{ config.title }}</a>

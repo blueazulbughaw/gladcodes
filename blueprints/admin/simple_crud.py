@@ -197,6 +197,9 @@ RESOURCES = {
         "add_via_page": True,
         "card_title_field": "skill_name",
         "reorderable": True,
+        # Cards are shown under category headings, in the same first-
+        # appearance order /resume uses, with an "add to this category" link.
+        "group_by": "category",
         "fields": [
             ("category", "text", "Category (e.g. Engineering)"),
             ("skill_name", "text", "Skill"),
@@ -338,7 +341,18 @@ def simple_list(resource):
     context = {"resource": resource, "config": config, "rows": rows, "icon_choices": ICON_CHOICES}
     if config.get("list_view") == "event_cards":
         context["upcoming_rows"], context["past_rows"] = _split_upcoming_past(rows)
+    if config.get("group_by"):
+        context["groups"] = _group_rows(rows, config["group_by"])
     return render_template("simple_list.html", **context)
+
+
+def _group_rows(rows, field):
+    """[(group value, [rows])] in first-appearance (sort_order) order — the
+    same grouping the public pages do (e.g. skills by category on /resume)."""
+    groups = {}
+    for row in rows:
+        groups.setdefault(row[field] or "Uncategorized", []).append(row)
+    return list(groups.items())
 
 
 @admin_bp.route("/<resource>/create", methods=["GET", "POST"])
@@ -348,11 +362,24 @@ def simple_create(resource):
         # Only resources with add_via_page (currently just Events) link here
         # for GET — others still use the inline form on simple_list.html —
         # but the route itself works generically for any resource.
+        # ?category=Engineering (from a group's "Add to this category" link)
+        # pre-fills the grouping field.
+        prefill = None
+        group_field = config.get("group_by")
+        if group_field and request.args.get(group_field):
+            prefill = {name: "" for name, _, _ in config["fields"]}
+            prefill[group_field] = request.args[group_field]
         return render_template(
-            "simple_new.html", resource=resource, config=config, icon_choices=ICON_CHOICES
+            "simple_new.html", resource=resource, config=config, icon_choices=ICON_CHOICES, prefill=prefill
         )
     columns = [name for name, _, _ in config["fields"]]
     values = [_parse_field(config, name, ftype) for name, ftype, _ in config["fields"]]
+    if config.get("group_by"):
+        # Append at the end: a sort_order of 0 would put the new row first,
+        # dragging its whole group to the top of the public page.
+        top = query_one(f"SELECT COALESCE(MAX(sort_order), -1) + 1 AS next FROM {config['table']}")
+        columns.append("sort_order")
+        values.append(top["next"])
     placeholders = ", ".join(["%s"] * len(columns))
     execute(
         f"INSERT INTO {config['table']} ({', '.join(columns)}) VALUES ({placeholders})",

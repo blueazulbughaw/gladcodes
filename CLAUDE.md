@@ -270,3 +270,10 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   Personal nav), not a daily question; the old `daily_checkins.app_ideas`
   column is kept but unused (schema.sql copied its contents over once).
   The daily "What did you learn today?" answer is `daily_checkins.learnings`.
+- `simple_crud` resources can set `"group_by": "<column>"` (skills use
+  `category`): the admin list shows one card grid per group under a
+  heading, in first-appearance sort_order (same as the public page), with
+  a "+ Add to <group>" link that pre-fills the column. Drag-reorder works
+  within a group; a drop saves the order of every card on the page so
+  sort_order stays one sequence. New rows in grouped resources get
+  `MAX(sort_order)+1`, so adding one never jumps its group to the top.
