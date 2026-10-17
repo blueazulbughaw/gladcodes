@@ -376,21 +376,58 @@ CREATE TABLE IF NOT EXISTS skills (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 INSERT INTO skills (category, skill_name, sort_order)
-SELECT * FROM (SELECT 'Engineering' AS category, 'Python' AS skill_name, 1 AS sort_order UNION ALL
-    SELECT 'Engineering', 'Flask', 2 UNION ALL
-    SELECT 'Engineering', 'JavaScript', 3 UNION ALL
-    SELECT 'Engineering', 'SQL', 4 UNION ALL
-    SELECT 'Engineering', 'REST APIs', 5 UNION ALL
-    SELECT 'Program & product', 'Roadmapping', 6 UNION ALL
-    SELECT 'Program & product', 'Cross-functional leadership', 7 UNION ALL
-    SELECT 'Program & product', 'Agile delivery', 8 UNION ALL
-    SELECT 'Program & product', 'Stakeholder management', 9 UNION ALL
-    SELECT 'Business', 'MBA — MIS', 10 UNION ALL
-    SELECT 'Business', 'Data-informed strategy', 11 UNION ALL
-    SELECT 'Business', 'Founder operations', 12 UNION ALL
-    SELECT 'Community', 'Public speaking', 13 UNION ALL
-    SELECT 'Community', 'Mentorship', 14 UNION ALL
-    SELECT 'Community', 'Developer communities', 15
+SELECT * FROM (SELECT 'Front-end' AS category, 'JavaScript' AS skill_name, 1 AS sort_order UNION ALL
+    SELECT 'Front-end', 'jQuery', 2 UNION ALL
+    SELECT 'Front-end', 'Prototype.js', 3 UNION ALL
+    SELECT 'Front-end', 'React', 4 UNION ALL
+    SELECT 'Front-end', 'HTML', 5 UNION ALL
+    SELECT 'Front-end', 'CSS', 6 UNION ALL
+    SELECT 'Front-end', 'AJAX', 7 UNION ALL
+    SELECT 'Front-end', 'JSON', 8 UNION ALL
+    SELECT 'Front-end', 'XML', 9 UNION ALL
+    SELECT 'Front-end', 'Bootstrap', 10 UNION ALL
+    SELECT 'Back-end / languages', 'PHP', 11 UNION ALL
+    SELECT 'Back-end / languages', 'Node.js', 12 UNION ALL
+    SELECT 'Back-end / languages', 'Python (Flask)', 13 UNION ALL
+    SELECT 'Back-end / languages', 'JSP / Java', 14 UNION ALL
+    SELECT 'Back-end / languages', 'Visual C++', 15 UNION ALL
+    SELECT 'Back-end / languages', 'COBOL', 16 UNION ALL
+    SELECT 'Back-end / languages', 'MySQL', 17 UNION ALL
+    SELECT 'CMS / e-commerce', 'WordPress', 18 UNION ALL
+    SELECT 'CMS / e-commerce', 'Drupal', 19 UNION ALL
+    SELECT 'CMS / e-commerce', 'Adobe Experience Manager (AEM)', 20 UNION ALL
+    SELECT 'CMS / e-commerce', 'OSCommerce', 21 UNION ALL
+    SELECT 'CMS / e-commerce', 'Shopify', 22 UNION ALL
+    SELECT 'CMS / e-commerce', 'eBay', 23 UNION ALL
+    SELECT 'CMS / e-commerce', 'Amazon Seller Central', 24 UNION ALL
+    SELECT 'CRM / automation', 'HubSpot', 25 UNION ALL
+    SELECT 'CRM / automation', 'Zoho CRM', 26 UNION ALL
+    SELECT 'CRM / automation', 'JobTread', 27 UNION ALL
+    SELECT 'CRM / automation', 'Zapier', 28 UNION ALL
+    SELECT 'CRM / automation', 'n8n', 29 UNION ALL
+    SELECT 'CRM / automation', 'DocuSign', 30 UNION ALL
+    SELECT 'CRM / automation', 'Twilio', 31 UNION ALL
+    SELECT 'Enterprise / delivery tools', 'ServiceNow', 32 UNION ALL
+    SELECT 'Enterprise / delivery tools', 'Rally', 33 UNION ALL
+    SELECT 'Enterprise / delivery tools', 'Jira', 34 UNION ALL
+    SELECT 'Enterprise / delivery tools', 'Confluence', 35 UNION ALL
+    SELECT 'Enterprise / delivery tools', 'CA Clarity', 36 UNION ALL
+    SELECT 'Enterprise / delivery tools', 'Excel / VBA', 37 UNION ALL
+    SELECT 'Enterprise / delivery tools', 'Microsoft 365', 38 UNION ALL
+    SELECT 'Enterprise / delivery tools', 'SAP', 39 UNION ALL
+    SELECT 'Enterprise / delivery tools', 'Oracle CC&B', 40 UNION ALL
+    SELECT 'Version control', 'Git', 41 UNION ALL
+    SELECT 'Version control', 'Tortoise SVN', 42 UNION ALL
+    SELECT 'Practices', 'Agile / Scrum', 43 UNION ALL
+    SELECT 'Practices', 'Technical Program Management', 44 UNION ALL
+    SELECT 'Practices', 'Capacity Planning', 45 UNION ALL
+    SELECT 'Practices', 'Vulnerability Remediation', 46 UNION ALL
+    SELECT 'Practices', 'Cross-time-zone Leadership', 47 UNION ALL
+    SELECT 'Practices', 'Requirements Gathering', 48 UNION ALL
+    SELECT 'Practices', 'Onboarding and Training', 49 UNION ALL
+    SELECT 'Languages', 'English', 50 UNION ALL
+    SELECT 'Languages', 'Filipino', 51 UNION ALL
+    SELECT 'Languages', 'Japanese (JLPT N3)', 52
 ) AS tmp
 WHERE NOT EXISTS (SELECT 1 FROM skills);
 

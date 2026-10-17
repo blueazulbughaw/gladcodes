@@ -16,12 +16,15 @@
   var items = document.querySelectorAll(".career-timeline-item");
   var heroEls = document.querySelectorAll(".hero-fade");
 
+  var skillGroups = document.querySelectorAll("[data-skills-group]");
+
   if (reduceMotion) {
     heroEls.forEach(function (el) { el.style.opacity = 1; });
     items.forEach(function (item) {
       var card = item.querySelector(".career-timeline-card");
       if (card) card.style.opacity = 1;
     });
+    skillGroups.forEach(function (group) { group.style.opacity = 1; });
     return;
   }
 
@@ -39,6 +42,32 @@
       scrollTrigger: { start: 0, end: "max", scrub: true },
     });
   }
+
+  // Skills: each category card pops in, then its tags cascade in one after
+  // another — independent of the timeline below, so it still runs even on
+  // a page that somehow has no timeline rows.
+  skillGroups.forEach(function (group) {
+    var tags = group.querySelectorAll(".skills-tags span");
+    gsap.from(group, {
+      opacity: 0,
+      y: 30,
+      scale: 0.92,
+      duration: 0.5,
+      ease: "power2.out",
+      scrollTrigger: { trigger: group, start: "top 88%", toggleActions: "play none none none" },
+    });
+    if (tags.length) {
+      gsap.from(tags, {
+        opacity: 0,
+        scale: 0.6,
+        duration: 0.35,
+        stagger: 0.04,
+        delay: 0.15,
+        ease: "back.out(1.7)",
+        scrollTrigger: { trigger: group, start: "top 88%", toggleActions: "play none none none" },
+      });
+    }
+  });
 
   if (!track || !items.length) return;
 

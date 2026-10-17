@@ -13,31 +13,14 @@
 
 <section class="page-hero">
   <div class="container">
-    <span class="eyebrow hero-fade">Work with me</span>
-    <h1 class="hero-fade">Resume</h1>
-    <p class="hero-fade">
-      Software Engineer &middot; Technical Program Manager &middot; MBA-MIS &middot; Founder who ships.
-      {% if meta and meta.last_updated %}Last updated {{ meta.last_updated|human_date }}.{% endif %}
-    </p>
-    <div class="hero-actions hero-fade">
-      {% if meta and meta.file_path %}
-      <a class="btn btn-primary" href="{{ url_for('static', filename='uploads/' + meta.file_path) }}" download>
-        <i data-lucide="download" width="18" height="18"></i> Download PDF
-      </a>
-      {% endif %}
-      <a class="btn btn-secondary" href="{{ url_for('public.lets_connect') }}">Let's Connect</a>
-    </div>
+    <span class="eyebrow hero-fade">My story</span>
+    <h1 class="hero-fade">How I got here</h1>
+    <p class="hero-fade">Fourteen stops, two side ventures, one MBA, and a lot of learning along the way. Scroll down and I'll show you.</p>
   </div>
 </section>
 
 <section class="section">
   <div class="container">
-    <div class="section-header reveal">
-      <span class="eyebrow">Career</span>
-      <h2>Where I've been</h2>
-      <p>Fourteen stops, two side ventures, one MBA, and a lot of learning as I went. Scroll down.</p>
-    </div>
-
     {% set type_icons = {'education': 'graduation-cap', 'full_time': 'briefcase', 'contract': 'file-signature', 'side_venture': 'rocket', 'gap': 'map-pin'} %}
     <div class="career-timeline" id="careerTimeline">
       <div class="career-timeline-track"></div>
@@ -62,11 +45,13 @@
     <div class="section-header reveal">
       <span class="eyebrow">Along the way</span>
       <h2>Skills</h2>
+      <p>Picked up across 15+ years, one platform, one client, one language at a time.</p>
     </div>
+    {% set category_icons = {'Front-end': 'layout', 'Back-end / languages': 'server', 'CMS / e-commerce': 'shopping-cart', 'CRM / automation': 'zap', 'Enterprise / delivery tools': 'clipboard-list', 'Version control': 'git-branch', 'Practices': 'target', 'Languages': 'globe'} %}
     <div class="skills-matrix">
       {% for category, skill_names in skills_by_category.items() %}
-      <div class="card skills-group reveal">
-        <h4>{{ category }}</h4>
+      <div class="card skills-group" data-skills-group>
+        <h4><i data-lucide="{{ category_icons.get(category, 'star') }}" width="16" height="16"></i> {{ category }}</h4>
         <div class="skills-tags">
           {% for name in skill_names %}<span>{{ name }}</span>{% endfor %}
         </div>
@@ -79,13 +64,21 @@
 <section class="section">
   <div class="container">
     <div class="section-header reveal">
-      <span class="eyebrow">Let's work together</span>
-      <h2>Get in touch</h2>
-      <p>Book a call directly, or send a message about what you have in mind.</p>
+      <span class="eyebrow">Work with me</span>
+      <h2>Resume</h2>
+      <p>
+        Software Engineer &middot; Technical Program Manager &middot; MBA-MIS &middot; Founder who ships.
+        {% if meta and meta.last_updated %}Last updated {{ meta.last_updated|human_date }}.{% endif %}
+      </p>
     </div>
-    <div class="hero-actions">
+    <div class="hero-actions reveal">
+      {% if meta and meta.file_path %}
+      <a class="btn btn-primary" href="{{ url_for('static', filename='uploads/' + meta.file_path) }}" download>
+        <i data-lucide="download" width="18" height="18"></i> Download PDF
+      </a>
+      {% endif %}
       {% if settings.get('calendly_url') %}
-      <a class="btn btn-primary" href="{{ settings.calendly_url }}" target="_blank" rel="noopener">
+      <a class="btn btn-secondary" href="{{ settings.calendly_url }}" target="_blank" rel="noopener">
         <i data-lucide="calendar" width="18" height="18"></i> Book a call
       </a>
       {% endif %}

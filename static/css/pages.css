@@ -372,7 +372,17 @@
   gap: var(--space-md);
 }
 .skills-group { padding: 1.5rem; }
-.skills-group h4 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--teal); margin-bottom: 0.6rem; }
+.skills-group h4 {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--teal);
+  margin-bottom: 0.75rem;
+}
+.skills-group h4 svg { flex-shrink: 0; width: 16px; height: 16px; }
 .skills-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .skills-tags span {
   font-size: 0.8rem;
