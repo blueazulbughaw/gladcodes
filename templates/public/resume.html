@@ -9,31 +9,25 @@
 
 {% block content %}
 <div class="scroll-progress" id="scrollProgress"></div>
-<div class="career-timeline-indicator" id="careerIndicator"><span></span></div>
 
 <section class="page-hero">
   <div class="container">
-    <span class="eyebrow hero-fade">Work with me</span>
-    <h1 class="hero-fade">Resume</h1>
-    <p class="hero-fade">Software Engineer &middot; Technical Program Manager &middot; MBA-MIS &middot; Founder who ships.</p>
+    <h1 class="hero-fade">Software Engineer &middot; Technical Program Manager &middot; MBA-MIS &middot; Founder Who Ships</h1>
   </div>
 </section>
 
 <section class="section">
   <div class="container">
     {% set type_icons = {'education': 'graduation-cap', 'full_time': 'briefcase', 'contract': 'file-signature', 'side_venture': 'rocket', 'gap': 'map-pin'} %}
-    <div class="career-timeline" id="careerTimeline">
-      <div class="career-timeline-track"></div>
-      <div class="career-timeline-progress" id="careerTimelineProgress"></div>
+    <div class="resume-layers">
       {% for entry in timeline %}
-      <div class="career-timeline-item career-timeline-item--{{ entry.entry_type }}" data-period="{{ entry.period_label }}">
-        <div class="career-timeline-dot"><i data-lucide="{{ type_icons.get(entry.entry_type, 'circle') }}" width="18" height="18"></i></div>
-        <div class="card career-timeline-card">
-          <span class="career-timeline-period">{{ entry.period_label }}</span>
+      <div class="resume-layer">
+        <div class="resume-layer-period"><i data-lucide="{{ type_icons.get(entry.entry_type, 'circle') }}" width="16" height="16"></i> {{ entry.period_label }}</div>
+        <div class="resume-layer-body">
           <h3>{{ entry.title }}</h3>
-          <p class="career-timeline-company">{{ entry.company }}</p>
+          <p class="resume-layer-company">{{ entry.company }}</p>
           {% if entry.resume_bullets %}
-          <ul class="career-timeline-bullets">
+          <ul class="resume-layer-bullets">
             {% for line in entry.resume_bullets.split('\n') %}{% if line.strip() %}<li>{{ line.strip() }}</li>{% endif %}{% endfor %}
           </ul>
           {% endif %}

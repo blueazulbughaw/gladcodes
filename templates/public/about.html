@@ -13,16 +13,9 @@
 
 <section class="page-hero">
   <div class="container">
-    <span class="eyebrow hero-fade">About</span>
-    <h1 class="hero-fade">Software Engineer &middot; TPM &middot; MBA-MIS &middot; Founder Who Ships</h1>
-    <p class="hero-fade">
-      My engineering career has taken me from Japan to Hong Kong, including a
-      stint as a Technical Program Manager at American Express, before an MBA
-      in Management Information Systems. Now I'm returning to hands-on
-      engineering as a founder — building GladCodes in public, one shipped
-      feature at a time, while staying active in the developer communities
-      that shaped me along the way.
-    </p>
+    <span class="eyebrow hero-fade">My story</span>
+    <h1 class="hero-fade">How I got here</h1>
+    <p class="hero-fade">Fourteen stops, two side ventures, one MBA, and a lot of learning along the way. Scroll down and I'll show you.</p>
   </div>
 </section>
 
@@ -40,27 +33,6 @@
           <h3>{{ entry.title }}</h3>
           <p class="career-timeline-company">{{ entry.company }}</p>
           {% if entry.summary %}<p>{{ entry.summary }}</p>{% endif %}
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-
-<section class="section section--sand">
-  <div class="container">
-    <div class="section-header reveal">
-      <span class="eyebrow">Along the way</span>
-      <h2>Skills</h2>
-      <p>Picked up across 15+ years, one platform, one client, one language at a time.</p>
-    </div>
-    {% set category_icons = {'Front-end': 'layout', 'Back-end / languages': 'server', 'CMS / e-commerce': 'shopping-cart', 'CRM / automation': 'zap', 'Enterprise / delivery tools': 'clipboard-list', 'Version control': 'git-branch', 'Practices': 'target', 'Languages': 'globe'} %}
-    <div class="skills-matrix">
-      {% for category, skill_names in skills_by_category.items() %}
-      <div class="card skills-group" data-skills-group>
-        <h4><i data-lucide="{{ category_icons.get(category, 'star') }}" width="16" height="16"></i> {{ category }}</h4>
-        <div class="skills-tags">
-          {% for name in skill_names %}<span>{{ name }}</span>{% endfor %}
         </div>
       </div>
       {% endfor %}

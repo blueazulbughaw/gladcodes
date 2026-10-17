@@ -373,6 +373,41 @@
   .career-timeline-dot.is-active { animation: none; }
 }
 
+/* Resume: horizontal layered format (deliberately different from the
+   /about zig-zag story timeline above) — each role is a full-width row,
+   dates on the left, details on the right, stacked like an actual
+   resume rather than a spine-and-dot story. */
+.resume-layers { display: flex; flex-direction: column; }
+.resume-layer {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: var(--space-md);
+  padding: var(--space-md) 0;
+  border-bottom: 1px solid rgba(var(--navy-rgb), 0.1);
+}
+.resume-layer:first-child { padding-top: 0; }
+.resume-layer:last-child { border-bottom: none; padding-bottom: 0; }
+.resume-layer-period {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+  color: var(--teal);
+}
+.resume-layer-period svg { flex-shrink: 0; margin-top: 2px; }
+.resume-layer-body h3 { margin: 0 0 0.15rem; font-size: 1.15rem; }
+.resume-layer-company { font-size: 0.9rem; font-weight: 600; color: rgba(var(--navy-rgb), 0.6); margin: 0 0 0.6rem; }
+.resume-layer-bullets { margin: 0; padding-left: 1.1rem; color: rgba(var(--navy-rgb), 0.8); }
+.resume-layer-bullets li { margin-bottom: 0.3rem; }
+.resume-layer-bullets li:last-child { margin-bottom: 0; }
+
+@media (max-width: 640px) {
+  .resume-layer { grid-template-columns: 1fr; gap: 0.3rem; }
+}
+
 /* Resume: skills ------------------------------------------------------------ */
 .skills-matrix {
   display: grid;

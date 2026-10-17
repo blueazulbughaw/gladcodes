@@ -336,13 +336,7 @@ def videos_index():
 @public_bp.route("/about")
 def about():
     timeline = query("SELECT * FROM resume_timeline ORDER BY sort_order")
-
-    skill_rows = query("SELECT * FROM skills ORDER BY sort_order")
-    skills_by_category = OrderedDict()
-    for row in skill_rows:
-        skills_by_category.setdefault(row["category"], []).append(row["skill_name"])
-
-    return render_template("about.html", timeline=timeline, skills_by_category=skills_by_category)
+    return render_template("about.html", timeline=timeline)
 
 
 @public_bp.route("/resources")

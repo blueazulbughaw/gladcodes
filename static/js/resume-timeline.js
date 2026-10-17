@@ -1,9 +1,14 @@
-/* Scroll-driven animation for the /resume career timeline: a page-wide
-   scroll progress bar, a scrubbed fill line down the timeline spine,
-   dramatic staggered card entrances (scale + rotate + slide, alternating
-   by side), pulsing "active" dots, and a floating badge showing which era
-   is currently in view. Needs GSAP + ScrollTrigger (loaded via CDN in
-   resume.html) — everything here no-ops if either is missing.
+/* Shared scroll animation for /about and /resume — same script, two
+   different-looking pages, since each only has the markup the other
+   doesn't:
+   - Page-wide scroll progress bar and skills stagger: both pages.
+   - /about's zig-zag story timeline (.career-timeline-item, spine fill,
+     floating era badge, dramatic scale/rotate entrances): only exists on
+     /about, so that whole block no-ops on /resume.
+   - /resume's horizontal layered rows (.resume-layer): only exists on
+     /resume, a plainer fade-and-slide-up per row, no spine or dots.
+   Needs GSAP + ScrollTrigger (loaded via CDN in each page) — everything
+   here no-ops if either is missing.
 
    prefers-reduced-motion skips every scroll-linked/animated effect below
    and just shows the final state, same policy as animations.js. */
@@ -17,6 +22,7 @@
   var heroEls = document.querySelectorAll(".hero-fade");
 
   var skillGroups = document.querySelectorAll("[data-skills-group]");
+  var layers = document.querySelectorAll(".resume-layer");
 
   if (reduceMotion) {
     heroEls.forEach(function (el) { el.style.opacity = 1; });
@@ -25,6 +31,7 @@
       if (card) card.style.opacity = 1;
     });
     skillGroups.forEach(function (group) { group.style.opacity = 1; });
+    layers.forEach(function (layer) { layer.style.opacity = 1; });
     return;
   }
 
@@ -67,6 +74,20 @@
         scrollTrigger: { trigger: group, start: "top 88%", toggleActions: "play none none none" },
       });
     }
+  });
+
+  // Resume page: plain full-width rows, no spine/zig-zag — each one just
+  // fades and slides up in turn as you scroll past it, "layer by layer"
+  // rather than the dramatic rotate/scale treatment the story timeline
+  // below uses. Independent of the /about-only block that follows.
+  layers.forEach(function (layer) {
+    gsap.from(layer, {
+      opacity: 0,
+      y: 40,
+      duration: 0.6,
+      ease: "power2.out",
+      scrollTrigger: { trigger: layer, start: "top 88%", toggleActions: "play none none none" },
+    });
   });
 
   if (!track || !items.length) return;
