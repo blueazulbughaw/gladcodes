@@ -81,10 +81,19 @@ flask run
   on the server.
 - To restart after a deploy: touch `~/gladcodes_app/tmp/restart.txt`
   (or use the cPanel "Restart" button, which does the same thing).
-- Check-in reminders: a cPanel cron job runs `send_reminders.py` hourly
-  (`0 * * * * cd ~/gladcodes_app && ~/virtualenv/gladcodes_app/3.11/bin/python send_reminders.py`).
-  It needs `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` (from
-  `python generate_vapid_keys.py`) set in the app's env vars.
+- **Routine deploy = push, then cPanel Git Version Control → Update from
+  Remote → Deploy HEAD Commit.** `.cpanel.yml` pip-installs requirements
+  into the app's virtualenv, (re)installs the reminder cron line, and
+  touches `tmp/restart.txt`. On restart `passenger_wsgi.py` runs
+  `database/schema.sql` (it's idempotent) and creates push keys if
+  missing — so schema changes need no manual import. Keep it that way:
+  anything a deploy needs should be automated here, not a manual step.
+- Why the app does setup itself instead of the deploy shell or cron: env
+  vars set in the cPanel Python App panel (DB password, etc.) are only
+  visible to Passenger, not to `.cpanel.yml` tasks or cron. So the
+  reminder cron job just `curl`s `/gc-admin/reminders/tick` (auth-exempt,
+  always 204, sends only an already-due reminder, at most once via
+  `checkin_app_state.reminder_last_sent`).
 - Passenger is the **only** way Python runs here — there is no standalone
   `python app.py` server in production.
 
@@ -202,8 +211,9 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   today's row exists — the point is to make the site the first thing
   opened each morning instead of social media. Mood, meds, gratitude, etc.
   are personal: nothing in `blueprints/public` ever reads this table.
-  "Today" is the calendar day in `LOCAL_TIMEZONE` (env, default
-  America/New_York), not UTC; `tzdata` is in requirements because Windows
+  "Today" is the calendar day in the timezone the Today page's browser
+  last reported (`checkin_app_state.local_timezone`, sent with check-in
+  saves and push subscribes), falling back to `LOCAL_TIMEZONE`; `tzdata` is in requirements because Windows
   dev machines have no system tz database for `zoneinfo`.
 - The public dashboard's GitHub chart (`services/github.get_weekly_activity`)
   counts **pushes**, not commits, from the public events feed — GitHub
@@ -217,7 +227,7 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   push JS is inline in `today.html`. The `<link rel="manifest">` and SW
   registration are in `_shell.html` (authenticated pages), never
   `base_admin.html`, so the login page stays bare. Manifest + SW are the
-  only auth-exempt admin endpoints besides login (`routes.PUBLIC_ENDPOINTS`)
+  auth-exempt admin endpoints besides login and the reminder tick (`routes.PUBLIC_ENDPOINTS`)
   so installs and background SW updates survive JWT expiry. The SW has no
   fetch handler/offline cache on purpose — admin pages must always be live.
 - `url_for('static', ...)` appends `?v=<mtime>` (`app.py::static_cache_bust`)
@@ -227,3 +237,8 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   and reminder taps don't bounce to login. JWTs are stateless, so the only
   way to revoke remembered devices is rotating `JWT_SECRET`. The checkbox
   is plain text with no branding, consistent with the bare login page.
+- Auto-generated VAPID keys live in `checkin_app_state` (a deliberate,
+  narrow exception to "secrets only in .env": they're created by the app,
+  not by a person, and panel env vars can't be written programmatically).
+  Never put them — or anything private — in `site_settings`, whose rows go
+  to every public template as `settings`. Env `VAPID_*` vars override.

@@ -1,0 +1,15 @@
+---
+# Runs when you click "Deploy HEAD Commit" in cPanel > Git Version Control.
+# Same idea as Secret Santa: a deploy is pull + click, nothing by hand.
+# Schema updates and push keys are handled by the app itself on restart
+# (passenger_wsgi.py), because the env vars from the Python App panel are
+# only visible to the running app, not to this deploy shell.
+deployment:
+  tasks:
+    - export APPDIR=$HOME/gladcodes_app
+    # Install any new Python packages into the app's own virtualenv.
+    - for PIP in $HOME/virtualenv/gladcodes_app/*/bin/pip; do $PIP install -q -r $APPDIR/requirements.txt; done
+    # (Re)install the check-in reminder ping, replacing any older copy of the line.
+    - (crontab -l 2>/dev/null | grep -v 'gladcodes-reminders'; echo '*/15 * * * * curl -fsS -o /dev/null https://glad.codes/gc-admin/reminders/tick # gladcodes-reminders') | crontab -
+    # Restart Passenger so new code, schema, and packages take effect.
+    - mkdir -p $APPDIR/tmp && touch $APPDIR/tmp/restart.txt

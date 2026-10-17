@@ -1,13 +1,12 @@
 import json
-import subprocess
-import sys
 import unittest
 from unittest.mock import patch
 
 from app import create_app
 from blueprints.admin.auth import COOKIE_NAME, issue_token
 from blueprints.admin.csrf import CSRF_COOKIE_NAME
-from send_reminders import due_reminder, reminder_text
+from services.push import generate_vapid_keypair
+from services.reminders import due_reminder, reminder_text
 
 EVENING_EMPTY = {"win": None, "focus": None, "priority_done": 0, "scroll_minutes": None, "top_priority": "Ship push"}
 EVENING_DONE = dict(EVENING_EMPTY, win="Shipped it")
@@ -82,11 +81,49 @@ class VapidKeyTests(unittest.TestCase):
     def test_generated_keys_load_in_pywebpush(self):
         from py_vapid import Vapid
 
-        out = subprocess.run([sys.executable, "generate_vapid_keys.py"], capture_output=True, text=True, check=True).stdout
-        keys = dict(line.split("=", 1) for line in out.strip().splitlines())
-        vapid = Vapid.from_string(keys["VAPID_PRIVATE_KEY"])
-        self.assertIsNotNone(vapid.private_key)
-        self.assertEqual(len(keys["VAPID_PUBLIC_KEY"]), 87)  # 65 raw bytes, base64url
+        public, private = generate_vapid_keypair()
+        self.assertIsNotNone(Vapid.from_string(private).private_key)
+        self.assertEqual(len(public), 87)  # 65 raw bytes, base64url
+
+
+class ReminderTickTests(unittest.TestCase):
+    def setUp(self):
+        self.app = create_app()
+        self.app.config.update(TESTING=True, VAPID_PUBLIC_KEY="pub", VAPID_PRIVATE_KEY="priv")
+        self.client = self.app.test_client()
+
+    def _tick(self, hour, entry, claimed=True):
+        from datetime import datetime
+        with patch("blueprints.admin.app_shell.local_now", return_value=datetime(2026, 10, 16, hour, 5)),              patch("blueprints.admin.app_shell.query_one", return_value=entry),              patch("blueprints.admin.app_shell.claim_reminder", return_value=claimed) as claim,              patch("blueprints.admin.app_shell.send_to_all", return_value=1) as send:
+            resp = self.client.get("/gc-admin/reminders/tick")
+        self.assertEqual(resp.status_code, 204)
+        self.assertEqual(resp.get_data(), b"")
+        return claim, send
+
+    def test_morning_tick_sends_once_without_a_session(self):
+        claim, send = self._tick(8, None)
+        claim.assert_called_once_with("2026-10-16:morning")
+        self.assertEqual(send.call_args[1]["tag"], "checkin-morning")
+
+    def test_already_claimed_reminder_is_not_resent(self):
+        _, send = self._tick(8, None, claimed=False)
+        send.assert_not_called()
+
+    def test_off_hours_tick_does_nothing(self):
+        claim, send = self._tick(14, None)
+        claim.assert_not_called()
+        send.assert_not_called()
+
+
+class SchemaSplitTests(unittest.TestCase):
+    def test_schema_splits_into_clean_statements(self):
+        from database.db import SCHEMA_PATH, schema_statements
+
+        with open(SCHEMA_PATH, encoding="utf-8") as f:
+            statements = schema_statements(f.read())
+        self.assertTrue(all(not s.lstrip().startswith("--") for s in statements))
+        self.assertTrue(any("CREATE TABLE IF NOT EXISTS checkin_app_state" in s for s in statements))
+        self.assertFalse(any("DROP DATABASE" in s.upper() for s in statements))
 
 
 if __name__ == "__main__":

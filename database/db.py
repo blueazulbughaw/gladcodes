@@ -2,6 +2,7 @@
 get_db()/query()/execute() here so parameterization stays consistent — never
 build SQL with string formatting outside this module.
 """
+import os
 from contextlib import contextmanager
 from datetime import datetime, timezone
 
@@ -87,3 +88,26 @@ def transaction():
         raise
     finally:
         cursor.close()
+
+
+SCHEMA_PATH = os.path.join(os.path.dirname(__file__), "schema.sql")
+
+
+def schema_statements(sql_text: str):
+    """Split schema.sql into statements. Full-line `--` comments are dropped
+    first (some contain semicolons); the file never puts `;` inside string
+    literals, which is what makes a plain split safe here."""
+    lines = [line for line in sql_text.splitlines() if not line.lstrip().startswith("--")]
+    return [stmt.strip() for stmt in "\n".join(lines).split(";") if stmt.strip()]
+
+
+def apply_schema():
+    """Run schema.sql (idempotent by design: CREATE TABLE IF NOT EXISTS,
+    guarded seeds, ADD COLUMN IF NOT EXISTS). Called from passenger_wsgi.py
+    on every app start, so a deploy never needs a manual phpMyAdmin import.
+    Needs an app context."""
+    with open(SCHEMA_PATH, encoding="utf-8") as f:
+        statements = schema_statements(f.read())
+    with transaction() as cursor:
+        for statement in statements:
+            cursor.execute(statement)

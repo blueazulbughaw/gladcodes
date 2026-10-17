@@ -23,9 +23,10 @@ from .csrf import CSRF_COOKIE_NAME, csrf_cookie_missing, get_or_create_csrf_toke
 # blueprint, so they all get the auth gate and CSRF protection for free.
 
 
-# Reachable without a session: the login form, plus the installable app's
-# manifest and service worker (see app_shell.py for why those two).
-PUBLIC_ENDPOINTS = {"admin.login", "admin.manifest", "admin.service_worker"}
+# Reachable without a session: the login form, the installable app's
+# manifest and service worker, and the cron-pinged reminder tick (see
+# app_shell.py for why each is safe).
+PUBLIC_ENDPOINTS = {"admin.login", "admin.manifest", "admin.service_worker", "admin.reminders_tick"}
 
 
 @admin_bp.before_request

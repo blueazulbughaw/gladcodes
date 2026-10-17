@@ -571,3 +571,19 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uq_push_endpoint (endpoint(191))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Single-row state for the installable Today app, written by the app itself
+-- (not admin-editable, and deliberately NOT in site_settings, whose rows are
+-- passed to every public template). VAPID keys are generated on first start
+-- (services/push.ensure_vapid_keys) unless VAPID_* env vars override them;
+-- local_timezone is reported by the phone's browser; reminder_last_sent
+-- ("YYYY-MM-DD:morning") makes each reminder go out at most once.
+CREATE TABLE IF NOT EXISTS checkin_app_state (
+    id TINYINT PRIMARY KEY,
+    vapid_public_key VARCHAR(255),
+    vapid_private_key VARCHAR(255),
+    local_timezone VARCHAR(64),
+    reminder_last_sent VARCHAR(32)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT IGNORE INTO checkin_app_state (id) VALUES (1);

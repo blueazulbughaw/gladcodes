@@ -3,15 +3,19 @@
 The manifest and service worker are served from /gc-admin/ rather than
 /static/ on purpose: a public static file naming /gc-admin/today would
 disclose the admin URL. Both are exempt from the auth gate (see
-routes.PUBLIC_ENDPOINTS) so installs and the browser's background service
+routes.PUBLIC_ENDPOINTS, along with the reminder tick) so installs and the browser's background service
 worker updates keep working after the 30-minute JWT expires; neither
 contains anything beyond the app's name and start URL.
 """
-from flask import Response, jsonify, request, url_for
+from flask import Response, current_app, jsonify, request, url_for
+
+from database.db import query_one
+from services.reminders import claim_reminder, due_reminder, reminder_text
 
 from services.push import delete_subscription, enabled, save_subscription, send_to_all
 
 from . import admin_bp
+from .checkin import local_now, save_timezone
 
 SERVICE_WORKER_JS = """
 // Check-in reminders (sent by services/push.py). No offline caching:
@@ -96,6 +100,7 @@ def push_subscribe():
     if not _valid_subscription(endpoint, p256dh, auth):
         return jsonify({"ok": False}), 400
     save_subscription(endpoint, p256dh, auth, request.user_agent.string or "")
+    save_timezone(request.form.get("tz"))
     return jsonify({"ok": True})
 
 
@@ -113,3 +118,20 @@ def push_test():
         return jsonify({"ok": False, "sent": 0}), 503
     sent = send_to_all("It works ✨", "This is where your check-in reminders will show up.", url_for("admin.today"), tag="test")
     return jsonify({"ok": sent > 0, "sent": sent})
+
+
+@admin_bp.route("/reminders/tick")
+def reminders_tick():
+    """Pinged every 15 minutes by the cron job .cpanel.yml installs. Exempt
+    from auth (cron has no session) — safe because it can only send the
+    reminder that's already due, once (claim_reminder), and always answers
+    an empty 204 so it reveals nothing."""
+    if enabled():
+        now = local_now()
+        entry = query_one("SELECT * FROM daily_checkins WHERE checkin_date = %s", (now.date(),))
+        kind = due_reminder(now.hour, current_app.config["CHECKIN_MORNING_HOUR"],
+                            current_app.config["CHECKIN_EVENING_HOUR"], entry)
+        if kind and claim_reminder(f"{now.date().isoformat()}:{kind}"):
+            title, body = reminder_text(kind, entry)
+            send_to_all(title, body, url_for("admin.today"), tag=f"checkin-{kind}")
+    return "", 204

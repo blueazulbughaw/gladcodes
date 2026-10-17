@@ -34,17 +34,16 @@ class Config:
     GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
     GITHUB_CACHE_TTL_SECONDS = 60 * 60  # 1 hour
 
-    # Which calendar day the private daily check-in (/gc-admin/today) counts
-    # as "today". The server runs in UTC; this is where Glad actually wakes up.
+    # Fallback for which calendar day the daily check-in counts as "today",
+    # used until the Today app reports the phone's timezone (checkin.py).
     LOCAL_TIMEZONE = os.environ.get("LOCAL_TIMEZONE") or "America/New_York"
 
-    # Web Push for check-in reminders (services/push.py, send_reminders.py).
-    # Both keys are base64url — generate with `python generate_vapid_keys.py`.
-    # Leave empty and nothing is pushed; the app still installs and works.
+    # Web Push for check-in reminders (services/push.py). Optional override:
+    # leave empty and passenger_wsgi.py generates/stores a pair on startup.
     VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
     VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")
     VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT") or "https://glad.codes"
-    # Local hours (LOCAL_TIMEZONE, 24h clock) when send_reminders.py nudges.
+    # Local hours (24h clock) when the reminder tick nudges (services/reminders.py).
     CHECKIN_MORNING_HOUR = int(os.environ.get("CHECKIN_MORNING_HOUR") or 8)
     CHECKIN_EVENING_HOUR = int(os.environ.get("CHECKIN_EVENING_HOUR") or 21)
 

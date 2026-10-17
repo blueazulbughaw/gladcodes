@@ -1,18 +1,57 @@
 """Web Push for the installed check-in app (/gc-admin/today).
 
-Needs VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY (see config.py); without them
-nothing is sent. Best-effort like services/mail.py: any failure is logged
-and swallowed — a push never raises into a request or the cron script.
+VAPID keys: VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY env vars win if set;
+otherwise ensure_vapid_keys() (run from passenger_wsgi.py at startup)
+generates a pair once and keeps it in checkin_app_state, so push works
+after a plain deploy with nothing to configure. Sending is best-effort
+like services/mail.py: failures are logged, never raised.
 """
+import base64
 import json
 import logging
 
 from flask import current_app
 
-from database.db import execute, query
+from database.db import execute, query, query_one
 
 log = logging.getLogger(__name__)
 TIMEOUT_SECONDS = 5
+
+
+def generate_vapid_keypair():
+    """(public, private) as base64url: raw uncompressed P-256 point / raw scalar."""
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric import ec
+
+    def b64url(raw: bytes) -> str:
+        return base64.urlsafe_b64encode(raw).rstrip(b"=").decode()
+
+    key = ec.generate_private_key(ec.SECP256R1())
+    public = key.public_key().public_bytes(serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint)
+    return b64url(public), b64url(key.private_numbers().private_value.to_bytes(32, "big"))
+
+
+def ensure_vapid_keys() -> None:
+    """Load (creating on first run) the VAPID pair into app.config. Needs an
+    app context. Race-safe across Passenger workers: only a row with no key
+    yet is updated, then every worker reads back whichever pair won."""
+    config = current_app.config
+    if config.get("VAPID_PUBLIC_KEY") and config.get("VAPID_PRIVATE_KEY"):
+        return
+    row = query_one("SELECT vapid_public_key, vapid_private_key FROM checkin_app_state WHERE id = 1")
+    if not row or not row["vapid_private_key"]:
+        public, private = generate_vapid_keypair()
+        execute(
+            """
+            UPDATE checkin_app_state SET vapid_public_key = %s, vapid_private_key = %s
+            WHERE id = 1 AND vapid_private_key IS NULL
+            """,
+            (public, private),
+        )
+        row = query_one("SELECT vapid_public_key, vapid_private_key FROM checkin_app_state WHERE id = 1")
+    if row and row["vapid_private_key"]:
+        config["VAPID_PUBLIC_KEY"] = row["vapid_public_key"]
+        config["VAPID_PRIVATE_KEY"] = row["vapid_private_key"]
 
 
 def enabled() -> bool:

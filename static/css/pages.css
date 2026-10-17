@@ -5,7 +5,7 @@
   padding: var(--space-2xl) 0 var(--space-lg);
 }
 .page-hero h1 { font-size: clamp(1.9rem, 3.4vw, 2.6rem); }
-.page-hero p { max-width: 56ch; color: rgba(var(--navy-rgb), 0.7); }
+.page-hero p { color: rgba(var(--navy-rgb), 0.7); }
 /* One-sentence subtitle under a page title. Sized so the whole sentence
    fits on a single line inside the container on desktop; wraps normally on
    narrower screens so phones never get a horizontal scroll. */

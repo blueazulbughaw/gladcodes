@@ -7,6 +7,7 @@ Never exposed publicly — nothing here is read by blueprints/public.
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+import pymysql
 from flask import current_app, redirect, render_template, request, url_for
 
 from database.db import execute, query, query_one, utc_now
@@ -18,12 +19,34 @@ MOODS = [(1, "😞", "Rough"), (2, "😕", "Meh"), (3, "😐", "Okay"), (4, "�
 CHART_DAYS = 14
 
 
-def local_now() -> datetime:
+def valid_timezone(name) -> bool:
+    if not name or len(name) > 64:
+        return False
     try:
-        tz = ZoneInfo(current_app.config["LOCAL_TIMEZONE"])
+        ZoneInfo(name)
     except (ZoneInfoNotFoundError, ValueError):
-        tz = ZoneInfo("UTC")
-    return datetime.now(tz)
+        return False
+    return True
+
+
+def saved_timezone():
+    """The timezone the phone/browser last reported (see save_timezone), so
+    LOCAL_TIMEZONE never has to be configured by hand."""
+    try:
+        row = query_one("SELECT local_timezone FROM checkin_app_state WHERE id = 1")
+    except pymysql.err.MySQLError:  # table not created yet, DB unreachable in tests
+        return None
+    return row["local_timezone"] if row else None
+
+
+def save_timezone(name) -> None:
+    if valid_timezone(name):
+        execute("UPDATE checkin_app_state SET local_timezone = %s WHERE id = 1", (name,))
+
+
+def local_now() -> datetime:
+    name = saved_timezone() or current_app.config["LOCAL_TIMEZONE"]
+    return datetime.now(ZoneInfo(name) if valid_timezone(name) else ZoneInfo("UTC"))
 
 
 def local_today() -> date:
@@ -77,10 +100,6 @@ def hour_label(hour: int) -> str:
     return f"{hour % 12 or 12}{'am' if hour < 12 else 'pm'}"
 
 
-def evening_done(entry) -> bool:
-    return bool(entry and (entry["win"] or entry["focus"] or entry["priority_done"] or entry["scroll_minutes"] is not None))
-
-
 def _flag(name):
     return 1 if request.form.get(name) else 0
 
@@ -98,6 +117,7 @@ def today():
     today_date = local_today()
 
     if request.method == "POST":
+        save_timezone(request.form.get("tz"))
         day = parse_day(request.form.get("checkin_date"), today_date)
         execute(
             """

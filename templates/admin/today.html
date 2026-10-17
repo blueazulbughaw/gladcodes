@@ -25,6 +25,7 @@
   <form method="post" class="checkin-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <input type="hidden" name="checkin_date" value="{{ day.isoformat() }}">
+    <input type="hidden" name="tz" id="checkinTz" value="">
 
     <section class="card checkin-card">
       <h2><i data-lucide="sunrise"></i> Morning</h2>
@@ -183,9 +184,15 @@
       return Uint8Array.from(raw, function (c) { return c.charCodeAt(0); });
     }
 
+    // The browser knows where Glad actually is; the server uses it to decide
+    // what "today" is and when 8am happens (no LOCAL_TIMEZONE to configure).
+    var TZ = "";
+    try { TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch (_) {}
+    document.getElementById("checkinTz").value = TZ;
+
     function subFields(sub) {
       var json = sub.toJSON();
-      return { endpoint: json.endpoint, p256dh: json.keys.p256dh, auth: json.keys.auth };
+      return { endpoint: json.endpoint, p256dh: json.keys.p256dh, auth: json.keys.auth, tz: TZ };
     }
 
     // Install: Chrome/Edge (desktop + Android) fire beforeinstallprompt.
@@ -211,7 +218,7 @@
     }
     if (!pushSupported) return;
     if (!VAPID_KEY) {
-      if (standalone) say("Installed. Reminders need VAPID keys on the server (see CLAUDE.md).");
+      if (standalone) say("Installed. Reminders will turn on after the app restarts on the server.");
       return;
     }
 
