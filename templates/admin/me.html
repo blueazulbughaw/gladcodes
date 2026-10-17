@@ -66,20 +66,36 @@
     <section class="card">
       <h2><i data-lucide="pill"></i> Medicine, last 7 days</h2>
       {% if adherence %}
-      <table class="personal-meds">
-        <thead><tr><th></th>{% for cell in adherence[0].cells %}<th>{{ cell.day.strftime('%a')[0] }}</th>{% endfor %}<th></th></tr></thead>
-        <tbody>
-          {% for med in adherence %}
-          <tr>
-            <th scope="row">{{ med.name }}</th>
+      {# Stacked per medicine (name + %, then 7 equal day squares) so it always
+         fits a phone-width card; a wide table didn't. #}
+      <div class="med-week">
+        {% for med in adherence %}
+        <div class="med-week-row">
+          <div class="med-week-head">
+            <strong>{{ med.name }}</strong>
+            {% if med.pct is not none %}<span class="med-week-pct {{ 'is-good' if med.pct >= 90 else ('is-ok' if med.pct >= 60 else 'is-low') }}">{{ med.pct }}%</span>{% endif %}
+          </div>
+          <div class="med-week-days">
             {% for cell in med.cells %}
-            <td>{% if cell.due %}<span class="med-cell {{ 'med-cell--full' if cell.taken == cell.expected else ('med-cell--part' if cell.taken else 'med-cell--none') }}" title="{{ cell.day|human_date }}: {{ cell.taken }} of {{ cell.expected }}">{{ cell.taken }}/{{ cell.expected }}</span>{% elif cell.taken %}<span class="med-cell med-cell--full" title="{{ cell.taken }} taken">{{ cell.taken }}</span>{% else %}<span class="med-cell med-cell--off">·</span>{% endif %}</td>
+            {% if cell.due %}
+              {% set state = 'full' if cell.taken == cell.expected else ('part' if cell.taken else 'none') %}
+              {% set mark = '✓' if state == 'full' else (cell.taken ~ '/' ~ cell.expected) %}
+              {% set tip = cell.taken ~ ' of ' ~ cell.expected ~ ' taken' %}
+            {% elif cell.taken %}
+              {% set state, mark, tip = 'full', '✓', cell.taken ~ ' taken (as needed)' %}
+            {% else %}
+              {% set state, mark, tip = 'off', '–', 'not due' %}
+            {% endif %}
+            <div class="med-day med-day--{{ state }}" title="{{ cell.day|human_date }}: {{ tip }}">
+              <span class="med-day-label">{{ cell.day.strftime('%a')[0] }}</span>
+              <span class="med-day-box">{{ mark }}</span>
+            </div>
             {% endfor %}
-            <td class="personal-pct">{{ (med.pct ~ '%') if med.pct is not none else '' }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+          </div>
+        </div>
+        {% endfor %}
+        <p class="med-week-legend"><span class="med-day--full"><b>✓</b> all taken</span><span class="med-day--part"><b>1/3</b> some</span><span class="med-day--none"><b>0/3</b> missed</span><span class="med-day--off"><b>–</b> not due</span></p>
+      </div>
       {% else %}<p class="admin-meta"><a href="{{ url_for('admin.simple_list', resource='medications') }}">Add your medicines</a> to track them here.</p>{% endif %}
     </section>
 

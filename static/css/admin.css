@@ -575,16 +575,29 @@ body.admin-body { display: flex; min-height: 100vh; align-items: stretch; }
 .personal-list--log li span:last-child { white-space: pre-line; }
 .personal-date { flex-shrink: 0; min-width: 4.2rem; font-size: 0.78rem; font-weight: 600; color: rgba(var(--navy-rgb), 0.55); }
 
-.personal-meds { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-.personal-meds th { font-weight: 600; color: rgba(var(--navy-rgb), 0.55); padding: 0.25rem; text-align: center; }
-.personal-meds th[scope="row"] { text-align: left; color: var(--navy); font-size: 0.85rem; }
-.personal-meds td { padding: 0.2rem; text-align: center; }
-.med-cell { display: inline-block; min-width: 2.2rem; padding: 0.2rem 0; border-radius: 6px; font-weight: 600; }
-.med-cell--full { background: rgba(59, 165, 93, 0.15); color: #2a7a44; }
-.med-cell--part { background: rgba(231, 169, 60, 0.18); color: #9a6a12; }
-.med-cell--none { background: rgba(179, 38, 30, 0.1); color: #b3261e; }
-.med-cell--off { color: rgba(var(--navy-rgb), 0.25); }
-.personal-pct { font-weight: 700; color: var(--teal); }
+/* Medicine week (My dashboard): stacked rows, 7 equal day squares. */
+.med-week { display: flex; flex-direction: column; gap: 0.9rem; }
+.med-week-row { display: flex; flex-direction: column; gap: 0.4rem; min-width: 0; }
+.med-week-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; font-size: 0.9rem; }
+.med-week-head strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.med-week-pct { flex-shrink: 0; font-size: 0.75rem; font-weight: 700; padding: 0.1rem 0.5rem; border-radius: 999px; }
+.med-week-pct.is-good { background: rgba(59, 165, 93, 0.14); color: #2a7a44; }
+.med-week-pct.is-ok { background: rgba(231, 169, 60, 0.18); color: #9a6a12; }
+.med-week-pct.is-low { background: rgba(179, 38, 30, 0.1); color: #b3261e; }
+.med-week-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.3rem; }
+.med-day { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; min-width: 0; }
+.med-day-label { font-size: 0.65rem; font-weight: 600; color: rgba(var(--navy-rgb), 0.45); }
+.med-day-box {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; max-width: 40px; height: 28px; border-radius: 7px;
+  font-size: 0.68rem; font-weight: 700; white-space: nowrap;
+}
+.med-day--full .med-day-box, .med-week-legend .med-day--full b { background: rgba(59, 165, 93, 0.16); color: #2a7a44; }
+.med-day--part .med-day-box, .med-week-legend .med-day--part b { background: rgba(231, 169, 60, 0.2); color: #9a6a12; }
+.med-day--none .med-day-box, .med-week-legend .med-day--none b { background: rgba(179, 38, 30, 0.1); color: #b3261e; }
+.med-day--off .med-day-box, .med-week-legend .med-day--off b { background: rgba(var(--navy-rgb), 0.04); color: rgba(var(--navy-rgb), 0.3); }
+.med-week-legend { display: flex; flex-wrap: wrap; gap: 0.35rem 0.8rem; margin: 0.2rem 0 0; font-size: 0.7rem; color: rgba(var(--navy-rgb), 0.55); }
+.med-week-legend b { display: inline-block; min-width: 1.6rem; padding: 0 0.25rem; margin-right: 0.2rem; border-radius: 5px; text-align: center; font-size: 0.65rem; }
 
 .personal-tracking { margin-top: 1.5rem; }
 .personal-tracking-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.5rem 1rem; margin: 1rem 0; font-size: 0.88rem; }
