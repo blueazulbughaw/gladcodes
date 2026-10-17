@@ -8,3 +8,5 @@ python-dotenv==1.0.1
 requests==2.32.3
 Markdown==3.7
 bleach==6.1.0
+# IANA timezone data for zoneinfo (LOCAL_TIMEZONE); Windows has no system tz database.
+tzdata==2025.2

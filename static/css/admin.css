@@ -386,3 +386,117 @@ body.admin-body { display: flex; min-height: 100vh; align-items: stretch; }
 @media (max-width: 760px) {
   .admin-editor-grid { grid-template-columns: 1fr; }
 }
+
+/* Daily check-in (/gc-admin/today) ---------------------------------------- */
+.checkin-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  border-radius: var(--radius-card);
+  background: var(--navy);
+  color: #fff;
+  box-shadow: var(--shadow-card);
+  text-decoration: none;
+}
+.checkin-banner:hover { text-decoration: none; filter: brightness(1.1); }
+.checkin-banner strong { margin-left: auto; white-space: nowrap; }
+.checkin-banner--done { background: rgba(var(--teal-rgb), 0.12); color: var(--teal); }
+
+/* admin.css doesn't load base.css, so give check-in cards their own surface. */
+.checkin .card {
+  background: var(--card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 1.25rem;
+}
+.checkin .admin-page-header { align-items: flex-start; flex-wrap: wrap; gap: 0.75rem; }
+.checkin .admin-page-header h1 { margin-bottom: 0.2rem; }
+.checkin-badges { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.checkin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: rgba(231, 169, 60, 0.15);
+  color: #9a6a12;
+}
+.checkin-badge--teal { background: rgba(var(--teal-rgb), 0.12); color: var(--teal); }
+.checkin-badge svg { width: 16px; height: 16px; }
+.checkin-saved {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  background: rgba(59, 165, 93, 0.12);
+  color: #2a7a44;
+  font-weight: 600;
+}
+.checkin-saved svg { width: 18px; height: 18px; }
+
+.checkin-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; align-items: start; }
+.checkin-card { display: flex; flex-direction: column; gap: 1.1rem; }
+.checkin-card h2 { display: flex; align-items: center; gap: 0.5rem; font-size: 1.15rem; margin: 0; }
+.checkin-card h2 small, .checkin-scale legend small { font-family: var(--font-body); font-size: 0.8rem; font-weight: 400; color: rgba(var(--navy-rgb), 0.55); }
+.checkin-card h2 svg { color: var(--teal); }
+.checkin-actions { grid-column: 1 / -1; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+
+.checkin-scale { border: 0; padding: 0; margin: 0; }
+.checkin-scale legend { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.45rem; padding: 0; }
+.checkin-options { display: flex; gap: 0.4rem; }
+.checkin-option { flex: 1; position: relative; }
+.checkin-option input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.checkin-option span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  min-height: 44px;
+  padding: 0.4rem 0.25rem;
+  border-radius: 10px;
+  border: 1px solid rgba(var(--navy-rgb), 0.15);
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background 0.15s, border-color 0.15s;
+}
+.checkin-option--mood span b { font-size: 1.5rem; font-weight: 400; line-height: 1; }
+.checkin-option--mood span { font-size: 0.72rem; }
+.checkin-option input:checked + span { background: var(--teal); border-color: var(--teal); color: #fff; }
+.checkin-option input:focus-visible + span { outline: 2px solid var(--teal); outline-offset: 2px; }
+
+.checkin-row { display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap; }
+.checkin-row .admin-field { flex: 1; min-width: 140px; }
+.checkin-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid rgba(var(--navy-rgb), 0.15);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.checkin-toggle input { width: 18px; height: 18px; accent-color: var(--teal); }
+.checkin-toggle:has(input:checked) { background: rgba(var(--teal-rgb), 0.1); border-color: var(--teal); }
+.checkin-toggle--big { font-size: 1rem; padding: 0.8rem 1rem; }
+
+.checkin-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
+.checkin-history-title { font-size: 1.15rem; margin: 1rem 0; }
+.checkin-history { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+.checkin-history-item { color: var(--navy); text-decoration: none; display: flex; flex-direction: column; gap: 0.4rem; }
+.checkin-history-item:hover { text-decoration: none; box-shadow: var(--shadow-card-hover); }
+.checkin-history-head { display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; }
+.checkin-history-item p { display: flex; gap: 0.4rem; margin: 0; font-size: 0.85rem; color: rgba(var(--navy-rgb), 0.75); white-space: pre-line; }
+.checkin-history-item p svg { flex-shrink: 0; width: 15px; height: 15px; margin-top: 0.15rem; color: var(--teal); }
+
+@media (prefers-reduced-motion: reduce) {
+  .checkin-option span { transition: none; }
+}

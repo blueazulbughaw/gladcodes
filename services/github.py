@@ -101,3 +101,92 @@ def get_profile_summary(username: str):
 
     set_cached(cache_key, payload)
     return payload
+
+
+def normalize_username(value):
+    """github_username is meant to be a bare username, but admins sometimes
+    paste the full profile URL instead — accept both so a data-entry slip
+    doesn't break the profile link or the GitHub API call."""
+    if not value:
+        return None
+    value = value.strip().rstrip("/")
+    if value.startswith("http://") or value.startswith("https://"):
+        value = value.rsplit("/", 1)[-1]
+    return value or None
+
+
+def configured_username():
+    row = query_one("SELECT setting_value FROM site_settings WHERE setting_key = 'github_username'")
+    return normalize_username(row["setting_value"] if row else None)
+
+
+def bucket_pushes_by_week(events, today, weeks: int = 12) -> dict:
+    """Group PushEvents into Monday-start weeks ending with the current week.
+
+    Pure function (no I/O) so it's testable. Counts pushes, not commits:
+    GitHub stopped including commit counts in PushEvent payloads in 2025.
+    """
+    current_monday = today - timedelta(days=today.weekday())
+    mondays = [current_monday - timedelta(weeks=i) for i in range(weeks - 1, -1, -1)]
+    counts = {monday: 0 for monday in mondays}
+    last_push = None
+    pushes_30d = 0
+    for event in events:
+        if event.get("type") != "PushEvent" or not event.get("created_at"):
+            continue
+        created = datetime.fromisoformat(event["created_at"].replace("Z", "+00:00"))
+        day = created.date()
+        monday = day - timedelta(days=day.weekday())
+        if monday in counts:
+            counts[monday] += 1
+        if (today - day).days < 30:
+            pushes_30d += 1
+        if last_push is None or event["created_at"] > last_push["pushed_at"]:
+            last_push = {
+                "repo": (event.get("repo") or {}).get("name", ""),
+                "pushed_at": event["created_at"],
+            }
+    return {
+        "labels": [monday.strftime("%b %d") for monday in mondays],
+        "data": [counts[monday] for monday in mondays],
+        "pushes_30d": pushes_30d,
+        "last_push": last_push,
+    }
+
+
+def get_weekly_activity(username: str, weeks: int = 12):
+    """Return {"labels", "data", "pushes_30d", "last_push"} for the public
+    dashboard, or None on any failure (caller hides the section).
+
+    Built from the public events feed, which covers ~90 days / 300 events —
+    enough for 12 weeks. Cached like everything else here, so the dashboard
+    picks up new pushes within an hour without ever blocking on GitHub.
+    """
+    if not username:
+        return None
+
+    cache_key = f"activity:{username}"
+    cached = get_cached(cache_key)
+    if cached is not None:
+        return cached
+
+    events = []
+    try:
+        for page in (1, 2, 3):
+            resp = requests.get(
+                f"{GITHUB_API_BASE}/users/{username}/events/public",
+                headers=_headers(),
+                params={"per_page": 100, "page": page},
+                timeout=5,
+            )
+            resp.raise_for_status()
+            batch = resp.json()
+            events.extend(batch)
+            if len(batch) < 100:
+                break
+    except (requests.RequestException, ValueError):
+        return None
+
+    payload = bucket_pushes_by_week(events, datetime.now(timezone.utc).date(), weeks)
+    set_cached(cache_key, payload)
+    return payload

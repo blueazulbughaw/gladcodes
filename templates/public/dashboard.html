@@ -12,7 +12,7 @@
   <div class="container">
     <span class="eyebrow">Founder metrics</span>
     <h1>Dashboard</h1>
-    <p>Every number here is real and pulled straight from the same database that powers the rest of the site.</p>
+    <p>Every number here is real: pulled from the same database that powers the rest of the site, plus live GitHub activity that refreshes hourly.</p>
   </div>
 </section>
 
@@ -40,6 +40,15 @@
         <h3>Learning hours by skill</h3>
         <canvas id="learningChart" height="220"></canvas>
       </div>
+      {% if github_activity %}
+      <div class="card chart-card reveal">
+        <h3>GitHub pushes per week</h3>
+        <canvas id="githubActivityChart" height="220"></canvas>
+        <p class="stat-label">
+          {{ github_activity.pushes_30d }} pushes in the last 30 days{% if github_activity.last_push %} · last to <strong>{{ github_activity.last_push.repo }}</strong> on {{ github_activity.last_push.pushed_at_parsed|human_date }}{% endif %}
+        </p>
+      </div>
+      {% endif %}
       <div class="card chart-card beta-card reveal">
         <h3>Beta users</h3>
         <div class="beta-progress-numbers">{{ beta_current|int }} <span>/ {{ beta_target|int }} target</span></div>
@@ -61,6 +70,9 @@
     if (!window.GladCharts) return;
     GladCharts.lineChart("codingHoursChart", {{ coding_hours.labels|tojson }}, {{ coding_hours.data|tojson }}, "Coding hours");
     GladCharts.barChart("featuresChart", {{ features_shipped.labels|tojson }}, {{ features_shipped.data|tojson }}, "Features shipped");
+    {% if github_activity %}
+    GladCharts.barChart("githubActivityChart", {{ github_activity.labels|tojson }}, {{ github_activity.data|tojson }}, "Pushes");
+    {% endif %}
     GladCharts.barChart("learningChart", {{ learning_metrics.labels|tojson }}, {{ learning_metrics.data|tojson }}, "Hours studied");
   });
 </script>

@@ -4,6 +4,7 @@ from database.db import query_one
 from services.metrics import get_chart_series
 
 from . import admin_bp
+from .checkin import checkin_streak, has_checked_in, local_today
 from .auth import (
     COOKIE_NAME,
     clear_attempts,
@@ -68,7 +69,9 @@ def login():
             password = request.form.get("password", "")
             if verify_credentials(username, password):
                 clear_attempts(ip)
-                response = redirect(url_for("admin.index"))
+                # Morning ritual: land on the daily check-in until today's is done.
+                landing = "admin.index" if has_checked_in(local_today()) else "admin.today"
+                response = redirect(url_for(landing))
                 response.set_cookie(
                     COOKIE_NAME,
                     issue_token(username),
@@ -97,10 +100,13 @@ def index():
     project_count = query_one("SELECT COUNT(*) AS c FROM projects")["c"]
     now_row = query_one("SELECT updated_at FROM now_card WHERE id = 1")
     coding_hours = get_chart_series("coding_hours_weekly")
+    today_date = local_today()
 
     return render_template(
         "index.html",
         token_exp=g.token_exp,
+        checked_in_today=has_checked_in(today_date),
+        checkin_streak=checkin_streak(today_date),
         post_count=post_count,
         subscriber_count=subscriber_count,
         project_count=project_count,

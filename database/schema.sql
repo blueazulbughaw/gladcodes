@@ -536,3 +536,26 @@ CREATE TABLE IF NOT EXISTS pdf_assets (
     description TEXT,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Private daily check-in (/gc-admin/today). Never rendered on a public page:
+-- mood, meds, and gratitude are personal. One row per local calendar day;
+-- every tracker column is nullable so a morning save can be finished later.
+CREATE TABLE IF NOT EXISTS daily_checkins (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    checkin_date DATE NOT NULL UNIQUE,
+    mood TINYINT,
+    energy TINYINT,
+    focus TINYINT,
+    sleep_hours DECIMAL(3, 1),
+    took_meds TINYINT(1) NOT NULL DEFAULT 0,
+    exercised TINYINT(1) NOT NULL DEFAULT 0,
+    reading TEXT,
+    grateful TEXT,
+    top_priority VARCHAR(255),
+    priority_done TINYINT(1) NOT NULL DEFAULT 0,
+    scroll_minutes SMALLINT,
+    win TEXT,
+    notes TEXT,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

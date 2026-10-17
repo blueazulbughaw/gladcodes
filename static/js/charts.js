@@ -58,5 +58,38 @@
     });
   }
 
-  window.GladCharts = { lineChart: lineChart, barChart: barChart };
+  // Several series on one axis (e.g. mood/energy/focus). Gaps (null) are
+  // bridged so a missed day doesn't break the line. opts.min/opts.max pin
+  // the y-axis, e.g. to a 1–5 scale.
+  function multiLineChart(canvasId, labels, series, opts) {
+    var el = document.getElementById(canvasId);
+    if (!el) return null;
+    var colors = [palette.teal, palette.ocean, "#E7A93C", palette.navy];
+    opts = opts || {};
+    return new Chart(el, {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: series.map(function (s, i) {
+          var color = colors[i % colors.length];
+          return {
+            label: s.label,
+            data: s.data,
+            borderColor: color,
+            backgroundColor: color,
+            pointBackgroundColor: color,
+            tension: 0.35,
+            spanGaps: true,
+          };
+        }),
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: true, position: "bottom" } },
+        scales: { y: { min: opts.min, max: opts.max, ticks: { stepSize: 1 } } },
+      },
+    });
+  }
+
+  window.GladCharts = { lineChart: lineChart, barChart: barChart, multiLineChart: multiLineChart };
 })();

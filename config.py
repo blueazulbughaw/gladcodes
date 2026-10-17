@@ -30,6 +30,10 @@ class Config:
     GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
     GITHUB_CACHE_TTL_SECONDS = 60 * 60  # 1 hour
 
+    # Which calendar day the private daily check-in (/gc-admin/today) counts
+    # as "today". The server runs in UTC; this is where Glad actually wakes up.
+    LOCAL_TIMEZONE = os.environ.get("LOCAL_TIMEZONE") or "America/New_York"
+
     # Contact form delivery. Defaults assume a Python app on cPanel shared
     # hosting, where Exim already handles mail for the account and accepts
     # local, unauthenticated submission on localhost:25 — no external email

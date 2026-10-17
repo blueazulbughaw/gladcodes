@@ -9,6 +9,7 @@
     </button>
   </div>
   <nav>
+    <a href="{{ url_for('admin.today') }}" class="{{ 'active' if request.endpoint == 'admin.today' }}"><i data-lucide="sun"></i><span>Today</span></a>
     <a href="{{ url_for('admin.index') }}" class="{{ 'active' if request.endpoint == 'admin.index' }}"><i data-lucide="home"></i><span>Dashboard</span></a>
     <a href="{{ url_for('admin.now_card_editor') }}" class="{{ 'active' if request.endpoint == 'admin.now_card_editor' }}"><i data-lucide="clock"></i><span>NOW card</span></a>
     <a href="{{ url_for('admin.simple_list', resource='timeline') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'timeline' }}"><i data-lucide="flag"></i><span>Timeline</span></a>

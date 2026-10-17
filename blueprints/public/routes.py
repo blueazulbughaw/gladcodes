@@ -6,7 +6,8 @@ from flask import Response, abort, current_app, flash, redirect, render_template
 
 from database.db import execute, query, query_one, utc_now
 from services.content import render_markdown
-from services.github import get_profile_summary
+from services.github import configured_username, get_profile_summary, get_weekly_activity
+from services.github import normalize_username as _normalize_github_username
 from services.mail import send_contact_email
 from services.metrics import get_chart_series
 
@@ -32,18 +33,6 @@ CONTACT_SUBJECTS = [
 @public_bp.app_context_processor
 def inject_globals():
     return {"current_year": datetime.now(timezone.utc).year}
-
-
-def _normalize_github_username(value):
-    """github_username is meant to be a bare username, but admins sometimes
-    paste the full profile URL instead — accept both so a data-entry slip
-    doesn't break the profile link or the GitHub API call."""
-    if not value:
-        return None
-    value = value.strip().rstrip("/")
-    if value.startswith("http://") or value.startswith("https://"):
-        value = value.rsplit("/", 1)[-1]
-    return value or None
 
 
 @public_bp.context_processor
@@ -105,9 +94,7 @@ def home():
     for milestone in milestones:
         timeline_by_month.setdefault(milestone["month_label"], []).append(milestone)
 
-    github_row = query_one("SELECT setting_value FROM site_settings WHERE setting_key = 'github_username'")
-    github_username = _normalize_github_username(github_row["setting_value"] if github_row else None)
-    github = get_profile_summary(github_username)
+    github = get_profile_summary(configured_username())
     if github:
         for repo in github["repos"]:
             if repo.get("pushed_at"):
@@ -141,8 +128,15 @@ def dashboard():
     beta_target = beta.get("target", 0)
     beta_pct = round(beta_current / beta_target * 100) if beta_target else 0
 
+    github_activity = get_weekly_activity(configured_username())
+    if github_activity and github_activity.get("last_push"):
+        github_activity["last_push"]["pushed_at_parsed"] = datetime.fromisoformat(
+            github_activity["last_push"]["pushed_at"].replace("Z", "+00:00")
+        )
+
     return render_template(
         "dashboard.html",
+        github_activity=github_activity,
         stats=stats,
         coding_hours=coding_hours,
         features_shipped=features_shipped,

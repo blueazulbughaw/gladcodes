@@ -193,3 +193,15 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   honeypot field (`company`, absolutely positioned off-screen); a
   filled honeypot silently "succeeds" without sending mail rather than
   telling the bot it was caught.
+- The private daily check-in (`/gc-admin/today`, `blueprints/admin/checkin.py`,
+  `daily_checkins` table) is the admin's landing page after login until
+  today's row exists — the point is to make the site the first thing
+  opened each morning instead of social media. Mood, meds, gratitude, etc.
+  are personal: nothing in `blueprints/public` ever reads this table.
+  "Today" is the calendar day in `LOCAL_TIMEZONE` (env, default
+  America/New_York), not UTC; `tzdata` is in requirements because Windows
+  dev machines have no system tz database for `zoneinfo`.
+- The public dashboard's GitHub chart (`services/github.get_weekly_activity`)
+  counts **pushes**, not commits, from the public events feed — GitHub
+  removed commit counts from PushEvent payloads in 2025. Same
+  `{"labels", "data"}` shape and `github_cache` pattern as everything else.

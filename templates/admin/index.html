@@ -8,6 +8,12 @@
     <span id="sessionCountdown" class="session-countdown" data-exp="{{ token_exp }}"></span>
   </div>
 
+  <a href="{{ url_for('admin.today') }}" class="checkin-banner{{ ' checkin-banner--done' if checked_in_today }}">
+    <i data-lucide="{{ 'check-circle-2' if checked_in_today else 'sun' }}"></i>
+    <span>{% if checked_in_today %}Today's check-in is done{% else %}You haven't checked in today: mood, reading, gratitude{% endif %}</span>
+    <strong>{{ checkin_streak }}-day streak</strong>
+  </a>
+
   <div class="overview-cards">
     <div class="overview-card">
       <span class="overview-value">{{ post_count }}</span>
