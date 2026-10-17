@@ -55,6 +55,12 @@
       var remaining = Math.max(0, exp - Date.now());
       var mins = Math.floor(remaining / 60000);
       var secs = Math.floor((remaining % 60000) / 1000);
+      if (mins >= 60 * 24) {
+        // "Remember this device" session: a ticking clock would be noise.
+        var days = Math.round(mins / (60 * 24));
+        el.textContent = "Signed in on this device for " + days + " more day" + (days === 1 ? "" : "s");
+        return;
+      }
       el.textContent = "Session expires in " + mins + ":" + String(secs).padStart(2, "0");
       if (remaining <= 0) { window.location.reload(); }
     }

@@ -61,6 +61,8 @@ a { color: var(--teal); }
   border: 1px solid rgba(var(--navy-rgb), 0.2);
 }
 .login-card input:focus { outline: 2px solid var(--teal); outline-offset: 1px; }
+.login-card .login-remember { flex-direction: row; align-items: center; gap: 0.5rem; font-weight: 500; cursor: pointer; }
+.login-card .login-remember input { width: 16px; height: 16px; padding: 0; accent-color: var(--teal); }
 .login-submit { margin-top: 0.5rem; }
 .login-error {
   margin: 0;

@@ -10,6 +10,7 @@ from .auth import (
     clear_attempts,
     is_rate_limited,
     issue_token,
+    token_lifetime,
     record_failed_attempt,
     verify_credentials,
     verify_token,
@@ -77,13 +78,14 @@ def login():
                 # Morning ritual: land on the daily check-in until today's is done.
                 landing = "admin.index" if has_checked_in(local_today()) else "admin.today"
                 response = redirect(url_for(landing))
+                remember = request.form.get("remember") == "1"
                 response.set_cookie(
                     COOKIE_NAME,
-                    issue_token(username),
+                    issue_token(username, remember),
                     httponly=True,
                     secure=not current_app.debug,
                     samesite="Lax",
-                    max_age=current_app.config["JWT_EXPIRY_MINUTES"] * 60,
+                    max_age=int(token_lifetime(remember).total_seconds()),
                 )
                 return response
             record_failed_attempt(ip)

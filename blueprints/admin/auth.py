@@ -46,12 +46,18 @@ def verify_credentials(username: str, password: str) -> bool:
     return bcrypt.checkpw(password.encode("utf-8"), user["password_hash"].encode("utf-8"))
 
 
-def issue_token(username: str) -> str:
+def token_lifetime(remember: bool = False) -> timedelta:
+    if remember:
+        return timedelta(days=current_app.config["REMEMBER_DEVICE_DAYS"])
+    return timedelta(minutes=current_app.config["JWT_EXPIRY_MINUTES"])
+
+
+def issue_token(username: str, remember: bool = False) -> str:
     now = datetime.now(timezone.utc)
     payload = {
         "sub": username,
         "iat": now,
-        "exp": now + timedelta(minutes=current_app.config["JWT_EXPIRY_MINUTES"]),
+        "exp": now + token_lifetime(remember),
     }
     return jwt.encode(payload, current_app.config["JWT_SECRET"], algorithm="HS256")
 

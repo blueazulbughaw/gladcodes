@@ -222,3 +222,8 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   fetch handler/offline cache on purpose — admin pages must always be live.
 - `url_for('static', ...)` appends `?v=<mtime>` (`app.py::static_cache_bust`)
   so deploys aren't masked by browser-cached CSS/JS.
+- Login has a "Remember this device" checkbox: a `REMEMBER_DEVICE_DAYS`
+  (30) JWT instead of the default 30 minutes, so the installed Today app
+  and reminder taps don't bounce to login. JWTs are stateless, so the only
+  way to revoke remembered devices is rotating `JWT_SECRET`. The checkbox
+  is plain text with no branding, consistent with the bare login page.

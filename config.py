@@ -19,6 +19,10 @@ class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-only-insecure-key")
     JWT_SECRET = os.environ.get("JWT_SECRET", "dev-only-insecure-jwt-secret")
     JWT_EXPIRY_MINUTES = 30
+    # "Remember this device" on the login form: a long-lived token so the
+    # installed Today app and its reminder taps don't hit the login page
+    # every time. Rotate JWT_SECRET to sign out every remembered device.
+    REMEMBER_DEVICE_DAYS = 30
 
     PUBLIC_SITE_URL = os.environ.get("PUBLIC_SITE_URL", "https://glad.codes/")
 
