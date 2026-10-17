@@ -90,19 +90,16 @@
 .contact-layout { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); gap: clamp(2rem, 6vw, 5rem); align-items: start; }
 .contact-aside { position: sticky; top: 7rem; }
 .contact-aside-lead { font-family: var(--font-heading); font-weight: 600; font-size: clamp(1.3rem, 2.2vw, 1.75rem); line-height: 1.3; letter-spacing: -0.01em; color: var(--navy); text-wrap: balance; }
-.contact-aside-list { display: flex; flex-direction: column; gap: 0.75rem; margin: 1.5rem 0; }
+.contact-aside-list { display: flex; flex-direction: column; gap: 0.75rem; margin: 1.5rem 0 1.75rem; }
 .contact-aside-list li { display: flex; align-items: center; gap: 0.75rem; color: rgba(var(--navy-rgb), 0.8); }
 .contact-aside-icon { width: 38px; height: 38px; border-radius: 11px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--navy); color: var(--aqua); }
+/* "Prefer email?" line under the send button. */
 .contact-direct {
-  display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;
-  padding: 0.9rem 1.1rem; border-radius: 16px; background: var(--sand); color: var(--navy);
-  border: 1px solid rgba(var(--navy-rgb), 0.08); word-break: break-all;
-  transition: background 300ms ease;
+  display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0.4rem;
+  margin: 1.1rem 0 0; font-size: 0.92rem; color: rgba(var(--navy-rgb), 0.65); text-align: center;
 }
-.contact-direct:hover { text-decoration: none; background: rgba(var(--teal-rgb), 0.1); }
 .contact-direct svg { color: var(--teal); flex-shrink: 0; }
-.contact-direct span { display: flex; flex-direction: column; font-weight: 600; font-size: 0.95rem; }
-.contact-direct small { font-weight: 500; font-size: 0.75rem; color: rgba(var(--navy-rgb), 0.55); }
+.contact-direct a { font-weight: 600; color: var(--teal); word-break: break-all; }
 .contact-card { background: var(--card); border-radius: 24px; box-shadow: 0 30px 60px -28px rgba(var(--navy-rgb), 0.35); padding: clamp(1.5rem, 3.5vw, 2.5rem); }
 .contact-card .contact-form { max-width: none; gap: 1.35rem; }
 .contact-notice { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.9rem 1.1rem; border-radius: 14px; margin-bottom: 1.25rem; font-weight: 500; }
