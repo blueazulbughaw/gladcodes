@@ -73,7 +73,13 @@ flask run
 
 ## Deploy (Namecheap / cPanel)
 
-- SSH: port 21098, user `gladcodes`.
+- SSH: port 21098, user `gladcodes`, key `~/.ssh/id_ed25519_gladcodes`
+  (`ssh -i ~/.ssh/id_ed25519_gladcodes -o IdentitiesOnly=yes -p 21098 gladcodes@glad.codes`).
+  Repo lives at `~/gladcodes_app` (= the Passenger app root). Server Python
+  is **3.9** (`~/virtualenv/gladcodes_app/3.9/`), so no 3.10+ syntax
+  (`X | None`, `match`). Deploying over SSH = `git pull --ff-only`, pip
+  install into that venv, `touch tmp/restart.txt` — the same tasks
+  `.cpanel.yml` runs.
 - cPanel Git Version Control clone → cPanel "Setup Python App"
   (application root `gladcodes_app`, application URL `/`, startup file
   `passenger_wsgi.py`) → set env vars in the app panel → in the app's venv,
