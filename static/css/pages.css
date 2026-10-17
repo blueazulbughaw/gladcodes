@@ -352,6 +352,14 @@
 .career-timeline-card h3 { margin: 0 0 0.15rem; font-size: 1.1rem; }
 .career-timeline-company { font-size: 0.9rem; font-weight: 600; color: rgba(var(--navy-rgb), 0.6); margin: 0 0 0.5rem; }
 .career-timeline-card p:last-child { margin-bottom: 0; color: rgba(var(--navy-rgb), 0.8); }
+.career-timeline-bullets {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: rgba(var(--navy-rgb), 0.8);
+  list-style: disc;
+}
+.career-timeline-bullets li { margin-bottom: 0.3rem; }
+.career-timeline-bullets li:last-child { margin-bottom: 0; }
 
 @media (min-width: 760px) {
   .career-timeline-track, .career-timeline-progress { left: 50%; margin-left: -1.5px; }

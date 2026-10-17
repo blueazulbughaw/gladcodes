@@ -310,56 +310,76 @@ CREATE TABLE IF NOT EXISTS resume_timeline (
     company VARCHAR(255) NOT NULL,
     entry_type ENUM('education', 'full_time', 'contract', 'side_venture', 'gap') NOT NULL DEFAULT 'full_time',
     summary TEXT,
+    -- Separate voice for /resume (plain bullet points, one per line, no
+    -- first-person narration) vs summary above, which is the first-person
+    -- story told on /about — same facts, different register per page.
+    resume_bullets TEXT,
     sort_order INT NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-INSERT INTO resume_timeline (period_label, title, company, entry_type, summary, sort_order)
+ALTER TABLE resume_timeline ADD COLUMN IF NOT EXISTS resume_bullets TEXT AFTER summary;
+
+INSERT INTO resume_timeline (period_label, title, company, entry_type, summary, resume_bullets, sort_order)
 SELECT * FROM (SELECT
     '2002 - 2007' AS period_label,
     'B.S. Computer Engineering' AS title,
     'Mapua Institute of Technology' AS company,
     'education' AS entry_type,
     'Five years of engineering school in Manila - where I learned to pick up new things fast, a skill that''s carried every job since.' AS summary,
+    'Foundation in software and computer engineering principles.' AS resume_bullets,
     1 AS sort_order
     UNION ALL SELECT
     'Jun 2007 - Sep 2007', 'Associate Consultant, Developer', 'Oracle (Philippines) Corporation', 'full_time',
-    'My first real shot: a paid developer training program. Learned COBOL and Oracle''s billing platform from zero, in a fixed-length program built for engineers exactly like me.', 2
+    'My first real shot: a paid developer training program. Learned COBOL and Oracle''s billing platform from zero, in a fixed-length program built for engineers exactly like me.',
+    'Completed a competitive, paid developer training program.\nLearned COBOL and Oracle Customer Care and Billing (CC&B) from the ground up.', 2
     UNION ALL SELECT
     'Mar 2008 - Dec 2008', 'IT Engineer / Software Programmer', 'Digital Information Technology (Japan)', 'full_time',
-    'Moved to Kawasaki for this one. Worked entirely in Japanese - meetings, specs, all of it. Led small teams on an exam system, a social network clone, and a Visual C++ tool that caught discrepancies in hospital equipment data. Contract ended with the 2008 financial crisis.', 3
+    'Moved to Kawasaki for this one. Worked entirely in Japanese - meetings, specs, all of it. Led small teams on an exam system, a social network clone, and a Visual C++ tool that caught discrepancies in hospital equipment data. Contract ended with the 2008 financial crisis.',
+    'Led small development teams delivering an online exam system, a social networking platform, and a custom Visual C++ data-comparison tool for hospital equipment.\nOperated fully in Japanese across requirements, documentation, and client communication.', 3
     UNION ALL SELECT
     'May 2009 - Aug 2009', 'Japanese SAP Support Engineer', 'Hewlett-Packard Philippines', 'contract',
-    'Short stint supporting SAP issues for Japanese enterprise clients before moving back into software development.', 4
+    'Short stint supporting SAP issues for Japanese enterprise clients before moving back into software development.',
+    'Provided SAP support for Japanese enterprise clients.', 4
     UNION ALL SELECT
     'Aug 2009 - Mar 2011', 'Programmer (Web Developer)', 'Mozcom Inc.', 'full_time',
-    'Built Drupal sites and OSCommerce stores for recognizable Philippine brands. Sat in on client meetings, then went and built whatever they actually needed.', 5
+    'Built Drupal sites and OSCommerce stores for recognizable Philippine brands. Sat in on client meetings, then went and built whatever they actually needed.',
+    'Built and maintained Drupal and OSCommerce sites for recognized Philippine brands.\nPartnered directly with clients to translate business requirements into technical solutions.', 5
     UNION ALL SELECT
     'Mar 2011 - Aug 2014', 'euHReka Software Engineer', 'NGA Human Resources (NorthgateArinso)', 'full_time',
-    'Front-end engineer on a global HR platform for three and a half years. Built two modules, started mentoring junior engineers - the first hint that I''d end up leading more than coding.', 6
+    'Front-end engineer on a global HR platform for three and a half years. Built two modules, started mentoring junior engineers - the first hint that I''d end up leading more than coding.',
+    'Developed the Enterprise Content Management and Recruitment modules for a global cloud HR platform.\nMentored junior engineers and supported system testing, troubleshooting, and performance optimization.', 6
     UNION ALL SELECT
     '2014 - 2016', 'Web Developer / Technical Support Engineer', 'Freelance + NetSuite Philippines', 'contract',
-    'Freelanced WordPress and Drupal sites for US and Australian clients by night, supported NetSuite''s UK retail customers by day.', 7
+    'Freelanced WordPress and Drupal sites for US and Australian clients by night, supported NetSuite''s UK retail customers by day.',
+    'Delivered WordPress and Drupal projects for US and Australian clients.\nProvided L1 technical support for an e-commerce platform''s UK retail clients.', 7
     UNION ALL SELECT
     'May 2016 - Feb 2021', 'Engineer II - Technical Program Manager and Engineering Lead', 'American Express International, Inc.', 'full_time',
-    'Hired to build marketing pages. A year in, I was running delivery for about 15 engineers across 5 time zones - scrum master, AEM migration lead, the one presenting to directors and a VP. Still coded when the team was short-handed. When the company asked everyone back on-site mid-pandemic, I chose to relocate instead.', 8
+    'Hired to build marketing pages. A year in, I was running delivery for about 15 engineers across 5 time zones - scrum master, AEM migration lead, the one presenting to directors and a VP. Still coded when the team was short-handed. When the company asked everyone back on-site mid-pandemic, I chose to relocate instead.',
+    'Led delivery for a cross-functional team of approximately 15 engineers across 5 time zones.\nServed as Scrum Master, running sprints, retrospectives, and daily stand-ups across regions.\nDirected the migration of legacy applications to Adobe Experience Manager (AEM).\nBuilt reporting tools and presented performance metrics directly to directors and the VP of Technology.\nRecognized with multiple Blue Rewards.', 8
     UNION ALL SELECT
     'May 2016 - Jul 2017', 'CTO', 'WanderDeals (side venture)', 'side_venture',
-    'Side project: sole technical lead on a travel-booking startup. It didn''t get the resources to keep going, but I learned a lot about building when nobody hands you a spec.', 9
+    'Side project: sole technical lead on a travel-booking startup. It didn''t get the resources to keep going, but I learned a lot about building when nobody hands you a spec.',
+    'Served as sole technical lead for a travel-activities booking platform.', 9
     UNION ALL SELECT
     'May 2018 - Jul 2019', 'CTO', 'GoGoBaon (side venture)', 'side_venture',
-    'Another side build - a home-cook meal delivery business in Hong Kong. Built the site, ordering system, and payments myself.', 10
+    'Another side build - a home-cook meal delivery business in Hong Kong. Built the site, ordering system, and payments myself.',
+    'Built the website, ordering system, and payment integration for a home-cook meal delivery business.', 10
     UNION ALL SELECT
     'Jun 2021 - Jun 2022', 'Relocation and Professional Development', 'United States', 'gap',
-    'Moved to the US and spent a year just learning - React, Node.js, figuring out what was next.', 11
+    'Moved to the US and spent a year just learning - React, Node.js, figuring out what was next.',
+    'Completed independent study in React and Node.js.', 11
     UNION ALL SELECT
     'Apr 2023 - Jun 2023', 'CRM Architect', 'Confidential Legal Funding Company (NDA)', 'contract',
-    'CPT period during my MBA. Built a CRM from scratch - pipelines, automation, SMS integration - and co-built a directory site for attorneys and specialists.', 12
+    'CPT period during my MBA. Built a CRM from scratch - pipelines, automation, SMS integration - and co-built a directory site for attorneys and specialists.',
+    'Designed and implemented a CRM build-out, including custom pipelines, modules, and workflow automation.\nIntegrated SMS messaging for direct client communication from the CRM.\nCo-developed a directory site connecting attorneys with specialists across 50+ categories.', 12
     UNION ALL SELECT
     'Oct 2024 - Jun 2026', 'MBA, Management Information Systems', 'International American University', 'education',
-    'Went back to school to pair the engineering brain with a business one. Last step before betting on myself.', 13
+    'Went back to school to pair the engineering brain with a business one. Last step before betting on myself.',
+    'Graduate coursework in management information systems, pairing technical expertise with business strategy.', 13
     UNION ALL SELECT
     'Jul 2026 - Present', 'Founder and Principal Consultant', 'Genri Labs LLC', 'full_time',
-    'My own thing, finally. CRM and automation for a residential builder, e-commerce for another client, and my own products on the side - this site included.', 14
+    'My own thing, finally. CRM and automation for a residential builder, e-commerce for another client, and my own products on the side - this site included.',
+    'Architecting CRM and automation workflows for a residential construction client.\nManaging e-commerce operations for a retail client.\nBuilding independent products, including this site.', 14
 ) AS tmp
 WHERE NOT EXISTS (SELECT 1 FROM resume_timeline);
 

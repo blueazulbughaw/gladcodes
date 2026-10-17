@@ -182,7 +182,8 @@ RESOURCES = {
             ("title", "text", "Title"),
             ("company", "text", "Company"),
             ("entry_type", "select", "Type"),
-            ("summary", "textarea", "Summary"),
+            ("summary", "textarea", "Story (first person, for /about)"),
+            ("resume_bullets", "textarea", "Resume bullets (one per line, for /resume)"),
         ],
         "select_options": {
             "entry_type": ["education", "full_time", "contract", "side_venture", "gap"],
