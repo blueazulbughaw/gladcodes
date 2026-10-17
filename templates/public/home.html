@@ -195,7 +195,7 @@
 <section class="cta-chapter" id="newsletter" aria-labelledby="ctaTitle">
   <div class="cta-ambient" aria-hidden="true"></div>
   <div class="container cta-inner">
-    <h2 class="cta-title" id="ctaTitle">Follow the <span class="type-pill" aria-hidden="true"><span>&lt;/&gt;</span></span> journey, or hire the person behind it.</h2>
+    <h2 class="cta-title" id="ctaTitle">Follow the <span class="type-logo">{{ macros.logo_mark(label='') }}</span> journey, or hire the person behind it.</h2>
     <p class="cta-lede">Occasional updates when I ship something, hit a milestone, or learn something worth sharing. No spam.</p>
     <form class="newsletter-form" method="post" action="{{ url_for('public.newsletter_subscribe') }}">
       <label class="visually-hidden" for="newsletterEmail">Email address</label>

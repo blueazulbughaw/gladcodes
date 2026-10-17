@@ -225,16 +225,10 @@
   color: #fff; font-size: clamp(2.1rem, 5vw, 4.2rem); line-height: 1.06; letter-spacing: -0.03em;
   max-width: 20ch; margin-bottom: 1.5rem; text-wrap: balance;
 }
-/* Inline typography pill: a small glowing capsule set inside the heading. */
-.type-pill {
-  display: inline-flex; align-items: center; justify-content: center; vertical-align: middle;
-  width: 2.2em; height: 0.95em; margin: 0 0.15em; border-radius: 999px;
-  background: linear-gradient(120deg, var(--teal), var(--aqua), var(--ocean));
-  background-size: 200% 100%; animation: pill-shift 6s ease-in-out infinite alternate;
-  box-shadow: 0 0 40px rgba(94, 196, 196, 0.45);
-}
-.type-pill span { font-size: 0.42em; font-weight: 700; letter-spacing: 0; color: var(--navy); }
-@keyframes pill-shift { to { background-position: 100% 0; } }
+/* The <G/C> logo set inline in the CTA heading, at cap height. Cream
+   letters on the navy section, as the logo was designed. */
+.type-logo { display: inline-block; vertical-align: -0.12em; margin: 0 0.12em; color: var(--cream); }
+.type-logo .logo-mark { height: 0.95em; width: auto; filter: drop-shadow(0 0 24px rgba(94, 196, 196, 0.35)); }
 .cta-lede { color: rgba(255, 255, 255, 0.75); font-size: 1.1rem; max-width: 46ch; margin-bottom: 2rem; }
 .newsletter-form { display: flex; gap: 0.6rem; width: 100%; max-width: 560px; }
 .newsletter-form input {
@@ -251,11 +245,12 @@
 .cta-secondary { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(255, 255, 255, 0.12); width: 100%; }
 @media (max-width: 560px) {
   .newsletter-form { flex-direction: column; }
+  .newsletter-form .btn { justify-content: center; }
 }
 
 /* Reduced motion: final states, no loops ---------------------------------- */
 @media (prefers-reduced-motion: reduce) {
-  .type-pill, .now-pulse { animation: none; }
+  .now-pulse { animation: none; }
   .accordion-slice, .bento-card, .bento-repo, .community-card { transition: none; }
   .bento-metrics:hover, .bento-repo:hover, .community-card:hover { transform: none; }
 }
