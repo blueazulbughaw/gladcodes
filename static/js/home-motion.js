@@ -2,7 +2,6 @@
    - Hero entrance: headline lines, lede, buttons stagger in; the NOW card
      floats up and drifts with a little parallax as you scroll.
    - Pinned split: the timeline title stays pinned while months scroll by.
-   - Scrubbed statement: each word goes from faint to solid as you scroll.
    - Chapters, bento cards and milestones ease in as they enter.
    Does nothing under prefers-reduced-motion or if GSAP fails to load —
    the page is fully readable in its static state either way. */
@@ -54,24 +53,6 @@
       scrollTrigger: { trigger: month, start: "top 85%" }
     });
   });
-
-  // Scrubbed statement: wrap words, then fade each from 0.12 to 1.
-  var statement = document.querySelector("[data-scrub-words]");
-  if (statement) {
-    var words = statement.textContent.trim().split(/\s+/);
-    statement.textContent = "";
-    words.forEach(function (word, i) {
-      var span = document.createElement("span");
-      span.className = "word";
-      span.textContent = word;
-      statement.appendChild(span);
-      if (i < words.length - 1) statement.appendChild(document.createTextNode(" "));
-    });
-    gsap.to(statement.querySelectorAll(".word"), {
-      opacity: 1, ease: "none", stagger: 0.1,
-      scrollTrigger: { trigger: statement, start: "top 80%", end: "bottom 45%", scrub: true }
-    });
-  }
 
   // Chapter titles, bento cards and accordion slices ease in.
   gsap.utils.toArray(".chapter-title:not(#timelineTitle), .cta-title").forEach(function (el) {

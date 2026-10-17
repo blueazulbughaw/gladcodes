@@ -1,7 +1,7 @@
 /* Home: an AIDA landing page. Chapters get cinematic spacing, the hero is
    asymmetric (NOW card floats over the headline), the numbers sit in a
    gapless bento, the timeline is a pinned split, projects are a horizontal
-   accordion, tools/community are marquees, and one big CTA closes it.
+   accordion, community is a grid of cards, and one big CTA closes it.
    Motion: static/js/home-motion.js. Everything still reads correctly with
    no JS and under prefers-reduced-motion. */
 
@@ -166,15 +166,6 @@
   .split-pin { position: static; }
 }
 
-/* Desire: scrubbed statement ------------------------------------------- */
-.statement-chapter { padding: clamp(6rem, 14vw, 12rem) 0; }
-.statement {
-  font-family: var(--font-heading); font-weight: 600;
-  font-size: clamp(1.6rem, 3.6vw, 3.1rem); line-height: 1.22; letter-spacing: -0.02em;
-  margin: 0; max-width: 30ch; color: var(--navy);
-}
-.statement .word { opacity: 0.12; transition: opacity 120ms linear; }  /* JS wraps words; scrubbed to 1 */
-
 /* Desire: projects horizontal accordion -------------------------------- */
 .accordion { display: flex; gap: 0.85rem; min-height: 360px; }
 .accordion-slice {
@@ -204,32 +195,19 @@
 .chapter .journal-grid { gap: 1rem; }
 .chapter .journal-card { border-radius: 18px; padding: 1.5rem; }
 
-/* Desire: marquees --------------------------------------------------------- */
-.marquee {
-  display: flex; overflow: hidden; gap: 0;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
-  padding: 0.6rem 0;
+/* Community: still cards ------------------------------------------------- */
+.community-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
+.community-card {
+  display: flex; align-items: center; gap: 0.85rem;
+  padding: 1.15rem 1.25rem; border-radius: 18px;
+  background: var(--card); box-shadow: var(--shadow-card); color: var(--navy);
+  transition: transform 500ms cubic-bezier(0.2, 0.65, 0.3, 0.9), box-shadow 500ms cubic-bezier(0.2, 0.65, 0.3, 0.9);
 }
-.marquee-track {
-  display: flex; flex-shrink: 0; align-items: center; gap: clamp(2rem, 4vw, 3.5rem);
-  list-style: none; margin: 0; padding: 0 clamp(1rem, 2vw, 1.75rem);
-  animation: marquee 38s linear infinite;
-}
-.marquee--reverse .marquee-track { animation-direction: reverse; animation-duration: 46s; }
-.marquee:hover .marquee-track { animation-play-state: paused; }
-.marquee-track a, .marquee-track span {
-  display: inline-flex; align-items: center; gap: 0.6rem; white-space: nowrap;
-  font-family: var(--font-heading); font-weight: 700; letter-spacing: -0.02em;
-  font-size: clamp(1.6rem, 3.6vw, 2.8rem); color: var(--navy);
-  transition: color 300ms ease;
-}
-.marquee-track a:hover { color: var(--teal); text-decoration: none; }
-.marquee-track svg { color: var(--teal); flex-shrink: 0; }
-.marquee--outline .marquee-track a { color: transparent; -webkit-text-stroke: 1.5px rgba(var(--navy-rgb), 0.8); }
-.marquee--outline .marquee-track a:hover { color: var(--navy); -webkit-text-stroke-color: var(--navy); }
-.marquee--outline .marquee-track svg { color: var(--ocean); }
-@keyframes marquee { to { transform: translateX(-100%); } }
+.community-card:hover { text-decoration: none; transform: translateY(-4px); box-shadow: var(--shadow-card-hover); }
+.community-card-icon { width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--navy); color: var(--aqua); }
+.community-card-name { flex: 1; min-width: 0; font-family: var(--font-heading); font-weight: 600; font-size: 1.02rem; line-height: 1.25; }
+.community-card-arrow { color: rgba(var(--navy-rgb), 0.35); flex-shrink: 0; transition: transform 400ms cubic-bezier(0.2, 0.65, 0.3, 0.9), color 300ms ease; }
+.community-card:hover .community-card-arrow { color: var(--teal); transform: translate(2px, -2px); }
 
 /* Action: closing CTA ------------------------------------------------------ */
 .cta-chapter {
@@ -277,13 +255,9 @@
 
 /* Reduced motion: final states, no loops ---------------------------------- */
 @media (prefers-reduced-motion: reduce) {
-  .marquee { overflow-x: auto; }
-  .marquee-track { animation: none; }
-  .marquee-track[aria-hidden="true"] { display: none; }
   .type-pill, .now-pulse { animation: none; }
-  .statement .word { opacity: 1; }
-  .accordion-slice, .bento-card, .bento-repo { transition: none; }
-  .bento-metrics:hover, .bento-repo:hover { transform: none; }
+  .accordion-slice, .bento-card, .bento-repo, .community-card { transition: none; }
+  .bento-metrics:hover, .bento-repo:hover, .community-card:hover { transform: none; }
 }
 
 /* Shared with projects.html: project + journal cards -------------------- */

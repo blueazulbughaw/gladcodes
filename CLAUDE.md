@@ -289,9 +289,11 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   hero with the NOW card floating over it (pulled up under the nav so the
   ambient mesh runs behind the pill); a gapless 4-col bento (metrics 2x2 +
   stats 2x1 + learning 2x1, GitHub 4x1 only when it loads,
-  `grid-auto-flow: dense`); pinned-split timeline; scroll-scrubbed
-  statement; projects horizontal accordion; toolbox/community marquees
-  (second copy `aria-hidden`); one navy CTA. No eyebrow meta-labels on
+  `grid-auto-flow: dense`); pinned-split timeline; projects horizontal
+  accordion; journal; community as still cards (no marquee, by request);
+  one navy CTA. The "why hire me" scrub statement and the toolbox were
+  removed from home by request: toolbox_items is no longer shown on any
+  public page (its admin editor still exists). No eyebrow meta-labels on
   home. Motion = `static/js/home-motion.js` (GSAP 3.12.5 + ScrollTrigger
   from cdnjs, same as resume) and must stay a progressive enhancement:
   every section reads fully with no JS and under reduced motion. Don't

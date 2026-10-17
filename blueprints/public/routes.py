@@ -86,7 +86,6 @@ def home():
     )
     milestones = query("SELECT * FROM timeline_milestones ORDER BY sort_order")
     learning = query("SELECT * FROM learning_progress ORDER BY sort_order")
-    toolbox = query("SELECT * FROM toolbox_items ORDER BY sort_order")
     community = query("SELECT * FROM community_links ORDER BY sort_order")
     coding_hours = get_chart_series("coding_hours_weekly")
 
@@ -108,7 +107,6 @@ def home():
         journal_posts=journal_posts,
         timeline_by_month=list(timeline_by_month.items()),
         learning=learning,
-        toolbox=toolbox,
         community=community,
         coding_hours=coding_hours,
         github=github,

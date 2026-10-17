@@ -47,8 +47,9 @@ class HomePageTests(unittest.TestCase):
         body = self.get_home()
         for text in ("I don't know exactly what I'm doing.", "Right now", "Check-in app",
                      "The numbers behind the building", "Currently learning", "The timeline so far",
-                     "data-scrub-words", "What I'm building", "accordion-slice", "Notes from the road",
-                     "marquee-track", "PyCon Philippines", "hire the person behind it", "newsletter-form",
+                     "What I'm building", "accordion-slice", "Notes from the road",
+                     "Communities I show up for", "community-card", "PyCon Philippines",
+                     "hire the person behind it", "newsletter-form",
                      "home-motion.js"):
             self.assertIn(text, body)
 
@@ -60,11 +61,12 @@ class HomePageTests(unittest.TestCase):
         self.assertIn("Fresh on GitHub", body)
         self.assertIn("bento--with-github", body)
 
-    def test_marquee_duplicate_is_hidden_from_screen_readers(self):
+    def test_statement_and_toolbox_are_gone_community_is_still_cards(self):
         body = self.get_home()
-        # Two marquees (toolbox, community), each = 1 visible track + 1 aria-hidden copy.
-        self.assertEqual(body.count('class="marquee-track"'), 4)
-        self.assertEqual(body.count('class="marquee-track" aria-hidden="true"'), 2)
+        self.assertNotIn("I write down every project", body)
+        self.assertNotIn("marquee", body)
+        self.assertNotIn("Tools I build with", body)
+        self.assertIn('class="community-card" href="https://pycon.ph"', body)
 
     def test_never_links_to_admin(self):
         self.assertNotIn("gc-admin", self.get_home())

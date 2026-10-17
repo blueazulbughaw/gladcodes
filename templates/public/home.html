@@ -4,8 +4,8 @@
 {#
   Home = an AIDA landing page (Attention → Interest → Desire → Action):
   asymmetric hero with the NOW card floating over it, a gapless bento of
-  the numbers, a pinned timeline, a scroll-revealed "why hire Glad"
-  statement, a projects accordion, marquees, and one big closing CTA.
+  the numbers, a pinned timeline, a projects accordion, the journal,
+  community cards, and one big closing CTA.
   Motion lives in static/js/home-motion.js (GSAP from CDN, no build step)
   and is fully disabled under prefers-reduced-motion.
 #}
@@ -139,13 +139,6 @@
 </section>
 {% endif %}
 
-{# ---- Desire: scroll-scrubbed statement ---------------------------------- #}
-<section class="chapter statement-chapter" aria-label="How I work">
-  <div class="container">
-    <p class="statement" data-scrub-words>Engineer, program manager, MBA in information systems, founder. I write down every project, every number, and every lesson in the open, so you can see exactly how I think and ship before we ever talk.</p>
-  </div>
-</section>
-
 {# ---- Desire: projects as a horizontal accordion ------------------------- #}
 {% if projects %}
 <section class="chapter" id="projects" aria-labelledby="projectsTitle">
@@ -180,34 +173,21 @@
 </section>
 {% endif %}
 
-{# ---- Desire: toolbox + community marquees ------------------------------- #}
-{% if toolbox or community %}
-<section class="chapter chapter--tight" aria-labelledby="toolsTitle">
+{# ---- Community: still cards --------------------------------------------- #}
+{% if community %}
+<section class="chapter" aria-labelledby="communityTitle">
   <div class="container">
-    <h2 class="chapter-title" id="toolsTitle">Tools I build with, people I build with</h2>
-  </div>
-  {% if toolbox %}
-  <div class="marquee" aria-label="My toolbox">
-    {% for pass in range(2) %}
-    <ul class="marquee-track"{% if pass %} aria-hidden="true"{% endif %}>
-      {% for tool in toolbox %}
-      <li>{% if tool.url %}<a href="{{ tool.url }}" target="_blank" rel="noopener"{% if pass %} tabindex="-1"{% endif %}>{% else %}<span>{% endif %}{{ macros.dynamic_icon(tool.icon, 26) }}{{ tool.name }}{% if tool.url %}</a>{% else %}</span>{% endif %}</li>
-      {% endfor %}
-    </ul>
-    {% endfor %}
-  </div>
-  {% endif %}
-  {% if community %}
-  <div class="marquee marquee--reverse marquee--outline" aria-label="Communities I show up for">
-    {% for pass in range(2) %}
-    <ul class="marquee-track"{% if pass %} aria-hidden="true"{% endif %}>
+    <h2 class="chapter-title" id="communityTitle">Communities I show up for</h2>
+    <div class="community-cards">
       {% for org in community %}
-      <li><a href="{{ org.url }}" target="_blank" rel="noopener"{% if pass %} tabindex="-1"{% endif %}>{{ macros.dynamic_icon(org.icon, 24) }}{{ org.org_name }}</a></li>
+      <a class="community-card" href="{{ org.url }}" target="_blank" rel="noopener">
+        <span class="community-card-icon">{{ macros.dynamic_icon(org.icon, 22) }}</span>
+        <span class="community-card-name">{{ org.org_name }}</span>
+        <i data-lucide="arrow-up-right" class="community-card-arrow" width="18" height="18"></i>
+      </a>
       {% endfor %}
-    </ul>
-    {% endfor %}
+    </div>
   </div>
-  {% endif %}
 </section>
 {% endif %}
 
