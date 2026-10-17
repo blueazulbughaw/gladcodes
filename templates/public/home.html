@@ -1,255 +1,251 @@
 {% extends "base_public.html" %}
 {% import "_macros.html" as macros %}
 
+{#
+  Home = an AIDA landing page (Attention → Interest → Desire → Action):
+  asymmetric hero with the NOW card floating over it, a gapless bento of
+  the numbers, a pinned timeline, a scroll-revealed "why hire Glad"
+  statement, a projects accordion, marquees, and one big closing CTA.
+  Motion lives in static/js/home-motion.js (GSAP from CDN, no build step)
+  and is fully disabled under prefers-reduced-motion.
+#}
+
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
 {% endblock %}
 
 {% block content %}
 
-<section class="hero">
-  <div class="container">
+{# ---- Attention ---------------------------------------------------------- #}
+<section class="hero" aria-labelledby="heroTitle">
+  <div class="hero-ambient" aria-hidden="true"><span></span><span></span><span></span></div>
+  <div class="container hero-stage">
     <div class="hero-copy">
-      <span class="eyebrow">Building in public</span>
-      <h1 class="hero-headline">I don't know exactly what I'm doing.<br>
-        <span class="script-accent">But I'm doing it anyway.</span>
+      <h1 class="hero-headline" id="heroTitle">
+        <span class="hero-line">I don't know exactly what I'm doing.</span>
+        <span class="hero-line script-accent">But I'm doing it anyway.</span>
       </h1>
       <p class="hero-lede">{{ settings.get('hero_bio') or "Software engineer turned founder, writing down every project, metric, and lesson in the open — from shipping code across Japan and Hong Kong to building GladCodes from a blank folder." }}</p>
       <div class="hero-actions">
-        <a class="btn btn-primary" href="#newsletter">Follow the journey &rarr;</a>
-        <a class="btn btn-secondary" href="{{ url_for('public.lets_connect') }}">Let's Connect</a>
+        <a class="btn btn-primary btn-lg" href="#newsletter">Follow the journey <i data-lucide="arrow-down-right" width="18" height="18"></i></a>
+        <a class="btn btn-ghost btn-lg" href="{{ url_for('public.lets_connect') }}">Let's connect</a>
       </div>
     </div>
 
-    <div class="now-card card reveal">
-      <h3>Right now</h3>
+    {% if now %}
+    <aside class="now-card" aria-label="What I'm up to right now">
+      <div class="now-card-head">
+        <span class="now-pulse" aria-hidden="true"></span>
+        <h2>Right now</h2>
+      </div>
       <dl>
-        <dt>Location</dt>
-        <dd>{{ now.location }}</dd>
-        <dt>Building</dt>
-        <dd>{{ now.building }}</dd>
-        <dt>Drinking</dt>
-        <dd>{{ now.drinking }}</dd>
-        <dt>Reading</dt>
-        <dd>{{ now.reading }}</dd>
-        <dt>Goal this week</dt>
-        <dd>{{ now.goal_this_week }}</dd>
+        <div><dt>Building</dt><dd>{{ now.building }}</dd></div>
+        <div><dt>Reading</dt><dd>{{ now.reading }}</dd></div>
+        <div><dt>Goal this week</dt><dd>{{ now.goal_this_week }}</dd></div>
+        <div class="now-card-pair"><div><dt>Location</dt><dd>{{ now.location }}</dd></div><div><dt>Drinking</dt><dd>{{ now.drinking }}</dd></div></div>
       </dl>
-      <div class="updated-at">Updated: {{ now.updated_at|human_date }}</div>
-    </div>
-
-    <svg class="hero-decoration" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <ellipse cx="220" cy="230" rx="150" ry="140" fill="var(--sand)"/>
-      <path d="M200 260C160 220 150 150 200 90C220 150 210 220 260 250C230 260 210 270 200 260Z" fill="var(--teal)" opacity="0.85"/>
-      <path d="M150 270C120 240 110 190 150 140C165 190 155 240 190 260C170 270 160 275 150 270Z" fill="var(--aqua)" opacity="0.8"/>
-      <path d="M250 280C280 250 300 200 270 150C245 200 250 250 220 270C235 280 245 283 250 280Z" fill="var(--ocean)" opacity="0.75"/>
-      <circle cx="200" cy="300" r="10" fill="var(--teal)"/>
-    </svg>
+      {% if now.updated_at %}<div class="updated-at">Updated {{ now.updated_at|human_date }}</div>{% endif %}
+    </aside>
+    {% endif %}
   </div>
 </section>
 
-<section class="section">
+{# ---- Interest: gapless bento (4 cols: 2x2 + 2x1 + 2x1, then 4x1) ------- #}
+<section class="chapter" aria-labelledby="numbersTitle">
   <div class="container">
-    <div class="stats-strip">
-      {% for stat in stats %}
-      <div class="stat-tile reveal">
-        <span class="stat-value" data-count-to="{{ stat.value }}" data-count-suffix="{{ stat.suffix }}">0{{ stat.suffix }}</span>
-        <div class="stat-label">{{ stat.label }}</div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-</section>
+    <h2 class="chapter-title" id="numbersTitle">The numbers behind the building</h2>
+    <div class="bento{{ ' bento--with-github' if github }}">
+      <a class="bento-card bento-metrics" href="{{ url_for('public.dashboard') }}">
+        <div class="bento-card-head">
+          <h3>Coding hours per week</h3>
+          <span class="bento-link">Full dashboard <i data-lucide="arrow-up-right" width="16" height="16"></i></span>
+        </div>
+        <div class="bento-chart"><canvas id="teaserCodingHoursChart" aria-label="Coding hours per week chart"></canvas></div>
+      </a>
 
-<section class="section section--sand" id="timeline">
-  <div class="container">
-    <div class="section-header reveal">
-      <span class="eyebrow">Build in public</span>
-      <h2>The timeline so far</h2>
-      <p>Every milestone, shipped or still pending, tracked month by month.</p>
-    </div>
-    <div class="timeline-track">
-      {% for month, milestones in timeline_by_month %}
-      <div class="timeline-month reveal">
-        <div class="timeline-month-label">{{ month }}</div>
-        {% for m in milestones %}
-        <div class="milestone milestone--{{ 'done' if m.is_done else 'pending' }}">
-          <i data-lucide="{{ 'check-circle-2' if m.is_done else 'circle' }}" width="18" height="18"></i>
-          <div>
-            <div class="milestone-title">{{ m.title }}</div>
-            {% if m.description %}<div class="milestone-desc">{{ m.description }}</div>{% endif %}
-          </div>
+      <div class="bento-card bento-stats">
+        {% for stat in stats %}
+        <div class="bento-stat">
+          <span class="stat-value reveal" data-count-to="{{ stat.value }}" data-count-suffix="{{ stat.suffix }}">0{{ stat.suffix }}</span>
+          <span class="stat-label">{{ stat.label }}</span>
         </div>
         {% endfor %}
       </div>
-      {% endfor %}
-    </div>
-    <div class="section-footer-link reveal">
-      <a href="#timeline">View full timeline &rarr;</a>
+
+      <div class="bento-card bento-learning">
+        <h3>Currently learning</h3>
+        <div class="learning-list">
+          {% for skill in learning %}
+          <div class="learning-item">
+            <div class="learning-item-label"><span>{{ skill.skill }}</span><span>{{ skill.progress_pct }}%</span></div>
+            <div class="progress-track"><div class="progress-fill reveal" data-progress="{{ skill.progress_pct }}"></div></div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      {% if github %}
+      <div class="bento-card bento-github">
+        <div class="bento-card-head">
+          <h3>Fresh on GitHub</h3>
+          <a class="bento-link" href="{{ github.profile.html_url }}" target="_blank" rel="noopener">Profile <i data-lucide="arrow-up-right" width="16" height="16"></i></a>
+        </div>
+        <div class="bento-repos">
+          {% for repo in github.repos[:3] %}
+          <a class="bento-repo" href="{{ repo.html_url }}" target="_blank" rel="noopener">
+            <strong>{{ repo.name }}</strong>
+            {% if repo.description %}<span class="bento-repo-desc">{{ repo.description }}</span>{% endif %}
+            <span class="bento-repo-meta">{% if repo.language %}{{ repo.language }} · {% endif %}{% if repo.pushed_at_parsed %}{{ repo.pushed_at_parsed|human_date }}{% endif %}</span>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
     </div>
   </div>
 </section>
 
-<section class="section" id="projects">
-  <div class="container">
-    <div class="section-header reveal">
-      <span class="eyebrow">What I'm building</span>
-      <h2>Projects</h2>
-      <p>Everything currently in progress, experimental, or shipped.</p>
+{# ---- Desire: pinned split — title stays while the months scroll -------- #}
+{% if timeline_by_month %}
+<section class="chapter chapter--sand" id="timeline" aria-labelledby="timelineTitle">
+  <div class="container split">
+    <div class="split-aside">
+      <div class="split-pin">
+        <h2 class="chapter-title" id="timelineTitle">The timeline so far</h2>
+        <p class="chapter-lede">Every milestone, shipped or still pending, tracked month by month.</p>
+      </div>
     </div>
-    <div class="projects-grid">
+    <ol class="split-flow">
+      {% for month, milestones in timeline_by_month %}
+      <li class="timeline-month">
+        <span class="timeline-month-label">{{ month }}</span>
+        <ul>
+          {% for m in milestones %}
+          <li class="milestone milestone--{{ 'done' if m.is_done else 'pending' }}">
+            <i data-lucide="{{ 'check-circle-2' if m.is_done else 'circle-dashed' }}" width="20" height="20"></i>
+            <div>
+              <div class="milestone-title">{{ m.title }}</div>
+              {% if m.description %}<div class="milestone-desc">{{ m.description }}</div>{% endif %}
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </li>
+      {% endfor %}
+    </ol>
+  </div>
+</section>
+{% endif %}
+
+{# ---- Desire: scroll-scrubbed statement ---------------------------------- #}
+<section class="chapter statement-chapter" aria-label="How I work">
+  <div class="container">
+    <p class="statement" data-scrub-words>Engineer, program manager, MBA in information systems, founder. I write down every project, every number, and every lesson in the open, so you can see exactly how I think and ship before we ever talk.</p>
+  </div>
+</section>
+
+{# ---- Desire: projects as a horizontal accordion ------------------------- #}
+{% if projects %}
+<section class="chapter" id="projects" aria-labelledby="projectsTitle">
+  <div class="container">
+    <div class="chapter-head">
+      <h2 class="chapter-title" id="projectsTitle">What I'm building</h2>
+      <a class="text-link" href="{{ url_for('public.projects_index') }}">All projects <i data-lucide="arrow-right" width="16" height="16"></i></a>
+    </div>
+    <div class="accordion">
       {% for project in projects %}
-      {{ macros.project_card(project) }}
+      <article class="accordion-slice" tabindex="0">
+        <div class="accordion-top">
+          <span class="accordion-icon">{{ macros.dynamic_icon(project.icon, 22) }}</span>
+          <span class="badge badge--{{ project.status }}">{{ project.status.replace('_', ' ') }}</span>
+        </div>
+        <h3>{{ project.title }}</h3>
+        <div class="accordion-body">
+          <p>{{ project.description }}</p>
+          <div class="project-progress">
+            <div class="project-progress-label"><span>Progress</span><span>{{ project.progress_pct }}%</span></div>
+            <div class="progress-track"><div class="progress-fill reveal" data-progress="{{ project.progress_pct }}"></div></div>
+          </div>
+          {% if project.url %}<a class="text-link" href="{{ project.url }}" target="_blank" rel="noopener">View project <i data-lucide="arrow-up-right" width="16" height="16"></i></a>{% endif %}
+        </div>
+      </article>
       {% endfor %}
-    </div>
-    <div class="section-footer-link reveal">
-      <a href="{{ url_for('public.projects_index') }}">See all projects &rarr;</a>
     </div>
   </div>
 </section>
+{% endif %}
 
-<section class="section section--sand">
+{# ---- Journal ------------------------------------------------------------ #}
+{% if journal_posts %}
+<section class="chapter chapter--sand" aria-labelledby="journalTitle">
   <div class="container">
-    <div class="section-header reveal">
-      <span class="eyebrow">Founder journal</span>
-      <h2>Latest posts</h2>
-      <p>Notes from the road between engineering, program management, and founding something new.</p>
+    <div class="chapter-head">
+      <h2 class="chapter-title" id="journalTitle">Notes from the road</h2>
+      <a class="text-link" href="{{ url_for('public.journal_index') }}">All posts <i data-lucide="arrow-right" width="16" height="16"></i></a>
     </div>
     <div class="journal-grid">
       {% for post in journal_posts %}
       {{ macros.journal_card(post) }}
       {% endfor %}
     </div>
-    <div class="section-footer-link reveal">
-      <a href="{{ url_for('public.journal_index') }}">See all posts &rarr;</a>
-    </div>
-  </div>
-</section>
-
-<section class="section">
-  <div class="container">
-    <div class="dashboard-teaser-layout">
-      <div>
-        <span class="eyebrow">Founder metrics</span>
-        <h2>The numbers behind the building</h2>
-        <p>Coding hours, features shipped, and beta progress — tracked in the open on the full dashboard.</p>
-        <a class="btn btn-primary" href="{{ url_for('public.dashboard') }}">See full dashboard &rarr;</a>
-      </div>
-      <div class="card chart-card reveal">
-        <h3>Coding hours per week</h3>
-        <canvas id="teaserCodingHoursChart" height="200"></canvas>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section section--sand">
-  <div class="container">
-    <div class="section-header reveal">
-      <span class="eyebrow">Always learning</span>
-      <h2>Currently learning</h2>
-    </div>
-    <div class="learning-list">
-      {% for skill in learning %}
-      <div class="reveal">
-        <div class="learning-item-label">
-          <span>{{ skill.skill }}</span>
-          <span>{{ skill.progress_pct }}%</span>
-        </div>
-        <div class="progress-track">
-          <div class="progress-fill reveal" data-progress="{{ skill.progress_pct }}"></div>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-
-<section class="section">
-  <div class="container">
-    <div class="section-header reveal">
-      <span class="eyebrow">Daily drivers</span>
-      <h2>My toolbox</h2>
-    </div>
-    <div class="toolbox-grid">
-      {% for tool in toolbox %}
-      <a class="card card--hover toolbox-item reveal" href="{{ tool.url or '#' }}" {{ 'target="_blank" rel="noopener"'|safe if tool.url }}>
-        <div class="toolbox-item-icon">{{ macros.dynamic_icon(tool.icon, 20) }}</div>
-        <span>{{ tool.name }}</span>
-      </a>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-
-{% if github %}
-<section class="section">
-  <div class="container">
-    <div class="section-header reveal">
-      <span class="eyebrow">On GitHub</span>
-      <h2>Recent repos</h2>
-      <p>Live from the GitHub API, cached for an hour so this never slows the page down.</p>
-    </div>
-    <div class="github-grid">
-      {% for repo in github.repos %}
-      <a class="card card--hover github-repo-card reveal" href="{{ repo.html_url }}" target="_blank" rel="noopener">
-        <div class="github-repo-header">
-          <h3>{{ repo.name }}</h3>
-          <span class="github-repo-stars"><i data-lucide="star" width="14" height="14"></i> {{ repo.stargazers_count }}</span>
-        </div>
-        {% if repo.description %}<p>{{ repo.description }}</p>{% endif %}
-        <div class="github-repo-meta">
-          {% if repo.language %}<span class="github-repo-lang">{{ repo.language }}</span>{% endif %}
-          {% if repo.pushed_at_parsed %}<span>Updated {{ repo.pushed_at_parsed|human_date }}</span>{% endif %}
-        </div>
-      </a>
-      {% endfor %}
-    </div>
-    <div class="section-footer-link reveal">
-      <a href="{{ github.profile.html_url }}" target="_blank" rel="noopener">View GitHub profile &rarr;</a>
-    </div>
   </div>
 </section>
 {% endif %}
 
-<section class="section section--sand">
+{# ---- Desire: toolbox + community marquees ------------------------------- #}
+{% if toolbox or community %}
+<section class="chapter chapter--tight" aria-labelledby="toolsTitle">
   <div class="container">
-    <div class="section-header reveal">
-      <span class="eyebrow">Showing up</span>
-      <h2>Community</h2>
-    </div>
-    <div class="community-grid">
+    <h2 class="chapter-title" id="toolsTitle">Tools I build with, people I build with</h2>
+  </div>
+  {% if toolbox %}
+  <div class="marquee" aria-label="My toolbox">
+    {% for pass in range(2) %}
+    <ul class="marquee-track"{% if pass %} aria-hidden="true"{% endif %}>
+      {% for tool in toolbox %}
+      <li>{% if tool.url %}<a href="{{ tool.url }}" target="_blank" rel="noopener"{% if pass %} tabindex="-1"{% endif %}>{% else %}<span>{% endif %}{{ macros.dynamic_icon(tool.icon, 26) }}{{ tool.name }}{% if tool.url %}</a>{% else %}</span>{% endif %}</li>
+      {% endfor %}
+    </ul>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% if community %}
+  <div class="marquee marquee--reverse marquee--outline" aria-label="Communities I show up for">
+    {% for pass in range(2) %}
+    <ul class="marquee-track"{% if pass %} aria-hidden="true"{% endif %}>
       {% for org in community %}
-      <a class="community-item reveal" href="{{ org.url }}" target="_blank" rel="noopener">
-        <div class="community-item-icon">{{ macros.dynamic_icon(org.icon, 18) }}</div>
-        <span>{{ org.org_name }}</span>
-      </a>
+      <li><a href="{{ org.url }}" target="_blank" rel="noopener"{% if pass %} tabindex="-1"{% endif %}>{{ macros.dynamic_icon(org.icon, 24) }}{{ org.org_name }}</a></li>
+      {% endfor %}
+    </ul>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+
+{# ---- Action ------------------------------------------------------------- #}
+<section class="cta-chapter" id="newsletter" aria-labelledby="ctaTitle">
+  <div class="cta-ambient" aria-hidden="true"></div>
+  <div class="container cta-inner">
+    <h2 class="cta-title" id="ctaTitle">Follow the <span class="type-pill" aria-hidden="true"><span>&lt;/&gt;</span></span> journey, or hire the person behind it.</h2>
+    <p class="cta-lede">Occasional updates when I ship something, hit a milestone, or learn something worth sharing. No spam.</p>
+    <form class="newsletter-form" method="post" action="{{ url_for('public.newsletter_subscribe') }}">
+      <label class="visually-hidden" for="newsletterEmail">Email address</label>
+      <input id="newsletterEmail" type="email" name="email" placeholder="you@example.com" required>
+      <button type="submit" class="btn btn-cream btn-lg">Subscribe</button>
+    </form>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="newsletter-messages">
+      {% for category, message in messages %}
+      <p class="newsletter-message newsletter-message--{{ category }}">{{ message }}</p>
       {% endfor %}
     </div>
-  </div>
-</section>
-
-<section class="section" id="newsletter">
-  <div class="container">
-    <div class="newsletter-card card reveal">
-      <div>
-        <span class="eyebrow">Stay in the loop</span>
-        <h2>Follow the journey</h2>
-        <p>Occasional updates when I ship something, hit a milestone, or learn something worth sharing. No spam.</p>
-      </div>
-      <form class="newsletter-form" method="post" action="{{ url_for('public.newsletter_subscribe') }}">
-        <input type="email" name="email" placeholder="you@example.com" required>
-        <button type="submit" class="btn btn-primary">Subscribe</button>
-      </form>
-      {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-      <div class="newsletter-messages">
-        {% for category, message in messages %}
-        <p class="newsletter-message newsletter-message--{{ category }}">{{ message }}</p>
-        {% endfor %}
-      </div>
-      {% endif %}
-      {% endwith %}
+    {% endif %}
+    {% endwith %}
+    <div class="cta-secondary">
+      <a class="btn btn-primary btn-lg" href="{{ url_for('public.resume') }}">See my resume <i data-lucide="arrow-right" width="18" height="18"></i></a>
+      <a class="text-link text-link--light" href="{{ url_for('public.contact') }}">Or send me a message</a>
     </div>
   </div>
 </section>
@@ -259,10 +255,14 @@
 {% block extra_scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer></script>
 <script src="{{ url_for('static', filename='js/charts.js') }}" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+<script src="{{ url_for('static', filename='js/home-motion.js') }}" defer></script>
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     if (!window.GladCharts) return;
-    GladCharts.lineChart("teaserCodingHoursChart", {{ coding_hours.labels|tojson }}, {{ coding_hours.data|tojson }}, "Coding hours");
+    var chart = GladCharts.lineChart("teaserCodingHoursChart", {{ coding_hours.labels|tojson }}, {{ coding_hours.data|tojson }}, "Coding hours");
+    if (chart) { chart.options.maintainAspectRatio = false; chart.update(); }
   });
 </script>
 {% endblock %}

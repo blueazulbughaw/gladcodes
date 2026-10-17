@@ -284,3 +284,17 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   `history.back()`: that lands on just-saved forms, and the installed app
   has no browser back button. Sidebar "View site" opens `/` in a new tab
   (admin may link to the public site, never the reverse).
+- **Home is an AIDA landing page** (gpt-taste principles, adapted to this
+  stack: no React/Tailwind, brand fonts kept, no stock photos). Asymmetric
+  hero with the NOW card floating over it (pulled up under the nav so the
+  ambient mesh runs behind the pill); a gapless 4-col bento (metrics 2x2 +
+  stats 2x1 + learning 2x1, GitHub 4x1 only when it loads,
+  `grid-auto-flow: dense`); pinned-split timeline; scroll-scrubbed
+  statement; projects horizontal accordion; toolbox/community marquees
+  (second copy `aria-hidden`); one navy CTA. No eyebrow meta-labels on
+  home. Motion = `static/js/home-motion.js` (GSAP 3.12.5 + ScrollTrigger
+  from cdnjs, same as resume) and must stay a progressive enhancement:
+  every section reads fully with no JS and under reduced motion. Don't
+  GSAP-animate elements that also carry `.reveal` (they fight over opacity).
+- Public nav is a floating glass pill (`base.css`); `main` has
+  `overflow-x: clip` (not `hidden`, which would break sticky/pinning).
