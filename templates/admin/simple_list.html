@@ -81,7 +81,7 @@
       {% elif ftype == 'date' %}
         {% if row[name] %}<div class="admin-card-item-row"><strong>{{ label }}:</strong> {{ row[name]|human_date }}</div>{% endif %}
       {% elif ftype == 'select' %}
-        {% if row[name] %}<span class="admin-status admin-status--{{ row[name] }}">{{ row[name].replace('_', ' ') }}</span>{% endif %}
+        {% if row[name] %}<span class="admin-status admin-status--{{ row[name] }}">{{ (row[name]|string).replace('_', ' ') }}</span>{% endif %}
       {% else %}
         {% if row[name] is not none and row[name] != '' %}<div class="admin-card-item-row"><strong>{{ label }}:</strong> {{ row[name] }}</div>{% endif %}
       {% endif %}

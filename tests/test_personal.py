@@ -145,5 +145,36 @@ class PersonalDashboardTests(unittest.TestCase):
         self.assertEqual(resp.status_code, 302)
 
 
+class MedicinesEditorTests(unittest.TestCase):
+    """doses_per_day is an INT column behind a select field — the list and
+    edit pages must handle a number, not just strings (this 500'd once)."""
+
+    def setUp(self):
+        self.app = create_app()
+        self.app.config["TESTING"] = True
+        self.client = self.app.test_client()
+        with self.app.app_context():
+            self.client.set_cookie(COOKIE_NAME, issue_token("glad"))
+
+    ROW = {"id": 1, "name": "Vitamin D", "doses_per_day": 3, "frequency": "every_other_day",
+           "start_date": date(2026, 10, 1), "is_active": 1, "notes": None, "sort_order": 0}
+
+    @patch("blueprints.admin.simple_crud.query")
+    def test_list_page_renders_int_select_values(self, mock_query):
+        mock_query.return_value = [self.ROW]
+        resp = self.client.get("/gc-admin/medications")
+        self.assertEqual(resp.status_code, 200)
+        body = resp.get_data(as_text=True)
+        self.assertIn("Vitamin D", body)
+        self.assertIn("every other day", body)
+
+    @patch("blueprints.admin.simple_crud.query_one")
+    def test_edit_form_preselects_the_saved_dose_count(self, mock_query_one):
+        mock_query_one.return_value = self.ROW
+        body = self.client.get("/gc-admin/medications/1/edit").get_data(as_text=True)
+        self.assertIn('<option value="3" selected>', body)
+        self.assertNotIn('<option value="1" selected>', body)
+
+
 if __name__ == "__main__":
     unittest.main()

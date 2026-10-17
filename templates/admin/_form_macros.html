@@ -30,7 +30,7 @@
   {% elif ftype == 'select' %}
   <select name="{{ name }}">
     {% for opt in config.select_options[name] %}
-    <option value="{{ opt }}" {{ 'selected' if row and row[name] == opt }}>{{ opt.replace('_', ' ') }}</option>
+    <option value="{{ opt }}" {{ 'selected' if row and row[name]|string == opt }}>{{ opt.replace('_', ' ') }}</option>
     {% endfor %}
   </select>
   {% elif ftype == 'icon' %}
