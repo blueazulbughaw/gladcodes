@@ -319,47 +319,47 @@ SELECT * FROM (SELECT
     'B.S. Computer Engineering' AS title,
     'Mapua Institute of Technology' AS company,
     'education' AS entry_type,
-    'Where it all started - the engineering fundamentals I still lean on today.' AS summary,
+    'Five years of engineering school in Manila. Boring to describe, but it''s where I learned to pick up new things fast - a skill that''s carried every job since.' AS summary,
     1 AS sort_order
     UNION ALL SELECT
     'Jun 2007 - Sep 2007', 'Associate Consultant, Developer', 'Oracle (Philippines) Corporation', 'full_time',
-    'Selected for a competitive developer training program, learning COBOL and the Oracle Customer Care and Billing platform from the ground up.', 2
+    'My first real shot: a paid developer training program. Learned COBOL and Oracle''s billing platform from zero. Didn''t last past the final review, but it proved I could learn fast under pressure.', 2
     UNION ALL SELECT
     'Mar 2008 - Dec 2008', 'IT Engineer / Software Programmer', 'Digital Information Technology (Japan)', 'full_time',
-    'Led small teams building an exam system, a social networking site, and a Visual C++ data-comparison tool for hospital equipment - entirely in Japanese. The contract wound down with the 2008 financial crisis.', 3
+    'Moved to Kawasaki for this one. Worked entirely in Japanese - meetings, specs, all of it. Led small teams on an exam system, a social network clone, and a Visual C++ tool that caught discrepancies in hospital equipment data. The 2008 financial crisis killed the contract work before I was ready to leave.', 3
     UNION ALL SELECT
     'May 2009 - Aug 2009', 'Japanese SAP Support Engineer', 'Hewlett-Packard Philippines', 'contract',
-    'Supported SAP issues for Japanese enterprise clients.', 4
+    'Short stint supporting SAP issues for Japanese clients while I looked for my way back into real development.', 4
     UNION ALL SELECT
     'Aug 2009 - Mar 2011', 'Programmer (Web Developer)', 'Mozcom Inc.', 'full_time',
-    'Built Drupal and OSCommerce sites for well-known Philippine brands, working directly with clients from requirements to launch.', 5
+    'Built Drupal sites and OSCommerce stores for recognizable Philippine brands. Sat in on client meetings, then went and built whatever they actually needed.', 5
     UNION ALL SELECT
     'Mar 2011 - Aug 2014', 'euHReka Software Engineer', 'NGA Human Resources (NorthgateArinso)', 'full_time',
-    'Front-end engineer on a global cloud HR platform. Built the Enterprise Content Management and Recruitment modules, and mentored junior engineers.', 6
+    'Front-end engineer on a global HR platform for three and a half years. Built two modules, started mentoring junior engineers - the first hint that I''d end up leading more than coding.', 6
     UNION ALL SELECT
     '2014 - 2016', 'Web Developer / Technical Support Engineer', 'Freelance + NetSuite Philippines', 'contract',
-    'Freelanced on WordPress and Drupal builds for US and Australian clients, while supporting the NetSuite e-commerce platform for UK retailers.', 7
+    'Freelanced WordPress and Drupal sites for US and Australian clients by night, supported NetSuite''s UK retail customers by day.', 7
     UNION ALL SELECT
     'May 2016 - Feb 2021', 'Engineer II - Technical Program Manager and Engineering Lead', 'American Express International, Inc.', 'full_time',
-    'Grew from hands-on engineer into leading delivery for about 15 engineers across 5 time zones - scrum master, AEM migration lead, and the one presenting results to directors and the VP of Technology. Earned multiple Blue Rewards along the way. Relocated during COVID-19.', 8
+    'Hired to build marketing pages. A year in, I was running delivery for about 15 engineers across 5 time zones - scrum master, AEM migration lead, the one presenting to directors and a VP. Still coded when the team was short-handed. Left when COVID hit and the company wanted everyone back in Hong Kong - I wasn''t going back mid-pandemic.', 8
     UNION ALL SELECT
     'May 2016 - Jul 2017', 'CTO', 'WanderDeals (side venture)', 'side_venture',
-    'Sole technical lead on a travel-activities booking platform, built alongside the day job.', 9
+    'Side project: sole technical lead on a travel-booking startup. Didn''t make it, but I learned a lot about building when nobody hands you a spec.', 9
     UNION ALL SELECT
     'May 2018 - Jul 2019', 'CTO', 'GoGoBaon (side venture)', 'side_venture',
-    'Built the website, ordering system, and payment integration for a home-cook meal delivery business in Hong Kong.', 10
+    'Another side build - a home-cook meal delivery business in Hong Kong. Built the site, ordering system, and payments myself.', 10
     UNION ALL SELECT
     'Jun 2021 - Jun 2022', 'Relocation and Professional Development', 'United States', 'gap',
-    'Relocated to the US and spent the year leveling up - React, Node.js, and planning what came next.', 11
+    'Moved to the US and spent a year just learning - React, Node.js, figuring out what was next.', 11
     UNION ALL SELECT
     'Apr 2023 - Jun 2023', 'CRM Architect', 'Confidential Legal Funding Company (NDA)', 'contract',
-    'Architected a Zoho CRM build-out with Twilio SMS integration, and co-built a WordPress provider directory used by personal-injury attorneys - during a CPT-authorized period of the MBA.', 12
+    'CPT period during my MBA. Built a CRM from scratch - pipelines, automation, SMS integration - and co-built a directory site for attorneys and specialists.', 12
     UNION ALL SELECT
     'Oct 2024 - Jun 2026', 'MBA, Management Information Systems', 'International American University', 'education',
-    'Paired the engineering background with a business lens - the final step before going out on my own.', 13
+    'Went back to school to pair the engineering brain with a business one. Last step before betting on myself.', 13
     UNION ALL SELECT
     'Jul 2026 - Present', 'Founder and Principal Consultant', 'Genri Labs LLC', 'full_time',
-    'Now running my own consultancy - CRM architecture and automation for Hi-Tech Builders, e-commerce operations for Knobhill Corporation, plus my own products, including this site.', 14
+    'My own thing, finally. CRM and automation for a residential builder, e-commerce for another client, and my own products on the side - this site included.', 14
 ) AS tmp
 WHERE NOT EXISTS (SELECT 1 FROM resume_timeline);
 

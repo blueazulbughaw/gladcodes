@@ -1,22 +1,25 @@
 {% extends "base_public.html" %}
 
 {% block title %}Resume — GladCodes{% endblock %}
-{% block description %}Glad's career story, from engineering school to founder — an interactive timeline, plus a downloadable resume.{% endblock %}
+{% block description %}Glad's career story, from engineering school to founder — an interactive scrolling timeline, plus a downloadable resume.{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
 {% endblock %}
 
 {% block content %}
+<div class="scroll-progress" id="scrollProgress"></div>
+<div class="career-timeline-indicator" id="careerIndicator"><span></span></div>
+
 <section class="page-hero">
   <div class="container">
-    <span class="eyebrow">Work with me</span>
-    <h1>Resume</h1>
-    <p>
+    <span class="eyebrow hero-fade">Work with me</span>
+    <h1 class="hero-fade">Resume</h1>
+    <p class="hero-fade">
       Software Engineer &middot; Technical Program Manager &middot; MBA-MIS &middot; Founder who ships.
       {% if meta and meta.last_updated %}Last updated {{ meta.last_updated|human_date }}.{% endif %}
     </p>
-    <div class="hero-actions">
+    <div class="hero-actions hero-fade">
       {% if meta and meta.file_path %}
       <a class="btn btn-primary" href="{{ url_for('static', filename='uploads/' + meta.file_path) }}" download>
         <i data-lucide="download" width="18" height="18"></i> Download PDF
@@ -30,17 +33,19 @@
 <section class="section">
   <div class="container">
     <div class="section-header reveal">
-      <span class="eyebrow">Memory lane</span>
-      <h2>The journey so far</h2>
-      <p>From engineering school in Manila to founding my own consultancy in LA — scroll through how I got here.</p>
+      <span class="eyebrow">Career</span>
+      <h2>Where I've been</h2>
+      <p>Fourteen stops, two side ventures, one MBA, and a lot of learning as I went. Scroll down.</p>
     </div>
 
     {% set type_icons = {'education': 'graduation-cap', 'full_time': 'briefcase', 'contract': 'file-signature', 'side_venture': 'rocket', 'gap': 'map-pin'} %}
-    <div class="career-timeline">
+    <div class="career-timeline" id="careerTimeline">
+      <div class="career-timeline-track"></div>
+      <div class="career-timeline-progress" id="careerTimelineProgress"></div>
       {% for entry in timeline %}
-      <div class="career-timeline-item career-timeline-item--{{ entry.entry_type }}">
+      <div class="career-timeline-item career-timeline-item--{{ entry.entry_type }}" data-period="{{ entry.period_label }}">
         <div class="career-timeline-dot"><i data-lucide="{{ type_icons.get(entry.entry_type, 'circle') }}" width="18" height="18"></i></div>
-        <div class="card career-timeline-card reveal">
+        <div class="card career-timeline-card">
           <span class="career-timeline-period">{{ entry.period_label }}</span>
           <h3>{{ entry.title }}</h3>
           <p class="career-timeline-company">{{ entry.company }}</p>
@@ -88,4 +93,10 @@
     </div>
   </div>
 </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+<script src="{{ url_for('static', filename='js/resume-timeline.js') }}" defer></script>
 {% endblock %}

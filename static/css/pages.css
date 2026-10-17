@@ -247,6 +247,47 @@
 }
 .link-button:hover { transform: translateY(-2px); box-shadow: var(--shadow-card-hover); text-decoration: none; }
 
+/* Whole-page scroll progress bar (fixed under the sticky nav) ------------- */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--teal), var(--aqua));
+  z-index: 60;
+  transform-origin: left;
+}
+
+/* Floating "which era am I in" badge, desktop only — JS shows/hides and
+   fills in the text as the timeline scrolls past. */
+.career-timeline-indicator {
+  position: fixed;
+  top: 50%;
+  right: var(--space-lg);
+  transform: translateY(-50%) translateX(20px);
+  background: var(--navy);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  box-shadow: var(--shadow-card-hover);
+  z-index: 55;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+.career-timeline-indicator.is-visible { opacity: 1; transform: translateY(-50%) translateX(0); }
+@media (max-width: 1100px) {
+  .career-timeline-indicator { display: none; }
+}
+
+/* Hero entrance (JS-driven stagger — see resume-timeline.js) -------------- */
+.hero-fade { opacity: 1; }
+
 /* Resume: career timeline ------------------------------------------------- */
 .career-timeline {
   position: relative;
@@ -254,14 +295,19 @@
   margin: 0 auto;
   padding-top: var(--space-xs);
 }
-.career-timeline::before {
-  content: "";
+.career-timeline-track,
+.career-timeline-progress {
   position: absolute;
   top: 0;
-  bottom: 0;
   left: 19px;
-  width: 2px;
-  background: rgba(var(--navy-rgb), 0.12);
+  width: 3px;
+  border-radius: 2px;
+}
+.career-timeline-track { height: 100%; background: rgba(var(--navy-rgb), 0.1); }
+.career-timeline-progress {
+  height: 0%;
+  background: linear-gradient(var(--teal), var(--aqua));
+  box-shadow: 0 0 12px rgba(14, 138, 138, 0.5);
 }
 .career-timeline-item {
   position: relative;
@@ -284,6 +330,11 @@
   box-shadow: 0 0 0 4px var(--cream);
   z-index: 1;
 }
+.career-timeline-dot.is-active { animation: careerDotPulse 1.8s ease-in-out infinite; }
+@keyframes careerDotPulse {
+  0%, 100% { box-shadow: 0 0 0 4px var(--cream), 0 0 0 4px rgba(14, 138, 138, 0.4); }
+  50% { box-shadow: 0 0 0 4px var(--cream), 0 0 0 11px rgba(14, 138, 138, 0); }
+}
 .career-timeline-item--side_venture .career-timeline-dot { background: var(--aqua); }
 .career-timeline-item--education .career-timeline-dot { background: var(--ocean); }
 .career-timeline-item--gap .career-timeline-dot { background: rgba(var(--navy-rgb), 0.4); }
@@ -303,11 +354,15 @@
 .career-timeline-card p:last-child { margin-bottom: 0; color: rgba(var(--navy-rgb), 0.8); }
 
 @media (min-width: 760px) {
-  .career-timeline::before { left: 50%; margin-left: -1px; }
+  .career-timeline-track, .career-timeline-progress { left: 50%; margin-left: -1.5px; }
   .career-timeline-item { width: 50%; padding-left: 0; padding-right: 56px; }
   .career-timeline-item:nth-child(even) { margin-left: 50%; padding-right: 0; padding-left: 56px; }
   .career-timeline-dot { left: auto; right: -20px; }
   .career-timeline-item:nth-child(even) .career-timeline-dot { left: -20px; right: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .career-timeline-dot.is-active { animation: none; }
 }
 
 /* Resume: skills ------------------------------------------------------------ */
