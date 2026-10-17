@@ -511,3 +511,83 @@ body.admin-body { display: flex; min-height: 100vh; align-items: stretch; }
 .checkin-app-actions .btn { display: inline-flex; align-items: center; gap: 0.4rem; }
 .checkin-app-actions .btn svg { width: 16px; height: 16px; }
 .checkin-app-actions [hidden] { display: none; }
+
+/* Sidebar groups: Personal (check-in, dashboard, medicines) vs Website. */
+.admin-nav-group {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  padding: 0.9rem 0.6rem 0.2rem;
+}
+.admin-nav-group:first-child { padding-top: 0; }
+
+/* Check-in v2 ------------------------------------------------------------- */
+.checkin-save-state { font-size: 0.8rem; color: rgba(var(--navy-rgb), 0.55); align-self: center; }
+.checkin-save-state.is-saved { color: #2a7a44; }
+.checkin-save-state.is-error { color: #b3261e; font-weight: 600; }
+.checkin-toggle svg { width: 18px; height: 18px; color: var(--teal); flex-shrink: 0; }
+
+.checkin-meds { display: flex; flex-direction: column; gap: 0.75rem; }
+.checkin-med { display: flex; flex-direction: column; gap: 0.4rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(var(--navy-rgb), 0.08); }
+.checkin-med:last-child { border-bottom: 0; padding-bottom: 0; }
+.checkin-med-name { display: flex; flex-direction: column; font-size: 0.95rem; }
+.checkin-med-name small { color: rgba(var(--navy-rgb), 0.55); font-size: 0.8rem; }
+.checkin-doses { display: grid; grid-template-columns: repeat(8, minmax(0, 44px)); gap: 0.35rem; }
+.checkin-dose { position: relative; }
+.checkin-dose input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.checkin-dose span {
+  display: flex; align-items: center; justify-content: center;
+  height: 44px; border-radius: 10px;
+  border: 1px solid rgba(var(--navy-rgb), 0.18);
+  font-weight: 600; font-size: 0.85rem; color: rgba(var(--navy-rgb), 0.6);
+}
+.checkin-dose input:checked + span { background: var(--success); border-color: var(--success); color: #fff; }
+.checkin-dose input:checked + span::before { content: "✓ "; }
+.checkin-dose input:focus-visible + span { outline: 2px solid var(--teal); outline-offset: 2px; }
+
+.checkin-tracked { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.checkin-tracked-item {
+  display: flex; flex-direction: column; gap: 0.15rem;
+  padding: 0.75rem; border-radius: 10px; background: rgba(var(--teal-rgb), 0.07);
+  font-size: 0.8rem; color: rgba(var(--navy-rgb), 0.65);
+}
+.checkin-tracked-item svg { width: 18px; height: 18px; color: var(--teal); }
+.checkin-tracked-item strong { font-family: var(--font-heading); font-size: 1.3rem; color: var(--navy); }
+.checkin-dashboard-link { margin: 1.5rem 0 0; }
+.checkin-dashboard-link a { display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 600; }
+.checkin-dashboard-link svg { width: 18px; height: 18px; }
+
+/* Personal dashboard (/gc-admin/me) ------------------------------------- */
+.personal .admin-page-header .btn { display: inline-flex; align-items: center; gap: 0.4rem; }
+.personal .admin-page-header .btn svg { width: 16px; height: 16px; }
+.personal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; align-items: start; }
+.personal-grid h2, .personal-tracking h2 { display: flex; align-items: center; gap: 0.5rem; font-size: 1.05rem; margin: 0 0 0.75rem; }
+.personal-grid h2 svg, .personal-tracking h2 svg { color: var(--teal); width: 18px; height: 18px; }
+.personal-list { display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.88rem; }
+.personal-list li { display: flex; gap: 0.6rem; align-items: baseline; }
+.personal-list--log { max-height: 320px; overflow-y: auto; }
+.personal-list--log li span:last-child { white-space: pre-line; }
+.personal-date { flex-shrink: 0; min-width: 4.2rem; font-size: 0.78rem; font-weight: 600; color: rgba(var(--navy-rgb), 0.55); }
+
+.personal-meds { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.personal-meds th { font-weight: 600; color: rgba(var(--navy-rgb), 0.55); padding: 0.25rem; text-align: center; }
+.personal-meds th[scope="row"] { text-align: left; color: var(--navy); font-size: 0.85rem; }
+.personal-meds td { padding: 0.2rem; text-align: center; }
+.med-cell { display: inline-block; min-width: 2.2rem; padding: 0.2rem 0; border-radius: 6px; font-weight: 600; }
+.med-cell--full { background: rgba(59, 165, 93, 0.15); color: #2a7a44; }
+.med-cell--part { background: rgba(231, 169, 60, 0.18); color: #9a6a12; }
+.med-cell--none { background: rgba(179, 38, 30, 0.1); color: #b3261e; }
+.med-cell--off { color: rgba(var(--navy-rgb), 0.25); }
+.personal-pct { font-weight: 700; color: var(--teal); }
+
+.personal-tracking { margin-top: 1.5rem; }
+.personal-tracking-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.5rem 1rem; margin: 1rem 0; font-size: 0.88rem; }
+.personal-tracking-grid dt { font-weight: 600; }
+.personal-tracking-grid dd { margin: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; min-width: 0; }
+.personal-tracking-grid code { word-break: break-all; background: rgba(var(--navy-rgb), 0.05); padding: 0.15rem 0.4rem; border-radius: 6px; font-size: 0.8rem; }
+@media (max-width: 600px) {
+  .personal-tracking-grid { grid-template-columns: 1fr; }
+  .checkin-tracked { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,154 @@
+{% extends "admin/_shell.html" %}
+
+{% block title %}My dashboard{% endblock %}
+
+{% block content %}
+<div class="container checkin personal">
+  <div class="admin-page-header">
+    <div>
+      <h1>My dashboard</h1>
+      <span class="admin-meta">Private: just you. The website dashboard is separate.</span>
+    </div>
+    <a class="btn btn-primary" href="{{ url_for('admin.today') }}"><i data-lucide="sun"></i> Today's check-in</a>
+  </div>
+
+  <div class="overview-cards">
+    <div class="overview-card"><span class="overview-value">{{ streak }}</span><span class="overview-label">Check-in streak (days)</span></div>
+    <div class="overview-card"><span class="overview-value">{{ prayer_streak }}</span><span class="overview-label">Morning + night prayer streak</span></div>
+    <div class="overview-card"><span class="overview-value">{{ med_pct ~ '%' if med_pct is not none else '—' }}</span><span class="overview-label">Medicine taken, last 7 days</span></div>
+    <div class="overview-card"><span class="overview-value">{% if avg_sleep is not none %}{{ avg_sleep // 60 }}h {{ '%02d'|format(avg_sleep % 60) }}m{% else %}—{% endif %}</span><span class="overview-label">Average sleep, last 7 days</span></div>
+    <div class="overview-card"><span class="overview-value">{{ (avg_app ~ 'm') if avg_app is not none else '—' }}</span><span class="overview-label">{{ tracked_app }} per day, last 7 days</span></div>
+    <div class="overview-card">
+      <span class="overview-value overview-value--small">{% if cycle.next_start %}{{ cycle.next_start|human_date }}{% else %}—{% endif %}</span>
+      <span class="overview-label">{% if cycle.next_start %}Next period expected ({% if cycle.days_until >= 0 %}in {{ cycle.days_until }} days{% else %}{{ -cycle.days_until }} days late{% endif %}){% else %}Next period: needs two logged periods{% endif %}</span>
+    </div>
+  </div>
+
+  <div class="checkin-charts">
+    <div class="card chart-card">
+      <h3>Mood and energy, last {{ chart.labels|length }} days</h3>
+      <canvas id="moodChart" height="220"></canvas>
+    </div>
+    <div class="card chart-card">
+      <h3>Sleep (hours), last 14 days</h3>
+      <canvas id="sleepChart" height="220"></canvas>
+    </div>
+    <div class="card chart-card">
+      <h3>{{ tracked_app }} minutes, last 14 days</h3>
+      <canvas id="appChart" height="220"></canvas>
+    </div>
+  </div>
+
+  <div class="personal-grid">
+    <section class="card">
+      <h2><i data-lucide="smile"></i> Why I felt that way</h2>
+      {% if mood_reasons %}
+      <ul class="personal-list">
+        {% for row in mood_reasons %}
+        <li><span class="personal-date">{{ row.checkin_date.strftime('%b %d') }}</span><span aria-label="Mood {{ row.mood }} of 5">{{ moods[row.mood - 1][1] }}</span><span>{{ row.mood_reason or '—' }}</span></li>
+        {% endfor %}
+      </ul>
+      {% else %}<p class="admin-meta">Nothing yet. Your mood and reasons from Today show up here.</p>{% endif %}
+    </section>
+
+    <section class="card">
+      <h2><i data-lucide="droplet"></i> Period cycle</h2>
+      {% if periods %}
+      <p class="admin-meta">{% if cycle.average_cycle %}Average cycle: <strong>{{ cycle.average_cycle }} days</strong>{% else %}Log one more period to see your average cycle.{% endif %}</p>
+      <ul class="personal-list">
+        {% for start, end in periods %}
+        <li><span class="personal-date">{{ start.strftime('%b %d') }}{% if end != start %} – {{ end.strftime('%b %d') }}{% endif %}</span><span>{{ (end - start).days + 1 }} day{{ 's' if end != start }}</span></li>
+        {% endfor %}
+      </ul>
+      {% else %}<p class="admin-meta">Tick <strong>Period day</strong> on Today each day of your period. Start and end dates, cycle length, and the next expected date show up here.</p>{% endif %}
+    </section>
+
+    <section class="card">
+      <h2><i data-lucide="pill"></i> Medicine, last 7 days</h2>
+      {% if adherence %}
+      <table class="personal-meds">
+        <thead><tr><th></th>{% for cell in adherence[0].cells %}<th>{{ cell.day.strftime('%a')[0] }}</th>{% endfor %}<th></th></tr></thead>
+        <tbody>
+          {% for med in adherence %}
+          <tr>
+            <th scope="row">{{ med.name }}</th>
+            {% for cell in med.cells %}
+            <td>{% if cell.due %}<span class="med-cell {{ 'med-cell--full' if cell.taken == cell.expected else ('med-cell--part' if cell.taken else 'med-cell--none') }}" title="{{ cell.day|human_date }}: {{ cell.taken }} of {{ cell.expected }}">{{ cell.taken }}/{{ cell.expected }}</span>{% elif cell.taken %}<span class="med-cell med-cell--full" title="{{ cell.taken }} taken">{{ cell.taken }}</span>{% else %}<span class="med-cell med-cell--off">·</span>{% endif %}</td>
+            {% endfor %}
+            <td class="personal-pct">{{ (med.pct ~ '%') if med.pct is not none else '' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}<p class="admin-meta"><a href="{{ url_for('admin.simple_list', resource='medications') }}">Add your medicines</a> to track them here.</p>{% endif %}
+    </section>
+
+    {% for title, icon, rows in logs %}
+    <section class="card">
+      <h2><i data-lucide="{{ icon }}"></i> {{ title }}</h2>
+      {% if rows %}
+      <ul class="personal-list personal-list--log">
+        {% for row in rows %}
+        <li><span class="personal-date">{{ row.checkin_date.strftime('%b %d') }}</span><span>{{ row.text }}</span></li>
+        {% endfor %}
+      </ul>
+      {% else %}<p class="admin-meta">Nothing yet.</p>{% endif %}
+    </section>
+    {% endfor %}
+  </div>
+
+  <section class="card personal-tracking" id="tracking">
+    <h2><i data-lucide="radio"></i> Phone tracking</h2>
+    <p class="admin-meta">Sleep and {{ tracked_app }} time come from your phone automatically. A phone automation sends them to these addresses with your private key.</p>
+    <dl class="personal-tracking-grid">
+      <dt>Sleep address</dt><dd><code>{{ site_base }}{{ url_for('admin.track_sleep') }}</code></dd>
+      <dt>{{ tracked_app }} address</dt><dd><code>{{ site_base }}{{ url_for('admin.track_app') }}</code></dd>
+      <dt>Private key</dt>
+      <dd>
+        {% if token %}
+        <code class="personal-token" id="trackToken" data-token="{{ token }}">••••••••••••••••</code>
+        <button type="button" class="btn-secondary-admin" id="revealToken">Show</button>
+        <button type="button" class="btn-secondary-admin" id="copyToken">Copy</button>
+        {% else %}Created when the app next restarts.{% endif %}
+      </dd>
+      <dt>Last sleep received</dt><dd>{% if status.last_sleep %}{{ status.last_sleep.sleep_date|human_date }} ({{ status.last_sleep.minutes // 60 }}h {{ '%02d'|format(status.last_sleep.minutes % 60) }}m){% else %}Never{% endif %}</dd>
+      <dt>Last {{ tracked_app }} event</dt><dd>{% if status.last_app %}{{ status.last_app.opened_at|human_date }}{% else %}Never{% endif %}</dd>
+    </dl>
+    <form method="post" action="{{ url_for('admin.regenerate_tracking_token') }}" onsubmit="return confirm('Make a new key? Your phone automations will stop until you paste the new one in.');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button type="submit" class="btn-link btn-link-danger">Make a new key</button>
+    </form>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}" defer></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    if (window.GladCharts) {
+      GladCharts.multiLineChart("moodChart", {{ chart.labels|tojson }}, [
+        { label: "Mood", data: {{ chart.mood|tojson }} },
+        { label: "Energy", data: {{ chart.energy|tojson }} }
+      ], { min: 1, max: 5 });
+      GladCharts.barChart("sleepChart", {{ chart.sleep_labels|tojson }}, {{ chart.sleep|tojson }}, "Hours");
+      GladCharts.barChart("appChart", {{ chart.sleep_labels|tojson }}, {{ chart.app|tojson }}, "Minutes");
+    }
+    var token = document.getElementById("trackToken");
+    if (!token) return;
+    document.getElementById("revealToken").addEventListener("click", function () {
+      var hidden = token.textContent.indexOf("•") === 0;
+      token.textContent = hidden ? token.dataset.token : "••••••••••••••••";
+      this.textContent = hidden ? "Hide" : "Show";
+    });
+    document.getElementById("copyToken").addEventListener("click", function () {
+      var btn = this;
+      navigator.clipboard.writeText(token.dataset.token).then(function () {
+        btn.textContent = "Copied";
+        setTimeout(function () { btn.textContent = "Copy"; }, 1500);
+      });
+    });
+  });
+</script>
+{% endblock %}

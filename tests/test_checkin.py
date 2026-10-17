@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from app import create_app
 from blueprints.admin.auth import COOKIE_NAME, issue_token
-from blueprints.admin.checkin import current_streak, parse_day
+from blueprints.admin.checkin import CHECKIN_FIELDS, current_streak, parse_day
 from blueprints.admin.csrf import CSRF_COOKIE_NAME
 from services.github import bucket_pushes_by_week
 
@@ -59,44 +59,78 @@ class TodayPageTests(unittest.TestCase):
 
     @patch("blueprints.admin.checkin.get_weekly_activity", return_value=None)
     @patch("blueprints.admin.checkin.configured_username", return_value=None)
+    @patch("blueprints.admin.checkin.local_tz_name", return_value="America/New_York")
     @patch("blueprints.admin.checkin.local_now", return_value=datetime(2026, 10, 16, 7, 30))
+    @patch("blueprints.admin.checkin.tracking")
     @patch("blueprints.admin.checkin.query_one")
     @patch("blueprints.admin.checkin.query")
-    def test_today_page_renders_with_history(self, mock_query, mock_query_one, *_):
-        mock_query_one.return_value = {"mood": 4, "energy": 3, "focus": None, "sleep_hours": 7.5,
-                                       "took_meds": 1, "exercised": 0, "reading": "Designing Data-Intensive Apps",
-                                       "grateful": "Coffee", "top_priority": "Ship check-in", "priority_done": 0,
-                                       "scroll_minutes": None, "win": None, "notes": None}
-        mock_query.side_effect = lambda sql, *a: (
-            [{"checkin_date": TODAY, "mood": 4, "reading": "DDIA", "grateful": "Coffee",
-              "top_priority": "Ship check-in", "priority_done": 0, "win": None,
-              "energy": 3, "focus": None, "sleep_hours": 7.5, "scroll_minutes": 20}]
-        )
+    def test_today_page_renders_new_fields(self, mock_query, mock_query_one, mock_tracking, *_):
+        from services import tracking as real
+
+        mock_query.return_value = [{"checkin_date": TODAY}]
+        mock_query_one.return_value = {
+            "mood": 4, "mood_reason": "Slept well", "energy": 3, "morning_prayer": 1, "night_prayer": 0,
+            "exercised": 0, "period_day": 0, "reading": "DDIA", "bible_passage": "Psalm 23",
+            "grateful": "Coffee", "app_ideas": "Habit app", "win": None, "notes": None,
+        }
+        mock_tracking.active_medications.return_value = [
+            {"id": 7, "name": "Vitamin D", "notes": "with food", "frequency": "daily", "doses_per_day": 3, "start_date": None},
+            {"id": 8, "name": "Weekly pill", "notes": None, "frequency": "weekly", "doses_per_day": 1, "start_date": date(2026, 10, 14)},
+        ]
+        mock_tracking.doses_taken.return_value = {(7, TODAY): {1}}
+        mock_tracking.medication_due.side_effect = real.medication_due
+        mock_tracking.dose_count.side_effect = real.dose_count
+        mock_tracking.sleep_by_day.return_value = {TODAY: 435}
+        mock_tracking.app_minutes_by_day.return_value = {TODAY: 23}
+        mock_tracking.tracking_status.return_value = {"last_sleep": {"x": 1}, "last_app": None}
+        mock_tracking.TRACKED_APP = "Instagram"
+
         resp = self.client.get("/gc-admin/today")
         self.assertEqual(resp.status_code, 200)
         body = resp.get_data(as_text=True)
-        self.assertIn("Good morning, Glad", body)
-        self.assertIn("1-day streak", body)
-        self.assertIn("Designing Data-Intensive Apps", body)
-        self.assertIn('name="robots" content="noindex, nofollow"', body)
+        for text in ("Good morning, Glad", "Morning prayer", "Night prayer", "Why do you feel that way?",
+                     "What Bible passage did you read today?", "Psalm 23", "Any app ideas today?",
+                     "Period day", "Vitamin D", "7h 15m", "23 min", "Saves automatically"):
+            self.assertIn(text, body)
+        self.assertNotIn("Weekly pill", body)  # due Wednesdays, today is Friday
+        self.assertEqual(body.count('class="dose-box"'), 3)
+        self.assertNotIn("Hours slept", body)
+        self.assertNotIn("Minutes scrolling", body)
+        self.assertNotIn('type="submit" class="btn btn-primary">Save check-in', body)
 
+    @patch("blueprints.admin.checkin.saved_timezone", return_value=None)
     @patch("blueprints.admin.checkin.local_now", return_value=datetime(2026, 10, 16, 7, 30))
     @patch("blueprints.admin.checkin.execute")
-    def test_post_upserts_and_sanitizes(self, mock_execute, _):
-        resp = self.client.post("/gc-admin/today", data={
+    def test_autosave_post_returns_json_and_sanitizes(self, mock_execute, *_):
+        resp = self.client.post("/gc-admin/today", headers={"X-Requested-With": "fetch"}, data={
             "csrf_token": "test-csrf", "checkin_date": "2026-10-16",
-            "mood": "9", "energy": "4", "sleep_hours": "30", "took_meds": "1",
-            "reading": "  Atomic Habits  ", "scroll_minutes": "45",
+            "mood": "9", "energy": "4", "morning_prayer": "1", "period_day": "1",
+            "mood_reason": "  Good sleep  ", "bible_passage": "John 15",
         })
-        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.get_json(), {"ok": True})
         params = mock_execute.call_args[0][1]
-        self.assertEqual(params[0], TODAY)
-        self.assertIsNone(params[1])        # mood 9 is out of range
-        self.assertEqual(params[2], 4)      # energy
-        self.assertIsNone(params[4])        # 30 hours of sleep rejected
-        self.assertEqual(params[5], 1)      # took_meds
-        self.assertEqual(params[7], "Atomic Habits")
-        self.assertEqual(params[11], 45)
+        fields = dict(zip(("checkin_date",) + CHECKIN_FIELDS, params))
+        self.assertEqual(fields["checkin_date"], TODAY)
+        self.assertIsNone(fields["mood"])            # 9 is out of range
+        self.assertEqual(fields["energy"], 4)
+        self.assertEqual(fields["mood_reason"], "Good sleep")
+        self.assertEqual(fields["morning_prayer"], 1)
+        self.assertEqual(fields["night_prayer"], 0)
+        self.assertEqual(fields["period_day"], 1)
+        self.assertEqual(fields["bible_passage"], "John 15")
+
+    @patch("blueprints.admin.checkin.saved_timezone", return_value=None)
+    @patch("blueprints.admin.checkin.tracking.set_dose")
+    def test_dose_checkbox_saves_and_validates(self, mock_set, _):
+        ok = self.client.post("/gc-admin/today/dose", data={
+            "csrf_token": "test-csrf", "checkin_date": "2026-10-16", "medication_id": "7", "dose_index": "2", "taken": "1"})
+        self.assertEqual(ok.status_code, 200)
+        self.assertEqual(mock_set.call_args[0][0], 7)
+        self.assertEqual(mock_set.call_args[0][2:], (2, True))
+        bad = self.client.post("/gc-admin/today/dose", data={
+            "csrf_token": "test-csrf", "medication_id": "7", "dose_index": "9", "taken": "1"})
+        self.assertEqual(bad.status_code, 400)
 
     def test_today_requires_login_silently(self):
         anon = self.app.test_client()

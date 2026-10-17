@@ -22,3 +22,4 @@ from . import tutorials  # noqa: E402,F401
 from . import pdf_library  # noqa: E402,F401
 from . import checkin  # noqa: E402,F401
 from . import app_shell  # noqa: E402,F401
+from . import personal  # noqa: E402,F401

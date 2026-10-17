@@ -8,8 +8,8 @@ from blueprints.admin.csrf import CSRF_COOKIE_NAME
 from services.push import generate_vapid_keypair
 from services.reminders import due_reminder, reminder_text
 
-EVENING_EMPTY = {"win": None, "focus": None, "priority_done": 0, "scroll_minutes": None, "top_priority": "Ship push"}
-EVENING_DONE = dict(EVENING_EMPTY, win="Shipped it")
+EVENING_EMPTY = {"win": None, "night_prayer": 0, "bible_passage": None}
+EVENING_DONE = dict(EVENING_EMPTY, night_prayer=1)
 
 
 class InstallableAppTests(unittest.TestCase):
@@ -73,8 +73,9 @@ class ReminderScheduleTests(unittest.TestCase):
     def test_quiet_at_other_hours(self):
         self.assertIsNone(due_reminder(13, 8, 21, None))
 
-    def test_evening_text_names_the_priority(self):
-        self.assertIn("Ship push", reminder_text("evening", EVENING_EMPTY)[1])
+    def test_evening_text_asks_for_passage_until_logged(self):
+        self.assertIn("Bible passage", reminder_text("evening", EVENING_EMPTY)[1])
+        self.assertNotIn("Bible passage", reminder_text("evening", dict(EVENING_EMPTY, bible_passage="Psalm 23"))[1])
 
 
 class VapidKeyTests(unittest.TestCase):

@@ -587,3 +587,62 @@ CREATE TABLE IF NOT EXISTS checkin_app_state (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 INSERT IGNORE INTO checkin_app_state (id) VALUES (1);
+
+-- Check-in v2 (2026-10-17): prayers, Bible passage, reason for the mood,
+-- app ideas, period day. focus/took_meds/top_priority/priority_done and the
+-- manual sleep_hours/scroll_minutes are no longer asked (sleep and phone
+-- time are tracked automatically now) but stay in the table: schema.sql
+-- never drops columns.
+ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS mood_reason TEXT AFTER mood;
+ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS morning_prayer TINYINT(1) NOT NULL DEFAULT 0;
+ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS night_prayer TINYINT(1) NOT NULL DEFAULT 0;
+ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS bible_passage TEXT;
+ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS app_ideas TEXT;
+ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS period_day TINYINT(1) NOT NULL DEFAULT 0;
+
+-- Medicines to take, edited via the `medications` simple_crud resource.
+-- doses_per_day (1-8) = how many checkboxes the Today page shows.
+CREATE TABLE IF NOT EXISTS medications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    doses_per_day TINYINT NOT NULL DEFAULT 1,
+    frequency ENUM('daily', 'every_other_day', 'weekly', 'as_needed') NOT NULL DEFAULT 'daily',
+    start_date DATE,
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
+    notes TEXT,
+    sort_order INT NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- One row per ticked dose checkbox (unticking deletes it).
+CREATE TABLE IF NOT EXISTS medication_doses (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    medication_id INT NOT NULL,
+    dose_date DATE NOT NULL,
+    dose_index TINYINT NOT NULL,
+    taken_at DATETIME NOT NULL,
+    UNIQUE KEY uq_dose (medication_id, dose_date, dose_index)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Tracked automatically from the phone (POST /gc-admin/track/*, token auth),
+-- never typed in. Kept apart from daily_checkins so a 7am sleep upload
+-- doesn't count as "checked in" and silence the morning reminder.
+CREATE TABLE IF NOT EXISTS sleep_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sleep_date DATE NOT NULL UNIQUE,
+    minutes SMALLINT NOT NULL,
+    updated_at DATETIME NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- App open/close events (e.g. Instagram) from a phone automation; minutes
+-- per day are summed from these. Times are UTC (db.utc_now()).
+CREATE TABLE IF NOT EXISTS app_sessions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    app VARCHAR(64) NOT NULL,
+    opened_at DATETIME NOT NULL,
+    closed_at DATETIME,
+    KEY idx_app_open (app, opened_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Secret the phone automations send as "Authorization: Bearer <token>".
+-- Generated on first start like the VAPID keys; shown on /gc-admin/me.
+ALTER TABLE checkin_app_state ADD COLUMN IF NOT EXISTS ingest_token VARCHAR(64);

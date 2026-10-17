@@ -1,6 +1,8 @@
-"""Private daily check-in (/gc-admin/today): mood, ADHD trackers, what I
-read, what I'm thankful for. Login lands here until today's entry exists,
-so the site is the first thing I open in the morning instead of Instagram.
+"""Private daily check-in (/gc-admin/today): prayers, mood + why, energy,
+gratitude, medicine doses, Bible passage, reading, app ideas, body
+(movement, period day), and the evening close. Autosaves: no Save button.
+Sleep and Instagram time are shown but never typed; the phone sends them
+(personal.py /track/*). Login lands here until today's entry exists.
 
 Never exposed publicly — nothing here is read by blueprints/public.
 """
@@ -8,15 +10,15 @@ from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import pymysql
-from flask import current_app, redirect, render_template, request, url_for
+from flask import current_app, jsonify, redirect, render_template, request, url_for
 
 from database.db import execute, query, query_one, utc_now
+from services import tracking
 from services.github import configured_username, get_weekly_activity
 
 from . import admin_bp
 
 MOODS = [(1, "😞", "Rough"), (2, "😕", "Meh"), (3, "😐", "Okay"), (4, "🙂", "Good"), (5, "😄", "Great")]
-CHART_DAYS = 14
 
 
 def valid_timezone(name) -> bool:
@@ -44,9 +46,13 @@ def save_timezone(name) -> None:
         execute("UPDATE checkin_app_state SET local_timezone = %s WHERE id = 1", (name,))
 
 
-def local_now() -> datetime:
+def local_tz_name() -> str:
     name = saved_timezone() or current_app.config["LOCAL_TIMEZONE"]
-    return datetime.now(ZoneInfo(name) if valid_timezone(name) else ZoneInfo("UTC"))
+    return name if valid_timezone(name) else "UTC"
+
+
+def local_now() -> datetime:
+    return datetime.now(ZoneInfo(local_tz_name()))
 
 
 def local_today() -> date:
@@ -83,14 +89,6 @@ def _scale(name):
     return int(value) if value in {"1", "2", "3", "4", "5"} else None
 
 
-def _number(name, cast, low, high):
-    try:
-        value = cast(request.form.get(name, ""))
-    except ValueError:
-        return None
-    return value if low <= value <= high else None
-
-
 def _text(name, max_len=None):
     value = request.form.get(name, "").strip()
     return (value[:max_len] if max_len else value) or None
@@ -112,80 +110,86 @@ def checkin_streak(today: date):
     return current_streak(dates, today)
 
 
+CHECKIN_FIELDS = (
+    "mood", "mood_reason", "energy", "morning_prayer", "night_prayer", "exercised",
+    "period_day", "reading", "bible_passage", "grateful", "app_ideas", "win", "notes",
+)
+
+
+def _checkin_values():
+    """Today form → column values, in CHECKIN_FIELDS order."""
+    return (
+        _scale("mood"),
+        _text("mood_reason"),
+        _scale("energy"),
+        _flag("morning_prayer"),
+        _flag("night_prayer"),
+        _flag("exercised"),
+        _flag("period_day"),
+        _text("reading"),
+        _text("bible_passage"),
+        _text("grateful"),
+        _text("app_ideas"),
+        _text("win"),
+        _text("notes"),
+    )
+
+
+def save_checkin(day: date) -> None:
+    columns = ", ".join(CHECKIN_FIELDS)
+    placeholders = ", ".join(["%s"] * (len(CHECKIN_FIELDS) + 2))
+    updates = ", ".join(f"{c} = VALUES({c})" for c in CHECKIN_FIELDS + ("updated_at",))
+    # Column names come from the fixed CHECKIN_FIELDS tuple above, never input.
+    execute(
+        f"""
+        INSERT INTO daily_checkins (checkin_date, {columns}, updated_at)
+        VALUES ({placeholders})
+        ON DUPLICATE KEY UPDATE {updates}
+        """,
+        (day, *_checkin_values(), utc_now()),
+    )
+
+
+def _wants_json() -> bool:
+    return request.headers.get("X-Requested-With") == "fetch"
+
+
 @admin_bp.route("/today", methods=["GET", "POST"])
 def today():
     today_date = local_today()
 
     if request.method == "POST":
+        # Autosave: the page posts the whole form in the background on every
+        # change (no Save button). The <noscript> fallback does a normal post.
         save_timezone(request.form.get("tz"))
         day = parse_day(request.form.get("checkin_date"), today_date)
-        execute(
-            """
-            INSERT INTO daily_checkins
-                (checkin_date, mood, energy, focus, sleep_hours, took_meds, exercised,
-                 reading, grateful, top_priority, priority_done, scroll_minutes, win, notes, updated_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            ON DUPLICATE KEY UPDATE
-                mood = VALUES(mood), energy = VALUES(energy), focus = VALUES(focus),
-                sleep_hours = VALUES(sleep_hours), took_meds = VALUES(took_meds),
-                exercised = VALUES(exercised), reading = VALUES(reading),
-                grateful = VALUES(grateful), top_priority = VALUES(top_priority),
-                priority_done = VALUES(priority_done), scroll_minutes = VALUES(scroll_minutes),
-                win = VALUES(win), notes = VALUES(notes), updated_at = VALUES(updated_at)
-            """,
-            (
-                day,
-                _scale("mood"),
-                _scale("energy"),
-                _scale("focus"),
-                _number("sleep_hours", float, 0, 24),
-                _flag("took_meds"),
-                _flag("exercised"),
-                _text("reading"),
-                _text("grateful"),
-                _text("top_priority", 255),
-                _flag("priority_done"),
-                _number("scroll_minutes", int, 0, 1440),
-                _text("win"),
-                _text("notes"),
-                utc_now(),
-            ),
-        )
+        save_checkin(day)
+        if _wants_json():
+            return jsonify({"ok": True})
         if day == today_date:
-            return redirect(url_for("admin.today", saved=1))
-        return redirect(url_for("admin.today", date=day.isoformat(), saved=1))
+            return redirect(url_for("admin.today"))
+        return redirect(url_for("admin.today", date=day.isoformat()))
 
     day = parse_day(request.args.get("date"), today_date)
     entry = query_one("SELECT * FROM daily_checkins WHERE checkin_date = %s", (day,))
 
-    chart_start = today_date - timedelta(days=CHART_DAYS - 1)
-    rows = query(
-        "SELECT checkin_date, mood, energy, focus, sleep_hours, scroll_minutes FROM daily_checkins WHERE checkin_date >= %s",
-        (chart_start,),
-    )
-    by_day = {row["checkin_date"]: row for row in rows}
-    chart_days = [chart_start + timedelta(days=i) for i in range(CHART_DAYS)]
+    taken = tracking.doses_taken(day, day)
+    medications = [
+        {
+            "id": med["id"],
+            "name": med["name"],
+            "notes": med["notes"],
+            "frequency": med["frequency"],
+            "doses": [(i, i in taken.get((med["id"], day), set())) for i in range(1, tracking.dose_count(med) + 1)],
+        }
+        for med in tracking.active_medications()
+        if tracking.medication_due(med, day)
+    ]
 
-    def series(key):
-        return [
-            float(by_day[d][key]) if d in by_day and by_day[d][key] is not None else None
-            for d in chart_days
-        ]
-
-    chart = {
-        "labels": [d.strftime("%b %d") for d in chart_days],
-        "mood": series("mood"),
-        "energy": series("energy"),
-        "focus": series("focus"),
-        "scroll": series("scroll_minutes"),
-    }
-
-    history = query(
-        """
-        SELECT checkin_date, mood, reading, grateful, top_priority, priority_done, win
-        FROM daily_checkins ORDER BY checkin_date DESC LIMIT 30
-        """
-    )
+    tz_name = local_tz_name()
+    sleep_minutes = tracking.sleep_by_day([day]).get(day)
+    app_minutes = tracking.app_minutes_by_day(tracking.TRACKED_APP, [day], tz_name).get(day, 0)
+    has_tracking = tracking.tracking_status()
 
     hour = local_now().hour
     greeting = "Good morning" if hour < 12 else "Good afternoon" if hour < 18 else "Good evening"
@@ -198,11 +202,28 @@ def today():
         greeting=greeting,
         streak=checkin_streak(today_date),
         moods=MOODS,
-        chart=chart,
-        history=history,
+        medications=medications,
+        sleep_minutes=sleep_minutes,
+        app_minutes=app_minutes,
+        tracked_app=tracking.TRACKED_APP,
+        tracking_connected=bool(has_tracking["last_sleep"] or has_tracking["last_app"]),
         github=get_weekly_activity(configured_username()),
         vapid_public_key=current_app.config.get("VAPID_PUBLIC_KEY") or None,
         morning_hour=hour_label(current_app.config["CHECKIN_MORNING_HOUR"]),
         evening_hour=hour_label(current_app.config["CHECKIN_EVENING_HOUR"]),
-        saved=request.args.get("saved") == "1",
     )
+
+
+@admin_bp.route("/today/dose", methods=["POST"])
+def today_dose():
+    """One medicine checkbox, saved the moment it's ticked/unticked."""
+    day = parse_day(request.form.get("checkin_date"), local_today())
+    try:
+        medication_id = int(request.form.get("medication_id", ""))
+        dose_index = int(request.form.get("dose_index", ""))
+    except ValueError:
+        return jsonify({"ok": False}), 400
+    if not 1 <= dose_index <= tracking.MAX_DOSES_PER_DAY:
+        return jsonify({"ok": False}), 400
+    tracking.set_dose(medication_id, day, dose_index, request.form.get("taken") == "1")
+    return jsonify({"ok": True})

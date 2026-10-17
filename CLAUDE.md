@@ -248,3 +248,21 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   not by a person, and panel env vars can't be written programmatically).
   Never put them — or anything private — in `site_settings`, whose rows go
   to every public template as `settings`. Env `VAPID_*` vars override.
+- **Personal area is separate from the website CMS.** Sidebar has a
+  "Personal" group (Today, My dashboard `/gc-admin/me`, Medicines) above
+  the "Website" group (Site dashboard `/gc-admin/` + all site editors).
+  After login: Today until checked in, then My dashboard.
+- Today **autosaves** (whole form POSTed with `X-Requested-With: fetch` on
+  every change; `<noscript>` Save fallback). Medicine doses save per
+  checkbox via `/gc-admin/today/dose`. `medications` is a `simple_crud`
+  resource; `doses_per_day` (1–8) = number of checkboxes; `frequency`
+  daily / every_other_day / weekly (weekday of `start_date`) / as_needed.
+- Sleep and Instagram time are **never typed in** — phone automations POST
+  to `/gc-admin/track/sleep` and `/gc-admin/track/app` with
+  `Authorization: Bearer <checkin_app_state.ingest_token>` (shown on My
+  dashboard). Those two endpoints skip JWT + CSRF (`routes.TOKEN_ENDPOINTS`)
+  and 404 on a bad token. They write `sleep_logs` / `app_sessions`, not
+  `daily_checkins`, so an early sleep upload doesn't count as checked in.
+- Period tracking = the `period_day` checkbox; runs of days (bridging one
+  forgotten day) become periods in `services/tracking.periods_from_days`,
+  with average cycle + predicted next start on My dashboard.

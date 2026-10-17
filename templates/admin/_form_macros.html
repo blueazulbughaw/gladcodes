@@ -26,7 +26,7 @@
   {% if ftype == 'textarea' %}
   <textarea name="{{ name }}" rows="3">{{ row[name] if row else '' }}</textarea>
   {% elif ftype == 'checkbox' %}
-  <input type="checkbox" name="{{ name }}" {{ 'checked' if row and row[name] }}>
+  <input type="checkbox" name="{{ name }}" {{ 'checked' if (row and row[name]) or (not row and name in config.get('default_checked', [])) }}>
   {% elif ftype == 'select' %}
   <select name="{{ name }}">
     {% for opt in config.select_options[name] %}

@@ -23,10 +23,14 @@ from .csrf import CSRF_COOKIE_NAME, csrf_cookie_missing, get_or_create_csrf_toke
 # blueprint, so they all get the auth gate and CSRF protection for free.
 
 
+# Phone automations (personal.py): no browser session, so no JWT cookie or
+# CSRF cookie — they authenticate with a bearer token instead.
+TOKEN_ENDPOINTS = {"admin.track_sleep", "admin.track_app"}
+
 # Reachable without a session: the login form, the installable app's
 # manifest and service worker, and the cron-pinged reminder tick (see
-# app_shell.py for why each is safe).
-PUBLIC_ENDPOINTS = {"admin.login", "admin.manifest", "admin.service_worker", "admin.reminders_tick"}
+# app_shell.py for why each is safe), plus the token-checked endpoints.
+PUBLIC_ENDPOINTS = {"admin.login", "admin.manifest", "admin.service_worker", "admin.reminders_tick"} | TOKEN_ENDPOINTS
 
 
 @admin_bp.before_request
@@ -42,7 +46,7 @@ def require_auth():
 
 @admin_bp.before_request
 def csrf_protect():
-    if request.method == "POST" and not validate_csrf():
+    if request.method == "POST" and request.endpoint not in TOKEN_ENDPOINTS and not validate_csrf():
         abort(400)
 
 
@@ -77,7 +81,7 @@ def login():
             if verify_credentials(username, password):
                 clear_attempts(ip)
                 # Morning ritual: land on the daily check-in until today's is done.
-                landing = "admin.index" if has_checked_in(local_today()) else "admin.today"
+                landing = "admin.personal_dashboard" if has_checked_in(local_today()) else "admin.today"
                 response = redirect(url_for(landing))
                 remember = request.form.get("remember") == "1"
                 response.set_cookie(

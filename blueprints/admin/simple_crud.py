@@ -217,6 +217,30 @@ RESOURCES = {
             ("published_at", "date", "Published date"),
         ],
     },
+    # Personal (private) — drives the medicine checkboxes on /gc-admin/today.
+    "medications": {
+        "table": "medications",
+        "title": "Medicines",
+        "add_button_label": "Add medicine",
+        "order_by": "sort_order",
+        "list_view": "cards",
+        "add_via_page": True,
+        "card_title_field": "name",
+        "reorderable": True,
+        "fields": [
+            ("name", "text", "Medicine"),
+            ("doses_per_day", "select", "How many times a day (one checkbox each, up to 8)"),
+            ("frequency", "select", "How often"),
+            ("start_date", "date", "Start date (sets which days for every other day / weekly)"),
+            ("is_active", "checkbox", "Currently taking"),
+            ("notes", "textarea", "Notes (dose, with food, time of day…)"),
+        ],
+        "default_checked": ["is_active"],  # a new medicine is one you're taking
+        "select_options": {
+            "doses_per_day": [str(n) for n in range(1, 9)],
+            "frequency": ["daily", "every_other_day", "weekly", "as_needed"],
+        },
+    },
     "instagram": {
         "table": "instagram_posts",
         "title": "Instagram / Reels",
