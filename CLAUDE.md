@@ -321,3 +321,9 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   block. Their cards are GSAP-animated by `resume-timeline.js`, so their
   hover only changes box-shadow: never add a CSS transform transition to
   an element GSAP tweens (it makes the tween lag).
+- `/lets-connect` (links.html) is a link-in-bio: one centered panel on the
+  page-hero ambient background (photo ring, socials, link cards), no
+  closing CTA. Admins only enter label + URL in the Links editor; each
+  card's icon and the small address hint are derived from the URL in the
+  template (`link_icon`/`link_hint` macros). Lucide has no brand logos,
+  so GitHub/LinkedIn/Instagram use `macros.social_icon`.

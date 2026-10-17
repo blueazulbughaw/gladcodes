@@ -111,5 +111,35 @@ class StoryPagesTests(PageClient):
         self.assertIn("<li>Cut time 70%</li>", body)
 
 
+class ConnectPageTests(PageClient):
+    """/lets-connect: link-in-bio cards with icons picked from each URL."""
+
+    LINKS = [{"label": "GitHub", "url": "https://github.com/blueazulbughaw"},
+             {"label": "Resume", "url": "/resume"},
+             {"label": "Newsletter", "url": "/#newsletter"}]
+
+    def setUp(self):
+        super().setUp()
+        ROWS["page_links"] = self.LINKS
+
+    def tearDown(self):
+        ROWS.pop("page_links", None)
+
+    def test_links_render_as_cards_with_icons_and_hints(self):
+        body = self.get("/lets-connect")
+        self.assertEqual(body.count('class="connect-link reveal"'), 3)
+        self.assertIn("github.com/blueazulbughaw</span>", body)
+        self.assertIn("glad.codes/resume</span>", body)
+        self.assertIn('data-lucide="file-text"', body)   # /resume
+        self.assertIn('data-lucide="mail"', body)        # newsletter
+        self.assertIn('href="https://github.com/blueazulbughaw" target="_blank"', body)
+        self.assertIn('href="/resume" >', body)           # internal: same tab
+
+    def test_no_shared_closing_cta_or_admin_links(self):
+        body = self.get("/lets-connect")
+        self.assertNotIn('class="closing-cta"', body)
+        self.assertNotIn("gc-admin", body)
+
+
 if __name__ == "__main__":
     unittest.main()

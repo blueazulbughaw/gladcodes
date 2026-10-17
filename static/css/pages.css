@@ -349,43 +349,50 @@
   .event-item-date, .event-item-time { white-space: normal; }
 }
 
-/* Links (linktree) --------------------------------------------------------- */
-.headshot-photo {
-  display: block;
-  width: 128px;
-  height: 128px;
-  border-radius: 50%;
-  object-fit: cover;
-  margin: 0 auto var(--space-lg);
-  box-shadow: var(--shadow-card);
+/* Let's Connect (link-in-bio) ------------------------------------------------
+   One centered profile panel on the page-hero ambient background: photo
+   with a gradient ring, title, social icons, then link cards. */
+.page-hero.connect { padding-bottom: clamp(4rem, 9vw, 7rem); min-height: 100vh; }
+.connect-panel { max-width: 600px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+.connect-avatar {
+  width: 128px; height: 128px; border-radius: 50%; padding: 4px; margin-bottom: 1.5rem;
+  background: conic-gradient(from 200deg, var(--teal), var(--aqua), var(--ocean), var(--teal));
+  box-shadow: 0 20px 40px -16px rgba(var(--navy-rgb), 0.45);
+  animation: page-rise 900ms cubic-bezier(0.2, 0.65, 0.3, 0.9) both;
 }
-.headshot-photo--placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(var(--navy-rgb), 0.06);
-  color: rgba(var(--navy-rgb), 0.35);
+.connect-avatar img, .connect-avatar-placeholder {
+  width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 4px solid var(--cream); display: block;
 }
-.links-stack {
-  max-width: 480px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
+.connect-avatar-placeholder { display: flex; align-items: center; justify-content: center; background: var(--sand); color: rgba(var(--navy-rgb), 0.4); }
+.page-hero.connect h1 { margin-left: auto; margin-right: auto; margin-bottom: 0.75rem; }
+.page-hero.connect p { max-width: 46ch; margin: 0 auto; }
+.connect-socials { display: flex; gap: 0.6rem; margin-top: 1.5rem; }
+.connect-socials a {
+  width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: var(--navy); color: #fff;
+  transition: transform 400ms cubic-bezier(0.2, 0.65, 0.3, 0.9), background 300ms ease;
 }
-.link-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem 1.5rem;
-  border-radius: var(--radius-pill);
-  background: var(--card);
-  box-shadow: var(--shadow-card);
-  font-weight: 600;
-  color: var(--navy);
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+.connect-socials a:hover { background: var(--teal); transform: translateY(-3px); }
+.connect-links { list-style: none; margin: 2.25rem 0 0; padding: 0; width: 100%; display: flex; flex-direction: column; gap: 0.75rem; text-align: left; }
+.connect-link {
+  display: flex; align-items: center; gap: 0.9rem;
+  padding: 0.85rem 1.1rem 0.85rem 0.85rem; border-radius: 18px;
+  background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow-card); color: var(--navy);
+  transition: opacity 600ms ease, transform 500ms cubic-bezier(0.2, 0.65, 0.3, 0.9), box-shadow 500ms cubic-bezier(0.2, 0.65, 0.3, 0.9);
 }
-.link-button:hover { transform: translateY(-2px); box-shadow: var(--shadow-card-hover); text-decoration: none; }
+.connect-link:hover { text-decoration: none; transform: translateY(-3px); box-shadow: var(--shadow-card-hover); }
+.connect-link-icon { width: 46px; height: 46px; border-radius: 14px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--navy); color: var(--aqua); }
+.connect-link-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.1rem; }
+.connect-link-text strong { font-family: var(--font-heading); font-size: 1.05rem; }
+.connect-link-text span { font-size: 0.8rem; color: rgba(var(--navy-rgb), 0.55); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.connect-link-arrow { flex-shrink: 0; color: rgba(var(--navy-rgb), 0.35); transition: transform 400ms cubic-bezier(0.2, 0.65, 0.3, 0.9), color 300ms ease; }
+.connect-link:hover .connect-link-arrow { color: var(--teal); transform: translate(3px, -1px); }
+@media (prefers-reduced-motion: reduce) {
+  .connect-avatar { animation: none; }
+  .connect-link:hover, .connect-socials a:hover { transform: none; }
+}
 
 /* Whole-page scroll progress bar (fixed under the sticky nav) ------------- */
 .scroll-progress {
