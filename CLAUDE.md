@@ -311,3 +311,11 @@ yet to gate access to (`blueprints/api/` is still just stubs).
 - `animations.js` count-up only fires on elements that are **both**
   `.reveal` and `data-count-to` — put `.reveal` on the number itself, not
   its wrapper (the dashboard showed 0s for this reason).
+- About and Resume follow the same language as the rest: About adds a
+  by-the-numbers bento counted from `resume_timeline` rows (never typed
+  in) and restyles the zig-zag timeline (navy squircle dots, sand
+  background); Resume has hero actions, a sticky-pinned Experience split
+  with role cards, and its own navy download band in the `closing_cta`
+  block. Their cards are GSAP-animated by `resume-timeline.js`, so their
+  hover only changes box-shadow: never add a CSS transform transition to
+  an element GSAP tweens (it makes the tween lag).

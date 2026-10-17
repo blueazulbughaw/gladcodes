@@ -18,7 +18,40 @@
   </div>
 </section>
 
-<section class="section">
+{# By-the-numbers bento, counted from the timeline itself so it never goes
+   stale. 4 cols: stats 2x1 + start-to-now card 2x1 = one full row. #}
+{% if timeline %}
+{% set side_ventures = timeline|selectattr('entry_type', 'equalto', 'side_venture')|list|length %}
+{% set schooling = timeline|selectattr('entry_type', 'equalto', 'education')|list|length %}
+{% set roles = timeline|selectattr('entry_type', 'in', ['full_time', 'contract'])|list|length %}
+<section class="section story-numbers" aria-label="My career by the numbers">
+  <div class="container">
+    <div class="story-bento">
+      <div class="story-stats">
+        <div><span class="story-stat-value">{{ timeline|length }}</span><span class="story-stat-label">stops along the way</span></div>
+        <div><span class="story-stat-value">{{ roles }}</span><span class="story-stat-label">roles in tech</span></div>
+        <div><span class="story-stat-value">{{ side_ventures }}</span><span class="story-stat-label">side venture{{ 's' if side_ventures != 1 }}</span></div>
+        <div><span class="story-stat-value">{{ schooling }}</span><span class="story-stat-label">degree{{ 's' if schooling != 1 }} &amp; programs</span></div>
+      </div>
+      <div class="story-arc">
+        <div class="story-arc-end">
+          <span class="story-arc-label">Where it started</span>
+          <strong>{{ timeline[0].title }}</strong>
+          <span>{{ timeline[0].company }} · {{ timeline[0].period_label }}</span>
+        </div>
+        <i data-lucide="arrow-down" class="story-arc-arrow" width="22" height="22"></i>
+        <div class="story-arc-end story-arc-end--now">
+          <span class="story-arc-label">Where I am now</span>
+          <strong>{{ timeline[-1].title }}</strong>
+          <span>{{ timeline[-1].company }} · {{ timeline[-1].period_label }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="section section--sand story-timeline" aria-label="Career timeline">
   <div class="container">
     {% set type_icons = {'education': 'graduation-cap', 'full_time': 'briefcase', 'contract': 'file-signature', 'side_venture': 'rocket', 'gap': 'map-pin'} %}
     <div class="career-timeline" id="careerTimeline">

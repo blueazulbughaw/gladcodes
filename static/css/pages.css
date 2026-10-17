@@ -428,10 +428,39 @@
 /* Hero entrance (JS-driven stagger — see resume-timeline.js) -------------- */
 .hero-fade { opacity: 1; }
 
-/* Resume: career timeline ------------------------------------------------- */
+/* About: by-the-numbers bento ----------------------------------------------
+   4 cols: navy stats 2x1 + start-to-now card 2x1 = one full row (gapless).
+   Tablet/phone: each spans the full width. */
+.story-numbers { padding-top: clamp(2.5rem, 5vw, 4rem); }
+.story-bento { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-flow: dense; gap: 1rem; }
+.story-stats {
+  grid-column: span 2; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem 1rem;
+  background: var(--navy); border-radius: 22px; padding: clamp(1.5rem, 3vw, 2.25rem);
+  position: relative; overflow: hidden; isolation: isolate;
+}
+.story-stats::before { content: ""; position: absolute; inset: 0; z-index: -1; background: radial-gradient(50% 70% at 100% 0%, rgba(94, 196, 196, 0.3), transparent 70%); }
+.story-stats > div { display: flex; flex-direction: column; gap: 0.2rem; }
+.story-stat-value { font-family: var(--font-heading); font-weight: 700; font-size: clamp(2.2rem, 4vw, 3.2rem); line-height: 1; color: var(--aqua); }
+.story-stat-label { font-size: 0.88rem; color: rgba(255, 255, 255, 0.72); }
+.story-arc {
+  grid-column: span 2; display: flex; flex-direction: column; justify-content: center; gap: 0.75rem;
+  background: var(--card); border-radius: 22px; box-shadow: var(--shadow-card); padding: clamp(1.5rem, 3vw, 2.25rem);
+}
+.story-arc-end { display: flex; flex-direction: column; gap: 0.15rem; }
+.story-arc-end strong { font-family: var(--font-heading); font-size: clamp(1.15rem, 2vw, 1.45rem); letter-spacing: -0.01em; }
+.story-arc-end span:last-child { font-size: 0.88rem; color: rgba(var(--navy-rgb), 0.6); }
+.story-arc-label { font-size: 0.8rem; font-weight: 600; color: var(--teal); }
+.story-arc-end--now strong { color: var(--teal); }
+.story-arc-arrow { color: rgba(var(--navy-rgb), 0.3); margin-left: 0.1rem; }
+@media (max-width: 900px) {
+  .story-bento { grid-template-columns: minmax(0, 1fr); }
+  .story-stats, .story-arc { grid-column: auto; }
+}
+
+/* About: career timeline (zig-zag story, JS: resume-timeline.js) ------------ */
 .career-timeline {
   position: relative;
-  max-width: 880px;
+  max-width: 980px;
   margin: 0 auto;
   padding-top: var(--space-xs);
 }
@@ -439,7 +468,7 @@
 .career-timeline-progress {
   position: absolute;
   top: 0;
-  left: 19px;
+  left: 21px;
   width: 3px;
   border-radius: 2px;
 }
@@ -447,129 +476,136 @@
 .career-timeline-progress {
   height: 0%;
   background: linear-gradient(var(--teal), var(--aqua));
-  box-shadow: 0 0 12px rgba(14, 138, 138, 0.5);
+  box-shadow: 0 0 16px rgba(94, 196, 196, 0.7);
 }
 .career-timeline-item {
   position: relative;
-  padding-left: 56px;
-  margin-bottom: var(--space-md);
+  padding-left: 64px;
+  margin-bottom: clamp(1.25rem, 3vw, 2rem);
 }
 .career-timeline-item:last-child { margin-bottom: 0; }
+/* Dots are navy squircles with a coloured icon, like the home accordion tiles. */
 .career-timeline-dot {
   position: absolute;
-  top: 1.4rem;
+  top: 1.5rem;
   left: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--teal);
-  color: #fff;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  background: var(--navy);
+  color: var(--aqua);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 0 4px var(--cream);
+  box-shadow: 0 0 0 5px var(--sand), 0 10px 24px -8px rgba(var(--navy-rgb), 0.5);
   z-index: 1;
 }
 .career-timeline-dot.is-active { animation: careerDotPulse 1.8s ease-in-out infinite; }
 @keyframes careerDotPulse {
-  0%, 100% { box-shadow: 0 0 0 4px var(--cream), 0 0 0 4px rgba(14, 138, 138, 0.4); }
-  50% { box-shadow: 0 0 0 4px var(--cream), 0 0 0 11px rgba(14, 138, 138, 0); }
+  0%, 100% { box-shadow: 0 0 0 5px var(--sand), 0 0 0 5px rgba(94, 196, 196, 0.5); }
+  50% { box-shadow: 0 0 0 5px var(--sand), 0 0 0 13px rgba(94, 196, 196, 0); }
 }
-.career-timeline-item--side_venture .career-timeline-dot { background: var(--aqua); }
-.career-timeline-item--education .career-timeline-dot { background: var(--ocean); }
-.career-timeline-item--gap .career-timeline-dot { background: rgba(var(--navy-rgb), 0.4); }
-.career-timeline-card { padding: 1.25rem 1.5rem; }
+.career-timeline-item--side_venture .career-timeline-dot { color: var(--warn); }
+.career-timeline-item--education .career-timeline-dot { color: #9ec9ef; }
+.career-timeline-item--gap .career-timeline-dot { color: rgba(255, 255, 255, 0.6); }
+.career-timeline-card {
+  padding: clamp(1.4rem, 2.6vw, 1.9rem) !important;
+  border-radius: 20px !important;
+  /* GSAP owns this card's transform (scroll entrance), so hover only deepens
+     the shadow: a CSS transform transition here would make GSAP lag. */
+  transition: box-shadow 600ms cubic-bezier(0.2, 0.65, 0.3, 0.9) !important;
+}
+.career-timeline-card:hover { box-shadow: 0 24px 48px -18px rgba(var(--navy-rgb), 0.32) !important; }
 .career-timeline-period {
   display: inline-block;
   font-family: var(--font-heading);
-  font-size: 0.75rem;
+  font-size: 0.92rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   color: var(--teal);
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.4rem;
 }
-.career-timeline-card h3 { margin: 0 0 0.15rem; font-size: 1.1rem; }
-.career-timeline-company { font-size: 0.9rem; font-weight: 600; color: rgba(var(--navy-rgb), 0.6); margin: 0 0 0.5rem; }
+.career-timeline-card h3 { margin: 0 0 0.2rem; font-size: clamp(1.2rem, 2vw, 1.45rem); letter-spacing: -0.01em; }
+.career-timeline-company { font-size: 0.92rem; font-weight: 600; color: rgba(var(--navy-rgb), 0.55); margin: 0 0 0.65rem; }
 .career-timeline-card p:last-child { margin-bottom: 0; color: rgba(var(--navy-rgb), 0.8); }
-.career-timeline-bullets {
-  margin: 0;
-  padding-left: 1.1rem;
-  color: rgba(var(--navy-rgb), 0.8);
-  list-style: disc;
-}
-.career-timeline-bullets li { margin-bottom: 0.3rem; }
-.career-timeline-bullets li:last-child { margin-bottom: 0; }
 
 @media (min-width: 760px) {
   .career-timeline-track, .career-timeline-progress { left: 50%; margin-left: -1.5px; }
-  .career-timeline-item { width: 50%; padding-left: 0; padding-right: 56px; }
-  .career-timeline-item:nth-child(even) { margin-left: 50%; padding-right: 0; padding-left: 56px; }
-  .career-timeline-dot { left: auto; right: -20px; }
-  .career-timeline-item:nth-child(even) .career-timeline-dot { left: -20px; right: auto; }
+  .career-timeline-item { width: 50%; padding-left: 0; padding-right: 64px; }
+  .career-timeline-item:nth-child(even) { margin-left: 50%; padding-right: 0; padding-left: 64px; }
+  .career-timeline-dot { left: auto; right: -22px; }
+  .career-timeline-item:nth-child(even) .career-timeline-dot { left: -22px; right: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .career-timeline-dot.is-active { animation: none; }
 }
 
-/* Resume: horizontal layered format (deliberately different from the
-   /about zig-zag story timeline above) — each role is a full-width row,
-   dates on the left, details on the right, stacked like an actual
-   resume rather than a spine-and-dot story. */
-.resume-layers { display: flex; flex-direction: column; }
+/* Resume: hero actions + pinned split of role cards ----------------------- */
+.page-hero .hero-actions { display: flex; flex-wrap: wrap; gap: 0.85rem; margin-top: 2rem; }
+.resume-split { display: grid; grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr); gap: clamp(2rem, 5vw, 5rem); align-items: start; }
+.resume-split-pin { position: sticky; top: 7rem; }
+.resume-split-pin h2 { font-size: clamp(1.9rem, 3.6vw, 3rem); letter-spacing: -0.02em; margin-bottom: 0.75rem; }
+.resume-split-pin p { color: rgba(var(--navy-rgb), 0.68); max-width: 30ch; }
+.resume-layers { display: flex; flex-direction: column; gap: 1rem; }
 .resume-layer {
-  display: grid;
-  grid-template-columns: 180px 1fr;
-  gap: var(--space-md);
-  padding: var(--space-md) 0;
-  border-bottom: 1px solid rgba(var(--navy-rgb), 0.1);
+  display: flex; flex-direction: column; gap: 0.85rem;
+  background: var(--card); border-radius: 20px; box-shadow: var(--shadow-card);
+  padding: clamp(1.4rem, 2.6vw, 1.9rem);
+  transition: box-shadow 600ms cubic-bezier(0.2, 0.65, 0.3, 0.9);  /* transform belongs to GSAP */
 }
-.resume-layer:first-child { padding-top: 0; }
-.resume-layer:last-child { border-bottom: none; padding-bottom: 0; }
+.resume-layer:hover { box-shadow: 0 24px 48px -18px rgba(var(--navy-rgb), 0.32); }
 .resume-layer-period {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.4rem;
-  font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: 0.8rem;
-  letter-spacing: 0.02em;
-  color: var(--teal);
+  display: flex; align-items: center; gap: 0.65rem;
+  font-family: var(--font-heading); font-weight: 700; font-size: 0.92rem; color: var(--teal);
 }
-.resume-layer-period svg { flex-shrink: 0; margin-top: 2px; }
-.resume-layer-body h3 { margin: 0 0 0.15rem; font-size: 1.15rem; }
-.resume-layer-company { font-size: 0.9rem; font-weight: 600; color: rgba(var(--navy-rgb), 0.6); margin: 0 0 0.6rem; }
-.resume-layer-bullets { margin: 0; padding-left: 1.1rem; color: rgba(var(--navy-rgb), 0.8); }
-.resume-layer-bullets li { margin-bottom: 0.3rem; }
-.resume-layer-bullets li:last-child { margin-bottom: 0; }
-
-@media (max-width: 640px) {
-  .resume-layer { grid-template-columns: 1fr; gap: 0.3rem; }
+.resume-layer-icon {
+  width: 38px; height: 38px; border-radius: 11px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--navy); color: var(--aqua);
+}
+.resume-layer--side_venture .resume-layer-icon { color: var(--warn); }
+.resume-layer--education .resume-layer-icon { color: #9ec9ef; }
+.resume-layer-body h3 { margin: 0 0 0.2rem; font-size: clamp(1.2rem, 2vw, 1.45rem); letter-spacing: -0.01em; }
+.resume-layer-company { font-size: 0.92rem; font-weight: 600; color: rgba(var(--navy-rgb), 0.55); margin: 0 0 0.75rem; }
+.resume-layer-bullets { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; color: rgba(var(--navy-rgb), 0.82); }
+.resume-layer-bullets li { position: relative; padding-left: 1.6rem; }
+.resume-layer-bullets li::before {
+  content: ""; position: absolute; left: 0; top: 0.3rem; width: 1rem; height: 1rem; border-radius: 50%;
+  background: rgba(var(--teal-rgb), 0.14) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230E8A8A' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") center / 0.6rem no-repeat;
+}
+@media (max-width: 900px) {
+  .resume-split { grid-template-columns: minmax(0, 1fr); }
+  .resume-split-pin { position: static; }
 }
 
 /* Resume: skills ------------------------------------------------------------ */
 .skills-matrix {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--space-md);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-auto-flow: dense;
+  gap: 1rem;
 }
-.skills-group { padding: 1.5rem; }
+.skills-group { padding: clamp(1.4rem, 2.4vw, 1.75rem) !important; border-radius: 20px !important; }
 .skills-group h4 {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--teal);
-  margin-bottom: 0.75rem;
+  gap: 0.65rem;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+  color: var(--navy);
+  margin-bottom: 1rem;
 }
-.skills-group h4 svg { flex-shrink: 0; width: 16px; height: 16px; }
-.skills-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.skills-group-icon {
+  width: 36px; height: 36px; border-radius: 11px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--navy); color: var(--aqua);
+}
+.skills-tags { display: flex; flex-wrap: wrap; gap: 0.45rem; }
 .skills-tags span {
-  font-size: 0.8rem;
-  padding: 0.25rem 0.7rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.35rem 0.8rem;
   border-radius: var(--radius-pill);
-  background: rgba(var(--navy-rgb), 0.06);
+  background: var(--sand);
+  border: 1px solid rgba(var(--navy-rgb), 0.08);
 }

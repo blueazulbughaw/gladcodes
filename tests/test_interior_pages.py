@@ -24,9 +24,8 @@ def fake_query(sql, *args):
     return []
 
 
-class InteriorPagesTests(unittest.TestCase):
-    """Shared interior-page treatment: closing CTA band (except pages with
-    their own ending), no eyebrow meta-labels, page-specific layouts."""
+class PageClient(unittest.TestCase):
+    """Renders public pages with the DB mocked (base class, no tests)."""
 
     def setUp(self):
         app = create_app()
@@ -43,11 +42,19 @@ class InteriorPagesTests(unittest.TestCase):
         self.assertEqual(resp.status_code, 200, path)
         return resp.get_data(as_text=True)
 
+
+class InteriorPagesTests(PageClient):
+    """Shared interior-page treatment: closing CTA band (except pages with
+    their own ending), no eyebrow meta-labels, page-specific layouts."""
+
     def test_closing_cta_on_interior_pages_only(self):
+        shared = 'id="closingCtaTitle"'  # the shared band's heading
         for path in ("/projects", "/journal", "/dashboard", "/about", "/events", "/resources"):
-            self.assertIn('class="closing-cta"', self.get(path), path)
-        for path in ("/contact", "/resume"):  # these end with their own call to action
-            self.assertNotIn('class="closing-cta"', self.get(path), path)
+            self.assertIn(shared, self.get(path), path)
+        self.assertNotIn('class="closing-cta"', self.get("/contact"))  # the page itself is the CTA
+        resume = self.get("/resume")  # same navy band style, its own download content
+        self.assertNotIn(shared, resume)
+        self.assertIn('id="resumeCtaTitle"', resume)
 
     def test_no_eyebrow_labels_or_admin_links(self):
         for path in ("/projects", "/journal", "/dashboard", "/about", "/events", "/resources", "/contact", "/resume"):
@@ -70,6 +77,38 @@ class InteriorPagesTests(unittest.TestCase):
         # carry data-count-to; on the tile wrapper it silently showed "0".
         body = self.get("/dashboard")
         self.assertIn('class="stat-value reveal" data-count-to="12"', body)
+
+
+class StoryPagesTests(PageClient):
+    """About + Resume follow the same design language."""
+
+    TIMELINE = [
+        {"period_label": "2005", "title": "BS Computer Science", "company": "Uni", "summary": "s", "entry_type": "education", "resume_bullets": "Honors"},
+        {"period_label": "2009", "title": "Software Engineer", "company": "Tokyo", "summary": "s", "entry_type": "full_time", "resume_bullets": "Built tools\nCut time 70%"},
+        {"period_label": "2016", "title": "Side venture", "company": "Self", "summary": "s", "entry_type": "side_venture", "resume_bullets": ""},
+        {"period_label": "2023", "title": "Founder", "company": "GladCodes", "summary": "s", "entry_type": "side_venture", "resume_bullets": ""},
+    ]
+
+    def setUp(self):
+        super().setUp()
+        ROWS["resume_timeline"] = self.TIMELINE
+
+    def tearDown(self):
+        ROWS.pop("resume_timeline", None)
+
+    def test_about_numbers_are_counted_from_the_timeline(self):
+        body = self.get("/about")
+        self.assertIn('<span class="story-stat-value">4</span><span class="story-stat-label">stops', body)
+        self.assertIn('<span class="story-stat-value">2</span><span class="story-stat-label">side ventures', body)
+        self.assertIn("BS Computer Science", body.split("Where it started")[1].split("Where I am now")[0])
+        self.assertIn("Founder", body.split("Where I am now")[1])
+
+    def test_resume_title_keeps_mba_mis_together_and_has_pinned_experience(self):
+        body = self.get("/resume")
+        self.assertIn("MBA&#8209;MIS", body)
+        self.assertIn('class="resume-split-pin"', body)
+        self.assertEqual(body.count('class="resume-layer resume-layer--'), 4)
+        self.assertIn("<li>Cut time 70%</li>", body)
 
 
 if __name__ == "__main__":
