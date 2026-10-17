@@ -141,5 +141,21 @@ class ConnectPageTests(PageClient):
         self.assertNotIn("gc-admin", body)
 
 
+class BrandTests(PageClient):
+    def test_logo_and_favicon_on_public_pages(self):
+        for path in ("/projects", "/about", "/contact", "/lets-connect"):
+            body = self.get(path)
+            self.assertIn('class="nav-logo"', body, path)
+            self.assertEqual(body.count('class="logo-mark '), 2, path)   # nav + footer
+            self.assertIn('img/brand/favicon.svg', body, path)
+            self.assertIn('aria-label="glad.codes home"', body, path)
+            self.assertNotIn("&lt;/&gt; glad.codes", body, path)       # old text logo gone
+
+    def test_admin_login_stays_unbranded(self):
+        body = self.client.get("/gc-admin/login").get_data(as_text=True)
+        self.assertNotIn("logo-mark", body)
+        self.assertNotIn("favicon", body)
+
+
 if __name__ == "__main__":
     unittest.main()

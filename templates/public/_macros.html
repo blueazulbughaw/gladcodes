@@ -1,3 +1,20 @@
+{# The <G/C> logo mark, redrawn as vector from Glad's logo artwork (the
+   source PNG has white letters on white, so they can't be cut out). The
+   brackets and slash keep the artwork's colours; the G and C use
+   currentColor, so CSS makes them navy on light backgrounds and cream on
+   dark ones. Coordinates are in the artwork's own space. #}
+{% macro logo_mark(class_name='', label='GladCodes') %}
+<svg class="logo-mark {{ class_name }}" viewBox="200 420 1600 670" {% if label %}role="img" aria-label="{{ label }}"{% else %}aria-hidden="true" focusable="false"{% endif %} xmlns="http://www.w3.org/2000/svg">
+  <path fill="#A5D6D5" d="M472 563 207 697v78l265 135v-84L291 737l181-91z"/>
+  <path fill="#A5D6D5" d="M1528 563l265 134v78l-265 135v-84l181-89-181-91z"/>
+  <path fill="#318182" d="M1060 427h78L943 1083h-80z"/>
+  <g fill="none" stroke="currentColor" stroke-width="72" stroke-linejoin="miter">
+    <path d="M808 650v-40l-45-45H615l-45 45v273l45 45h148l45-45V763H698"/>
+    <path d="M1431 650v-40l-45-45h-148l-45 45v273l45 45h148l45-45v-45"/>
+  </g>
+</svg>
+{% endmacro %}
+
 {# One project as a horizontal-accordion slice (home + /projects): widens on
    hover/focus to show the description and progress. Wrap slices in
    <div class="accordion">; CSS lives in home.css. #}

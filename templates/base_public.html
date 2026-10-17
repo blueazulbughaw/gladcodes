@@ -21,6 +21,10 @@
   <script type="application/ld+json">{{ person_ld|tojson }}</script>
   <script type="application/ld+json">{{ website_ld|tojson }}</script>
 
+  <link rel="icon" href="{{ url_for('static', filename='img/brand/favicon.svg') }}" type="image/svg+xml">
+  <link rel="icon" href="{{ url_for('static', filename='img/brand/favicon-32.png') }}" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/brand/apple-touch-icon.png') }}">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=Caveat&display=swap" rel="stylesheet">
@@ -32,7 +36,7 @@
 <body>
   <nav class="nav">
     <div class="container">
-      <a class="nav-logo" href="{{ url_for('public.home') }}">&lt;/&gt; glad.codes</a>
+      <a class="nav-logo" href="{{ url_for('public.home') }}" aria-label="glad.codes home">{{ macros.logo_mark(label='') }}<span>glad.codes</span></a>
       <ul class="nav-links">
         <li><a href="{{ url_for('public.home') }}">Home</a></li>
         <li><a href="{{ url_for('public.journal_index') }}">Journal</a></li>
@@ -101,6 +105,7 @@
         </div>
       </div>
       <div class="footer-bottom">
+        <a class="footer-logo" href="{{ url_for('public.home') }}" aria-label="glad.codes home">{{ macros.logo_mark(label='') }}</a>
         <span>{{ settings.get('footer_copyright') or ('© ' ~ current_year ~ ' Glad.') }}</span>
         {% if settings.get('footer_note') %}
         <span class="footer-extra">{{ settings.footer_note }}</span>

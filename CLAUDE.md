@@ -331,3 +331,11 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   card's icon and the small address hint are derived from the URL in the
   template (`link_icon`/`link_hint` macros). Lucide has no brand logos,
   so GitHub/LinkedIn/Instagram use `macros.social_icon`.
+- **Logo**: the <G/C> mark is `macros.logo_mark()`, an inline SVG redrawn
+  from Glad's artwork (`static/img/brand/logo-source.png`, whose letters are
+  white-on-white and can't be cut out). Brackets #A5D6D5 and slash #318182
+  are fixed; the G and C use `currentColor` (navy in the nav, cream in the
+  footer). Favicons (`static/img/brand/favicon.svg`, `favicon-32.png`,
+  `apple-touch-icon.png`) are the mark on a navy tile and are linked from
+  base_public only: the admin keeps its own Today PWA icons, and the admin
+  login stays unbranded.

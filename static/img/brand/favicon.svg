@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- <G/C> mark (see templates/public/_macros.html::logo_mark) on a navy tile -->
+  <rect width="64" height="64" rx="14" fill="#1A2E44"/>
+  <svg x="3" y="15" width="58" height="34" viewBox="200 420 1600 670">
+    <path fill="#A5D6D5" d="M472 563 207 697v78l265 135v-84L291 737l181-91z"/>
+    <path fill="#A5D6D5" d="M1528 563l265 134v78l-265 135v-84l181-89-181-91z"/>
+    <path fill="#5EC4C4" d="M1060 427h78L943 1083h-80z"/>
+    <g fill="none" stroke="#FFFDF8" stroke-width="80" stroke-linejoin="miter">
+      <path d="M808 650v-40l-45-45H615l-45 45v273l45 45h148l45-45V763H698"/>
+      <path d="M1431 650v-40l-45-45h-148l-45 45v273l45 45h148l45-45v-45"/>
+    </g>
+  </svg>
+</svg>

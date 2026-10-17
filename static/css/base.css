@@ -154,6 +154,15 @@ main { overflow-x: clip; max-width: 100%; }  /* no sideways scroll from off-scre
   white-space: nowrap;
 }
 .nav-logo:hover { text-decoration: none; }
+/* <G/C> mark (macros.logo_mark): letters follow `color`, so navy here and
+   cream in the footer; brackets/slash keep the logo's own colours. */
+.nav-logo { display: inline-flex; align-items: center; gap: 0.6rem; }
+.logo-mark { display: block; height: auto; flex-shrink: 0; }
+.nav-logo .logo-mark { width: 64px; color: var(--navy); }
+.footer-logo { display: inline-flex; color: var(--cream); }
+.footer-logo .logo-mark { width: 72px; }
+.footer-logo:hover { text-decoration: none; opacity: 0.9; }
+@media (max-width: 420px) { .nav-logo .logo-mark { width: 52px; } .nav-logo span { font-size: 1rem; } }
 .nav-links {
   display: flex;
   align-items: center;
@@ -239,6 +248,7 @@ main { overflow-x: clip; max-width: 100%; }  /* no sideways scroll from off-scre
   padding-top: var(--space-md);
   display: flex;
   justify-content: space-between;
+  align-items: center;
   flex-wrap: wrap;
   gap: var(--space-sm);
   font-size: 0.85rem;
