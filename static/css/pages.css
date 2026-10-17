@@ -390,9 +390,3 @@
   border-radius: var(--radius-pill);
   background: rgba(var(--navy-rgb), 0.06);
 }
-
-/* Placeholder pages (about/resources) -------------------------------------- */
-.placeholder-hero {
-  max-width: 720px;
-}
-.placeholder-hero .badge--experimental { margin-bottom: var(--space-sm); }
