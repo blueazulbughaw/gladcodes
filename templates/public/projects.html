@@ -12,7 +12,6 @@
 {% block content %}
 <section class="page-hero">
   <div class="container">
-    <span class="eyebrow">What I'm building</span>
     <h1>Projects</h1>
     <p>A running list of everything I'm shipping, experimenting with, or have already launched.</p>
   </div>
@@ -21,11 +20,13 @@
 <section class="section">
   <div class="container">
     {% if projects %}
-    <div class="projects-grid">
-      {% for project in projects %}
-      {{ macros.project_card(project, reveal=False) }}
-      {% endfor %}
+    {# Rows of up to 4 slices; a shorter last row simply gets wider slices,
+       so there are never empty cells. #}
+    {% for row in projects|batch(4) %}
+    <div class="accordion">
+      {% for project in row %}{{ macros.project_slice(project) }}{% endfor %}
     </div>
+    {% endfor %}
     {% else %}
     <div class="empty-state"><p>No projects listed yet — check back soon.</p></div>
     {% endif %}

@@ -7,6 +7,8 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
 {% endblock %}
 
+{% block closing_cta %}{% endblock %}{# ends with its own download/contact section #}
+
 {% block content %}
 <div class="scroll-progress" id="scrollProgress"></div>
 
@@ -41,7 +43,6 @@
 <section class="section section--sand">
   <div class="container">
     <div class="section-header reveal">
-      <span class="eyebrow">Along the way</span>
       <h2>Skills</h2>
     </div>
     {% set category_icons = {'Front-end': 'layout', 'Back-end / languages': 'server', 'CMS / e-commerce': 'shopping-cart', 'CRM / automation': 'zap', 'Enterprise / delivery tools': 'clipboard-list', 'Version control': 'git-branch', 'Practices': 'target', 'Languages': 'globe'} %}
@@ -61,7 +62,6 @@
 <section class="section">
   <div class="container">
     <div class="section-header reveal">
-      <span class="eyebrow">Get the PDF</span>
       <h2>Download this resume</h2>
       <p>
         {% if meta and meta.last_updated %}Last updated {{ meta.last_updated|human_date }}.{% endif %}

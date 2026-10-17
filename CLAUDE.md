@@ -298,3 +298,16 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   GSAP-animate elements that also carry `.reveal` (they fight over opacity).
 - Public nav is a floating glass pill (`base.css`); `main` has
   `overflow-x: clip` (not `hidden`, which would break sticky/pinning).
+- **Interior pages share the landing-page treatment** (pages.css): page-hero
+  with the same ambient mesh, pulled up under the nav, big balanced H1 and a
+  CSS rise-in (`.hero-fade` elements on about/resume keep their own JS
+  stagger); roomier sections; no eyebrow meta-labels anywhere public; a
+  shared closing CTA (`_closing_cta.html` via the `closing_cta` block in
+  base_public, overridden empty on home/contact/resume, which have their own
+  endings). Projects = accordion rows (`project_slice` macro, `|batch(4)`),
+  Journal = newest post as a feature card, Dashboard = navy stats tile + 2-col
+  chart bento (odd last chart spans both). Shared button variants, text
+  links and journal/tutorial card styles live in base.css, not home.css.
+- `animations.js` count-up only fires on elements that are **both**
+  `.reveal` and `data-count-to` — put `.reveal` on the number itself, not
+  its wrapper (the dashboard showed 0s for this reason).

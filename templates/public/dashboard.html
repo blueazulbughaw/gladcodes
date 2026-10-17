@@ -10,7 +10,6 @@
 {% block content %}
 <section class="page-hero">
   <div class="container">
-    <span class="eyebrow">Founder metrics</span>
     <h1>Dashboard</h1>
     <p>Every number here is real: pulled from the same database that powers the rest of the site, plus live GitHub activity that refreshes hourly.</p>
   </div>
@@ -18,16 +17,16 @@
 
 <section class="section">
   <div class="container">
-    <div class="stats-strip">
+    <div class="stats-strip stats-strip--tile">
       {% for stat in stats %}
-      <div class="stat-tile reveal">
-        <span class="stat-value" data-count-to="{{ stat.value }}" data-count-suffix="{{ stat.suffix }}">0{{ stat.suffix }}</span>
+      <div class="stat-tile">
+        <span class="stat-value reveal" data-count-to="{{ stat.value }}" data-count-suffix="{{ stat.suffix }}">0{{ stat.suffix }}</span>
         <div class="stat-label">{{ stat.label }}</div>
       </div>
       {% endfor %}
     </div>
 
-    <div class="charts-grid">
+    <div class="charts-grid dashboard-bento">
       <div class="card chart-card reveal">
         <h3>Coding hours per week</h3>
         <canvas id="codingHoursChart" height="220"></canvas>

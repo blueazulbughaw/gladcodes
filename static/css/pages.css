@@ -1,11 +1,121 @@
 /* Shared chrome for interior pages (journal, projects, events, links,
    resume, about, resources) — anything not specific to the home page. */
 
+/* Page hero: same ambient mesh + grain as the home hero, pulled up under
+   the floating nav pill, with a wide balanced title (2-3 lines max at
+   desktop) and a gentle CSS entrance. .hero-fade elements (about/resume)
+   keep their own JS stagger, so they're excluded from the CSS one. */
 .page-hero {
-  padding: var(--space-2xl) 0 var(--space-lg);
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  margin-top: -5.25rem;
+  padding: calc(5.25rem + clamp(3.5rem, 8vw, 6.5rem)) 0 clamp(3rem, 6vw, 5rem);
 }
-.page-hero h1 { font-size: clamp(1.9rem, 3.4vw, 2.6rem); }
-.page-hero p { color: rgba(var(--navy-rgb), 0.7); }
+.page-hero::before {
+  content: ""; position: absolute; inset: -10% -5%; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(38% 60% at 88% 10%, rgba(94, 196, 196, 0.42), transparent 70%),
+    radial-gradient(30% 50% at 62% 105%, rgba(63, 136, 197, 0.22), transparent 70%),
+    radial-gradient(26% 45% at 2% 55%, rgba(231, 169, 60, 0.14), transparent 70%);
+  filter: blur(10px);
+}
+.page-hero::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0.07; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.page-hero h1 {
+  font-size: clamp(2.3rem, 5vw, 4.2rem);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  max-width: 28ch;
+  margin-bottom: 1.25rem;
+  text-wrap: balance;
+}
+.page-hero p { color: rgba(var(--navy-rgb), 0.72); font-size: clamp(1.05rem, 1.4vw, 1.2rem); }
+.page-hero h1:not(.hero-fade), .page-hero p:not(.hero-fade) { animation: page-rise 900ms cubic-bezier(0.2, 0.65, 0.3, 0.9) both; }
+.page-hero p:not(.hero-fade) { animation-delay: 120ms; }
+@keyframes page-rise { from { opacity: 0; transform: translateY(24px); } }
+
+/* Interior chapters: roomier sections, bigger balanced headings, softer
+   cards with a slower, deeper hover lift. */
+.section { padding: clamp(4rem, 8vw, 7rem) 0; }
+.section-header h2 { font-size: clamp(1.7rem, 3vw, 2.5rem); letter-spacing: -0.02em; text-wrap: balance; }
+.section .card { border-radius: 18px; }
+.section .card--hover { transition: transform 600ms cubic-bezier(0.2, 0.65, 0.3, 0.9), box-shadow 600ms cubic-bezier(0.2, 0.65, 0.3, 0.9); }
+.section .card--hover:hover { transform: translateY(-6px); box-shadow: 0 24px 48px -18px rgba(var(--navy-rgb), 0.3); }
+.accordion + .accordion { margin-top: 0.85rem; }
+.section .accordion { min-height: 280px; }
+.dashboard-bento .beta-card { display: flex; flex-direction: column; justify-content: center; }
+
+/* Journal: newest post as a wide feature card ------------------------------ */
+.journal-feature {
+  position: relative; overflow: hidden; isolation: isolate;
+  display: flex; flex-direction: column; gap: 0.75rem;
+  padding: clamp(1.75rem, 4vw, 3rem); margin-bottom: 1.25rem;
+  border-radius: 22px; background: var(--navy); color: #fff;
+  transition: transform 600ms cubic-bezier(0.2, 0.65, 0.3, 0.9), box-shadow 600ms ease;
+}
+.journal-feature::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background: radial-gradient(45% 80% at 90% 0%, rgba(94, 196, 196, 0.35), transparent 70%), radial-gradient(35% 70% at 0% 100%, rgba(63, 136, 197, 0.3), transparent 70%);
+}
+.journal-feature:hover { text-decoration: none; transform: translateY(-4px); box-shadow: 0 30px 60px -24px rgba(var(--navy-rgb), 0.55); }
+.journal-feature-meta { display: flex; gap: 1rem; font-size: 0.8rem; color: rgba(255, 255, 255, 0.65); }
+.journal-feature-meta span:first-child { color: var(--aqua); font-weight: 600; }
+.journal-feature h2 { color: #fff; font-size: clamp(1.6rem, 3.4vw, 2.6rem); letter-spacing: -0.02em; margin: 0; max-width: 26ch; text-wrap: balance; }
+.journal-feature p { color: rgba(255, 255, 255, 0.75); max-width: 62ch; margin: 0; }
+.journal-feature-cta { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 0.5rem; font-family: var(--font-heading); font-weight: 600; color: var(--aqua); }
+.journal-feature-cta svg { transition: transform var(--transition-base); }
+.journal-feature:hover .journal-feature-cta svg { transform: translateX(4px); }
+
+/* Dashboard: navy stats tile + gapless 2-col chart bento ------------------- */
+.stats-strip--tile {
+  background: var(--navy); border-radius: 22px; padding: clamp(1.5rem, 3vw, 2.25rem);
+  margin-bottom: 1.25rem; gap: 1rem;
+}
+.stats-strip--tile .stat-tile { padding: 0.5rem; }
+.stats-strip--tile .stat-value { color: var(--aqua); }
+.stats-strip--tile .stat-label { color: rgba(255, 255, 255, 0.72); }
+.dashboard-bento { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-flow: dense; gap: 1.25rem; }
+/* An odd number of charts: the last one spans both columns, so no hole. */
+.dashboard-bento > :last-child:nth-child(odd) { grid-column: span 2; }
+@media (max-width: 760px) {
+  .dashboard-bento { grid-template-columns: minmax(0, 1fr); }
+  .dashboard-bento > :last-child:nth-child(odd) { grid-column: auto; }
+}
+
+/* Contact: intro aside + form card ---------------------------------------- */
+.contact-layout { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(2rem, 6vw, 5rem); align-items: start; }
+.contact-aside-lead { font-family: var(--font-heading); font-weight: 600; font-size: clamp(1.3rem, 2.2vw, 1.75rem); line-height: 1.3; letter-spacing: -0.01em; color: var(--navy); }
+.contact-aside-list { display: flex; flex-direction: column; gap: 0.75rem; margin: 1.5rem 0 2rem; }
+.contact-aside-list li { display: flex; align-items: center; gap: 0.65rem; color: rgba(var(--navy-rgb), 0.78); }
+.contact-aside-list svg { color: var(--teal); flex-shrink: 0; }
+.contact-layout .contact-form { max-width: none; background: var(--card); border-radius: 22px; box-shadow: var(--shadow-card); padding: clamp(1.5rem, 3vw, 2.25rem); }
+@media (max-width: 860px) { .contact-layout { grid-template-columns: minmax(0, 1fr); } }
+
+/* Closing "Action" band (templates/public/_closing_cta.html) ---------------- */
+.closing-cta {
+  position: relative; overflow: hidden; isolation: isolate;
+  background: var(--navy); color: #fff;
+  padding: clamp(4.5rem, 10vw, 8rem) 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.closing-cta::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(40% 70% at 85% 15%, rgba(94, 196, 196, 0.32), transparent 70%), radial-gradient(35% 60% at 8% 95%, rgba(63, 136, 197, 0.32), transparent 70%);
+}
+.closing-cta h2 { color: #fff; font-size: clamp(2rem, 4.6vw, 3.6rem); letter-spacing: -0.03em; line-height: 1.08; max-width: 18ch; text-wrap: balance; }
+.closing-cta h2 .script-accent { display: block; color: var(--aqua); font-size: 1.15em; letter-spacing: 0; margin-top: 0.15em; }
+.closing-cta p { color: rgba(255, 255, 255, 0.72); font-size: 1.1rem; max-width: 52ch; }
+.closing-cta-actions { display: flex; flex-wrap: wrap; gap: 0.85rem; margin-top: 2rem; }
+.closing-cta-actions .btn svg { transition: transform var(--transition-base); }
+.closing-cta-actions .btn:hover svg { transform: translateX(3px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .page-hero h1:not(.hero-fade), .page-hero p:not(.hero-fade) { animation: none; }
+  .section .card--hover:hover, .journal-feature:hover { transform: none; }
+}
 /* One-sentence subtitle under a page title. Sized so the whole sentence
    fits on a single line inside the container on desktop; wraps normally on
    narrower screens so phones never get a horizontal scroll. */
@@ -61,8 +171,19 @@
   gap: var(--space-sm);
 }
 .pdf-card-header h3 { margin: 0; }
-.teaser-list { display: flex; flex-direction: column; gap: 0.5rem; }
-.teaser-list a { font-weight: 600; }
+/* Big link rows: title left, arrow right, slides on hover. */
+.teaser-list { display: flex; flex-direction: column; border-top: 1px solid rgba(var(--navy-rgb), 0.12); }
+.teaser-list li { border-bottom: 1px solid rgba(var(--navy-rgb), 0.12); }
+.teaser-list a {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: 1.15rem 0.25rem; color: var(--navy);
+  font-family: var(--font-heading); font-weight: 600; font-size: clamp(1.1rem, 2vw, 1.45rem); letter-spacing: -0.01em;
+  transition: color 300ms ease, padding 400ms cubic-bezier(0.2, 0.65, 0.3, 0.9);
+}
+.teaser-list a svg { flex-shrink: 0; color: var(--teal); transition: transform 400ms cubic-bezier(0.2, 0.65, 0.3, 0.9); }
+.teaser-list a:hover { color: var(--teal); text-decoration: none; padding-left: 0.75rem; }
+.teaser-list a:hover svg { transform: translateX(4px); }
+@media (prefers-reduced-motion: reduce) { .teaser-list a, .teaser-list a svg { transition: none; } }
 
 /* Flash messages on light backgrounds (contact form, etc.) — the newsletter
    card's own message colors are tuned for its dark navy background, so
@@ -106,6 +227,11 @@
 .search-form {
   display: flex;
   gap: 0.5rem;
+  max-width: 100%;
+}
+@media (max-width: 560px) {
+  .search-form { width: 100%; }
+  .search-form input[type="search"] { min-width: 0; flex: 1; }  /* shrink so the button never gets cut off */
 }
 .search-form input[type="search"] {
   font-family: var(--font-body);
@@ -143,6 +269,7 @@
 
 /* Journal post ----------------------------------------------------------- */
 .post-header { max-width: 720px; margin: 0 auto var(--space-lg); }
+.post-header h1 { font-size: clamp(2rem, 4.4vw, 3.3rem); letter-spacing: -0.03em; line-height: 1.08; text-wrap: balance; }
 .post-meta {
   display: flex;
   gap: var(--space-sm);

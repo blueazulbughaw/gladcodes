@@ -14,6 +14,8 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
 {% endblock %}
 
+{% block closing_cta %}{% endblock %}{# home ends with its own full CTA chapter #}
+
 {% block content %}
 
 {# ---- Attention ---------------------------------------------------------- #}
@@ -154,21 +156,7 @@
     </div>
     <div class="accordion">
       {% for project in projects %}
-      <article class="accordion-slice" tabindex="0">
-        <div class="accordion-top">
-          <span class="accordion-icon">{{ macros.dynamic_icon(project.icon, 22) }}</span>
-          <span class="badge badge--{{ project.status }}">{{ project.status.replace('_', ' ') }}</span>
-        </div>
-        <h3>{{ project.title }}</h3>
-        <div class="accordion-body">
-          <p>{{ project.description }}</p>
-          <div class="project-progress">
-            <div class="project-progress-label"><span>Progress</span><span>{{ project.progress_pct }}%</span></div>
-            <div class="progress-track"><div class="progress-fill reveal" data-progress="{{ project.progress_pct }}"></div></div>
-          </div>
-          {% if project.url %}<a class="text-link" href="{{ project.url }}" target="_blank" rel="noopener">View project <i data-lucide="arrow-up-right" width="16" height="16"></i></a>{% endif %}
-        </div>
-      </article>
+      {{ macros.project_slice(project) }}
       {% endfor %}
     </div>
   </div>

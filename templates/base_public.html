@@ -71,6 +71,10 @@
     {% block content %}{% endblock %}
   </main>
 
+  {# Shared "Action" ending for interior pages; pages with their own ending
+     (home, contact, resume) override this block to empty. #}
+  {% block closing_cta %}{% include "_closing_cta.html" %}{% endblock %}
+
   <footer class="footer">
     <div class="container">
       <div class="footer-grid">
