@@ -34,6 +34,16 @@ class Config:
     # as "today". The server runs in UTC; this is where Glad actually wakes up.
     LOCAL_TIMEZONE = os.environ.get("LOCAL_TIMEZONE") or "America/New_York"
 
+    # Web Push for check-in reminders (services/push.py, send_reminders.py).
+    # Both keys are base64url — generate with `python generate_vapid_keys.py`.
+    # Leave empty and nothing is pushed; the app still installs and works.
+    VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
+    VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")
+    VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT") or "https://glad.codes"
+    # Local hours (LOCAL_TIMEZONE, 24h clock) when send_reminders.py nudges.
+    CHECKIN_MORNING_HOUR = int(os.environ.get("CHECKIN_MORNING_HOUR") or 8)
+    CHECKIN_EVENING_HOUR = int(os.environ.get("CHECKIN_EVENING_HOUR") or 21)
+
     # Contact form delivery. Defaults assume a Python app on cPanel shared
     # hosting, where Exim already handles mail for the account and accepts
     # local, unauthenticated submission on localhost:25 — no external email

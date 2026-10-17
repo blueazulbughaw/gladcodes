@@ -2,15 +2,6 @@
 
 {% block title %}Today{% endblock %}
 
-{% block extra_css %}
-<!-- "Add to Home Screen" opens this page full-screen like an app, so the
-     check-in can sit where Instagram used to on the phone. -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Today">
-<meta name="theme-color" content="#1A2E44">
-{% endblock %}
-
 {% block content %}
 <div class="container checkin">
   <div class="admin-page-header">
@@ -98,6 +89,18 @@
     </div>
   </form>
 
+  <section class="card checkin-app" id="appCard">
+    <div>
+      <h2><i data-lucide="smartphone"></i> Make it an app</h2>
+      <p class="admin-meta" id="appStatus">Install Today on this device and get a nudge at {{ morning_hour }} and {{ evening_hour }} instead of reaching for Instagram.</p>
+    </div>
+    <div class="checkin-app-actions">
+      <button type="button" class="btn btn-primary" id="installBtn" hidden><i data-lucide="download"></i> Install app</button>
+      <button type="button" class="btn-secondary-admin" id="pushBtn" hidden>Turn on reminders</button>
+      <button type="button" class="btn-secondary-admin" id="pushTestBtn" hidden>Send a test</button>
+    </div>
+  </section>
+
   <div class="checkin-charts">
     <div class="card chart-card">
       <h3>Mood, energy, and focus: last {{ chart.labels|length }} days</h3>
@@ -143,5 +146,130 @@
     ], { min: 1, max: 5 });
     GladCharts.barChart("checkinScrollChart", labels, {{ chart.scroll|tojson }}, "Minutes");
   });
+</script>
+<script>
+  // Install + reminder controls. Inline (not /static/) so no public file
+  // ever names the admin URLs.
+  (function () {
+    var CSRF = {{ csrf_token|tojson }};
+    var VAPID_KEY = {{ vapid_public_key|tojson }};
+    var SW_URL = {{ url_for('admin.service_worker')|tojson }};
+    var URLS = {
+      subscribe: {{ url_for('admin.push_subscribe')|tojson }},
+      unsubscribe: {{ url_for('admin.push_unsubscribe')|tojson }},
+      test: {{ url_for('admin.push_test')|tojson }}
+    };
+    var status = document.getElementById("appStatus");
+    var installBtn = document.getElementById("installBtn");
+    var pushBtn = document.getElementById("pushBtn");
+    var testBtn = document.getElementById("pushTestBtn");
+    var standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+    var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    var pushSupported = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+
+    function say(text) { status.textContent = text; }
+
+    function post(url, fields) {
+      var body = new URLSearchParams(fields || {});
+      body.set("csrf_token", CSRF);
+      return fetch(url, { method: "POST", body: body, credentials: "same-origin" }).then(function (r) {
+        return r.json().catch(function () { return {}; });
+      });
+    }
+
+    function b64urlToBytes(s) {
+      var pad = "=".repeat((4 - (s.length % 4)) % 4);
+      var raw = atob((s + pad).replace(/-/g, "+").replace(/_/g, "/"));
+      return Uint8Array.from(raw, function (c) { return c.charCodeAt(0); });
+    }
+
+    function subFields(sub) {
+      var json = sub.toJSON();
+      return { endpoint: json.endpoint, p256dh: json.keys.p256dh, auth: json.keys.auth };
+    }
+
+    // Install: Chrome/Edge (desktop + Android) fire beforeinstallprompt.
+    var deferred = null;
+    window.addEventListener("beforeinstallprompt", function (e) {
+      e.preventDefault();
+      deferred = e;
+      installBtn.hidden = false;
+    });
+    installBtn.addEventListener("click", function () {
+      if (!deferred) return;
+      deferred.prompt();
+      deferred.userChoice.finally(function () { deferred = null; installBtn.hidden = true; });
+    });
+    window.addEventListener("appinstalled", function () {
+      installBtn.hidden = true;
+      say("Installed. Open Today from your taskbar, Start menu, or home screen.");
+    });
+
+    if (isIOS && !standalone) {
+      say("On iPhone: tap Share, then Add to Home Screen. Open Today from there to turn on reminders.");
+      return;
+    }
+    if (!pushSupported) return;
+    if (!VAPID_KEY) {
+      if (standalone) say("Installed. Reminders need VAPID keys on the server (see CLAUDE.md).");
+      return;
+    }
+
+    function registration() {
+      return navigator.serviceWorker.register(SW_URL).then(function () { return navigator.serviceWorker.ready; });
+    }
+
+    function refresh() {
+      if (Notification.permission === "denied") {
+        pushBtn.hidden = true; testBtn.hidden = true;
+        say("Notifications are blocked for this site. Allow them in your browser's site settings, then reload.");
+        return;
+      }
+      registration().then(function (reg) { return reg.pushManager.getSubscription(); }).then(function (sub) {
+        var on = !!sub && Notification.permission === "granted";
+        pushBtn.hidden = false;
+        pushBtn.textContent = on ? "Turn off reminders" : "Turn on reminders";
+        pushBtn.dataset.on = on ? "1" : "";
+        testBtn.hidden = !on;
+        if (on) {
+          say("Reminders are on for this device: {{ morning_hour }} if you haven't checked in, {{ evening_hour }} for the evening half.");
+          post(URLS.subscribe, subFields(sub)); // keep the server's copy fresh
+        }
+      });
+    }
+
+    pushBtn.addEventListener("click", function () {
+      pushBtn.disabled = true;
+      var done = function () { pushBtn.disabled = false; refresh(); };
+      if (pushBtn.dataset.on) {
+        registration().then(function (reg) { return reg.pushManager.getSubscription(); }).then(function (sub) {
+          if (!sub) return;
+          return post(URLS.unsubscribe, { endpoint: sub.endpoint }).then(function () { return sub.unsubscribe(); });
+        }).then(function () { say("Reminders are off for this device."); }).finally(done);
+        return;
+      }
+      Notification.requestPermission().then(function (perm) {
+        if (perm !== "granted") throw new Error("denied");
+        return registration();
+      }).then(function (reg) {
+        return reg.pushManager.getSubscription().then(function (sub) {
+          return sub || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64urlToBytes(VAPID_KEY) });
+        });
+      }).then(function (sub) {
+        return post(URLS.subscribe, subFields(sub));
+      }).catch(function () {
+        say("Couldn't turn on reminders on this device. Check the browser's notification permission and try again.");
+      }).finally(done);
+    });
+
+    testBtn.addEventListener("click", function () {
+      testBtn.disabled = true;
+      post(URLS.test).then(function (r) {
+        say(r.sent ? "Test sent. It should pop up in a few seconds." : "The push service didn't accept it. Try turning reminders off and on.");
+      }).finally(function () { testBtn.disabled = false; });
+    });
+
+    refresh();
+  })();
 </script>
 {% endblock %}

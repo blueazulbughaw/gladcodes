@@ -500,3 +500,12 @@ body.admin-body { display: flex; min-height: 100vh; align-items: stretch; }
 @media (prefers-reduced-motion: reduce) {
   .checkin-option span { transition: none; }
 }
+
+.checkin-app { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-top: 2rem; }
+.checkin-app h2 { display: flex; align-items: center; gap: 0.5rem; font-size: 1.15rem; margin: 0 0 0.3rem; }
+.checkin-app h2 svg { color: var(--teal); }
+.checkin-app p { margin: 0; max-width: 60ch; }
+.checkin-app-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.checkin-app-actions .btn { display: inline-flex; align-items: center; gap: 0.4rem; }
+.checkin-app-actions .btn svg { width: 16px; height: 16px; }
+.checkin-app-actions [hidden] { display: none; }

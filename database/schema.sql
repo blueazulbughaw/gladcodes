@@ -559,3 +559,15 @@ CREATE TABLE IF NOT EXISTS daily_checkins (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Browsers/devices that turned on check-in reminders (Web Push) from the
+-- installed /gc-admin app. Single-admin site, so no user column.
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    endpoint VARCHAR(500) NOT NULL,
+    p256dh VARCHAR(255) NOT NULL,
+    auth VARCHAR(255) NOT NULL,
+    user_agent VARCHAR(255),
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_push_endpoint (endpoint(191))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

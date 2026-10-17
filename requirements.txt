@@ -10,3 +10,5 @@ Markdown==3.7
 bleach==6.1.0
 # IANA timezone data for zoneinfo (LOCAL_TIMEZONE); Windows has no system tz database.
 tzdata==2025.2
+# Web Push for check-in reminders (services/push.py); same range Secret Santa runs on this host.
+pywebpush==1.14.1

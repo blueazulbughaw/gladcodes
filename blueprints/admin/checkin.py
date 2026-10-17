@@ -73,6 +73,14 @@ def _text(name, max_len=None):
     return (value[:max_len] if max_len else value) or None
 
 
+def hour_label(hour: int) -> str:
+    return f"{hour % 12 or 12}{'am' if hour < 12 else 'pm'}"
+
+
+def evening_done(entry) -> bool:
+    return bool(entry and (entry["win"] or entry["focus"] or entry["priority_done"] or entry["scroll_minutes"] is not None))
+
+
 def _flag(name):
     return 1 if request.form.get(name) else 0
 
@@ -173,5 +181,8 @@ def today():
         chart=chart,
         history=history,
         github=get_weekly_activity(configured_username()),
+        vapid_public_key=current_app.config.get("VAPID_PUBLIC_KEY") or None,
+        morning_hour=hour_label(current_app.config["CHECKIN_MORNING_HOUR"]),
+        evening_hour=hour_label(current_app.config["CHECKIN_EVENING_HOUR"]),
         saved=request.args.get("saved") == "1",
     )

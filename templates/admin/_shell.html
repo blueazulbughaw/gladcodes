@@ -1,5 +1,23 @@
 {% extends "base_admin.html" %}
 
+{# Installable-app wiring lives here (authenticated pages only), never in
+   base_admin.html — the login page must stay bare and unbranded. #}
+{% block head_meta %}
+<link rel="manifest" href="{{ url_for('admin.manifest') }}">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}">
+<meta name="theme-color" content="#1A2E44">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Today">
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("{{ url_for('admin.service_worker') }}").catch(function () {});
+    });
+  }
+</script>
+{% endblock %}
+
 {% block admin_nav %}
 <aside class="admin-sidebar">
   <div class="admin-sidebar-brand">

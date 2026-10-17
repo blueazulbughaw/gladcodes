@@ -81,6 +81,10 @@ flask run
   on the server.
 - To restart after a deploy: touch `~/gladcodes_app/tmp/restart.txt`
   (or use the cPanel "Restart" button, which does the same thing).
+- Check-in reminders: a cPanel cron job runs `send_reminders.py` hourly
+  (`0 * * * * cd ~/gladcodes_app && ~/virtualenv/gladcodes_app/3.11/bin/python send_reminders.py`).
+  It needs `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` (from
+  `python generate_vapid_keys.py`) set in the app's env vars.
 - Passenger is the **only** way Python runs here — there is no standalone
   `python app.py` server in production.
 
@@ -205,3 +209,16 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   counts **pushes**, not commits, from the public events feed — GitHub
   removed commit counts from PushEvent payloads in 2025. Same
   `{"labels", "data"}` shape and `github_cache` pattern as everything else.
+- The admin is an installable PWA ("Today", start URL `/gc-admin/today`)
+  with Web Push reminders, modeled on Secret Santa's setup. To keep the
+  admin URL secret, **nothing PWA-related lives in `/static/`**: the
+  manifest and service worker are routes in `blueprints/admin/app_shell.py`
+  (`/gc-admin/manifest.webmanifest`, `/gc-admin/sw.js`), and the install/
+  push JS is inline in `today.html`. The `<link rel="manifest">` and SW
+  registration are in `_shell.html` (authenticated pages), never
+  `base_admin.html`, so the login page stays bare. Manifest + SW are the
+  only auth-exempt admin endpoints besides login (`routes.PUBLIC_ENDPOINTS`)
+  so installs and background SW updates survive JWT expiry. The SW has no
+  fetch handler/offline cache on purpose — admin pages must always be live.
+- `url_for('static', ...)` appends `?v=<mtime>` (`app.py::static_cache_bust`)
+  so deploys aren't masked by browser-cached CSS/JS.

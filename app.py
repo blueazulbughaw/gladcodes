@@ -1,3 +1,4 @@
+import os
 from datetime import timedelta
 
 from flask import Flask, request
@@ -50,6 +51,17 @@ def create_app(config_class=Config):
         return f"{hour_12}:{minute:02d} {period}"
 
     app.jinja_env.filters["youtube_embed"] = youtube_embed_url
+
+    @app.url_defaults
+    def static_cache_bust(endpoint, values):
+        # Append ?v=<file mtime> to every url_for('static', ...) so a deploy
+        # is picked up on the next page load instead of browsers serving a
+        # cached stylesheet/script that no longer matches the templates.
+        if endpoint != "static" or "filename" not in values:
+            return
+        path = os.path.join(app.static_folder, values["filename"])
+        if os.path.isfile(path):
+            values["v"] = int(os.stat(path).st_mtime)
 
     @app.after_request
     def add_admin_noindex_header(response):

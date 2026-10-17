@@ -22,9 +22,14 @@ from .csrf import CSRF_COOKIE_NAME, csrf_cookie_missing, get_or_create_csrf_toke
 # blueprint, so they all get the auth gate and CSRF protection for free.
 
 
+# Reachable without a session: the login form, plus the installable app's
+# manifest and service worker (see app_shell.py for why those two).
+PUBLIC_ENDPOINTS = {"admin.login", "admin.manifest", "admin.service_worker"}
+
+
 @admin_bp.before_request
 def require_auth():
-    if request.endpoint == "admin.login":
+    if request.endpoint in PUBLIC_ENDPOINTS:
         return None
     payload = verify_token(request.cookies.get(COOKIE_NAME))
     if payload is None:
