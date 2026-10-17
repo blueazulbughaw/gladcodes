@@ -18,6 +18,12 @@
 </script>
 {% endblock %}
 
+{% block before_content %}
+{% if back_url %}
+<div class="admin-backbar"><a class="admin-back" href="{{ back_url }}"><i data-lucide="arrow-left"></i><span>Back</span></a></div>
+{% endif %}
+{% endblock %}
+
 {% block admin_nav %}
 <aside class="admin-sidebar">
   <div class="admin-sidebar-brand">
@@ -33,6 +39,7 @@
     <a href="{{ url_for('admin.simple_list', resource='medications') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'medications' }}"><i data-lucide="pill"></i><span>Medicines</span></a>
     <a href="{{ url_for('admin.simple_list', resource='app_ideas') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'app_ideas' }}"><i data-lucide="lightbulb"></i><span>App ideas</span></a>
     <span class="admin-nav-group">Website</span>
+    <a href="{{ url_for('public.home') }}" target="_blank" rel="noopener"><i data-lucide="external-link"></i><span>View site</span></a>
     <a href="{{ url_for('admin.index') }}" class="{{ 'active' if request.endpoint == 'admin.index' }}"><i data-lucide="home"></i><span>Site dashboard</span></a>
     <a href="{{ url_for('admin.now_card_editor') }}" class="{{ 'active' if request.endpoint == 'admin.now_card_editor' }}"><i data-lucide="clock"></i><span>NOW card</span></a>
     <a href="{{ url_for('admin.simple_list', resource='timeline') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'timeline' }}"><i data-lucide="flag"></i><span>Timeline</span></a>

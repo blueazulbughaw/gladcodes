@@ -619,3 +619,19 @@ body.admin-body { display: flex; min-height: 100vh; align-items: stretch; }
 .admin-card-group-header { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem; padding-bottom: 0.4rem; border-bottom: 1px solid rgba(var(--navy-rgb), 0.1); }
 .admin-card-group-header h2 { font-size: 1.1rem; margin: 0; display: flex; align-items: center; gap: 0.5rem; }
 .admin-card-group-count { font-family: var(--font-body); font-size: 0.75rem; font-weight: 600; padding: 0.05rem 0.5rem; border-radius: 999px; background: rgba(var(--teal-rgb), 0.12); color: var(--teal); }
+
+/* Back button above every admin page except Today and the site dashboard
+   (routes.back_url). Sits in the same column as the page container. */
+.admin-backbar { max-width: 1000px; margin: 0 auto; padding: 1.25rem 1.5rem 0; }
+.admin-backbar + .container { padding-top: 0.75rem; }
+.admin-back {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  padding: 0.4rem 0.85rem 0.4rem 0.6rem; border-radius: 999px;
+  background: var(--card); box-shadow: var(--shadow-card);
+  color: var(--navy); font-size: 0.85rem; font-weight: 600; text-decoration: none;
+}
+.admin-back:hover { text-decoration: none; color: var(--teal); }
+.admin-back svg { width: 16px; height: 16px; }
+@media (max-width: 860px) {
+  .admin-backbar { padding: 1rem 1rem 0; }
+}

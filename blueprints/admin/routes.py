@@ -55,6 +55,37 @@ def inject_csrf():
     return {"csrf_token": get_or_create_csrf_token()}
 
 
+# Pages that are a "home" (no Back button) and personal resources whose
+# lists sit under Today rather than the site dashboard.
+NO_BACK_ENDPOINTS = {"admin.today", "admin.index", "admin.login"}
+PERSONAL_RESOURCES = {"medications", "app_ideas"}
+
+
+def back_url():
+    """Where the Back button goes: the page's parent, not browser history
+    (history.back() after saving a form lands on the stale form, and the
+    installed app has no browser back button). Edit/create → its list;
+    personal pages → Today; site editors → their index or the site dashboard."""
+    endpoint = request.endpoint or ""
+    if endpoint in NO_BACK_ENDPOINTS:
+        return None
+    resource = (request.view_args or {}).get("resource")
+    if resource and endpoint != "admin.simple_list":
+        return url_for("admin.simple_list", resource=resource)
+    if resource in PERSONAL_RESOURCES or endpoint == "admin.personal_dashboard":
+        return url_for("admin.today")
+    name = endpoint.split(".", 1)[-1]
+    index = f"admin.{name.rsplit('_', 1)[0]}_index"  # journal_edit -> journal_index
+    if index != endpoint and index in current_app.view_functions:
+        return url_for(index)
+    return url_for("admin.index")
+
+
+@admin_bp.context_processor
+def inject_back_url():
+    return {"back_url": back_url()}
+
+
 @admin_bp.after_request
 def set_csrf_cookie(response):
     if csrf_cookie_missing():

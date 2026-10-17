@@ -13,6 +13,7 @@
 <body class="admin-body">
   {% block admin_nav %}{% endblock %}
   <main class="admin-main">
+    {% block before_content %}{% endblock %}
     {% block content %}{% endblock %}
   </main>
   <script src="https://unpkg.com/lucide@1.24.0" defer></script>

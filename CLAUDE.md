@@ -277,3 +277,10 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   within a group; a drop saves the order of every card on the page so
   sort_order stays one sequence. New rows in grouped resources get
   `MAX(sort_order)+1`, so adding one never jumps its group to the top.
+- Every admin page except Today and the site dashboard shows a **Back**
+  button (`_shell.html` `before_content` block, `routes.back_url()`). It
+  goes to the page's *parent* (edit/create → its list, personal pages →
+  Today, `<x>_edit/_new` → `<x>_index`, else site dashboard), never
+  `history.back()`: that lands on just-saved forms, and the installed app
+  has no browser back button. Sidebar "View site" opens `/` in a new tab
+  (admin may link to the public site, never the reverse).
