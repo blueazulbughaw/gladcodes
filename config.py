@@ -52,7 +52,9 @@ class Config:
     # local, unauthenticated submission on localhost:25 — no external email
     # service needed. Override via env if the host requires authenticated
     # submission instead (e.g. SMTP_PORT=587 + SMTP_USER/SMTP_PASSWORD).
-    MAIL_TO = os.environ.get("MAIL_TO", "hello@gladcodes.com")
+    # Optional override; normally messages go to the "Contact email" set in
+    # admin Settings (services/mail.contact_recipient).
+    MAIL_TO = os.environ.get("MAIL_TO", "")
     MAIL_FROM = os.environ.get("MAIL_FROM", "noreply@glad.codes")
     SMTP_HOST = os.environ.get("SMTP_HOST", "localhost")
     SMTP_PORT = int(os.environ.get("SMTP_PORT", "25"))

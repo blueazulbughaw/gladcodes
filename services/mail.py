@@ -4,18 +4,41 @@ accepts local, unauthenticated submission on localhost:25 — no external
 email service (SendGrid/Mailgun/etc.) needed. Never let a delivery failure
 crash the page — the caller shows a friendly error and the sender can
 always fall back to a direct email.
+
+Recipient: the MAIL_TO env var if set, otherwise the admin-editable
+"Contact email" in Settings (site_settings.contact_email). The old
+hardcoded default (hello@gladcodes.com) pointed at a domain that doesn't
+exist, so Exim refused every message with a 550 and the form always failed.
 """
+import logging
 import smtplib
 from email.message import EmailMessage
 
 from flask import current_app
 
+from database.db import query_one
+
+log = logging.getLogger(__name__)
+
+
+def contact_recipient():
+    if current_app.config.get("MAIL_TO"):
+        return current_app.config["MAIL_TO"]
+    row = query_one("SELECT setting_value FROM site_settings WHERE setting_key = 'contact_email'")
+    value = (row["setting_value"] or "").strip() if row else ""
+    return value or None
+
 
 def send_contact_email(name: str, email: str, subject_choice: str, message: str) -> bool:
+    recipient = contact_recipient()
+    if not recipient:
+        log.error("Contact form: no recipient (set Contact email in admin Settings, or MAIL_TO)")
+        return False
+
     msg = EmailMessage()
     msg["Subject"] = f"GladCodes - {subject_choice}"
     msg["From"] = current_app.config["MAIL_FROM"]
-    msg["To"] = current_app.config["MAIL_TO"]
+    msg["To"] = recipient
     msg["Reply-To"] = email
     msg.set_content(f"From: {name} <{email}>\nSubject choice: {subject_choice}\n\n{message}")
 
@@ -26,5 +49,7 @@ def send_contact_email(name: str, email: str, subject_choice: str, message: str)
                 smtp.login(current_app.config["SMTP_USER"], current_app.config["SMTP_PASSWORD"])
             smtp.send_message(msg)
         return True
-    except (smtplib.SMTPException, OSError):
+    except (smtplib.SMTPException, OSError) as e:
+        # Logged (it used to fail silently): the SMTP error, never the message body.
+        log.error("Contact form email failed: %s: %s", type(e).__name__, e)
         return False
