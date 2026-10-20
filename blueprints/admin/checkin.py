@@ -17,7 +17,6 @@ from flask import current_app, jsonify, redirect, render_template, request, url_
 
 from database.db import execute, query, query_one, utc_now
 from services import tracking
-from services.github import configured_username, get_weekly_activity
 
 from . import admin_bp
 
@@ -230,7 +229,6 @@ def today():
         app_minutes=app_minutes,
         tracked_app=tracking.TRACKED_APP,
         tracking_connected=bool(has_tracking["last_sleep"] or has_tracking["last_app"]),
-        github=get_weekly_activity(configured_username()),
         vapid_public_key=current_app.config.get("VAPID_PUBLIC_KEY") or None,
         morning_hour=hour_label(current_app.config["CHECKIN_MORNING_HOUR"]),
         evening_hour=hour_label(current_app.config["CHECKIN_EVENING_HOUR"]),

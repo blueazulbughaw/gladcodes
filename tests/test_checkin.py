@@ -57,8 +57,6 @@ class TodayPageTests(unittest.TestCase):
         self.client.set_cookie(COOKIE_NAME, token)
         self.client.set_cookie(CSRF_COOKIE_NAME, "test-csrf")
 
-    @patch("blueprints.admin.checkin.get_weekly_activity", return_value=None)
-    @patch("blueprints.admin.checkin.configured_username", return_value=None)
     @patch("blueprints.admin.checkin.local_tz_name", return_value="America/New_York")
     @patch("blueprints.admin.checkin.local_now", return_value=datetime(2026, 10, 16, 7, 30))
     @patch("blueprints.admin.checkin.tracking")
@@ -134,7 +132,9 @@ class TodayPageTests(unittest.TestCase):
             self.assertNotIn(question, morning)
             self.assertNotIn(question, evening)
             self.assertIn(question, summary)
-        self.assertNotIn("Any app ideas today?", body)  # ideas are a list now, not a daily question
+        self.assertNotIn("Any app ideas today?", body)
+        self.assertNotIn("pushes this week", body)   # GitHub moved to My dashboard
+        self.assertIn('checkin-badge--link" href="/gc-admin/me"', body)  # ideas are a list now, not a daily question
         self.assertIn("/gc-admin/app_ideas/create", body)
         self.assertNotIn("Hours slept", body)
         self.assertNotIn("Minutes scrolling", body)
@@ -188,7 +188,7 @@ class TodayPageTests(unittest.TestCase):
 
     def _render(self, path):
         from services import tracking as real
-        with patch("blueprints.admin.checkin.get_weekly_activity", return_value=None),              patch("blueprints.admin.checkin.configured_username", return_value=None),              patch("blueprints.admin.checkin.local_tz_name", return_value="UTC"),              patch("blueprints.admin.checkin.local_now", return_value=datetime(2026, 10, 16, 20, 0)),              patch("blueprints.admin.checkin.query", return_value=[]),              patch("blueprints.admin.checkin.query_one", return_value=None) as q1,              patch("blueprints.admin.checkin.tracking") as t:
+        with patch("blueprints.admin.checkin.local_tz_name", return_value="UTC"),              patch("blueprints.admin.checkin.local_now", return_value=datetime(2026, 10, 16, 20, 0)),              patch("blueprints.admin.checkin.query", return_value=[]),              patch("blueprints.admin.checkin.query_one", return_value=None) as q1,              patch("blueprints.admin.checkin.tracking") as t:
             t.active_medications.return_value = []
             t.doses_taken.return_value = {}
             t.sleep_by_day.return_value = {}

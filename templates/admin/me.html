@@ -34,6 +34,7 @@
     <div class="overview-card"><span class="overview-value">😴 {% if avg_sleep is not none %}{{ avg_sleep // 60 }}h{{ '%02d'|format(avg_sleep % 60) }}{% else %}—{% endif %}</span><span class="overview-label">Avg sleep</span></div>
     <div class="overview-card"><span class="overview-value">💧 {{ avg_water if avg_water is not none else '—' }}</span><span class="overview-label">Avg glasses</span></div>
     <div class="overview-card"><span class="overview-value">📱 {{ (avg_app ~ 'm') if avg_app is not none else '—' }}</span><span class="overview-label">Avg {{ tracked_app }}</span></div>
+    <div class="overview-card"><span class="overview-value">💻 {{ github_pushes if github_pushes is not none else '—' }}</span><span class="overview-label">GitHub pushes this week</span></div>
     <div class="overview-card"><span class="overview-value overview-value--small">🩸 {% if cycle.next_start %}{{ cycle.next_start.strftime('%b') }} {{ cycle.next_start.day }}{% else %}—{% endif %}</span><span class="overview-label">Next period</span></div>
   </div>
 

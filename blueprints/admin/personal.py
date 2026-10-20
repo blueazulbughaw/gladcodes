@@ -15,6 +15,7 @@ from flask import abort, current_app, jsonify, redirect, render_template, reques
 
 from database.db import query
 from services import tracking
+from services.github import configured_username, get_weekly_activity
 
 from . import admin_bp
 from .checkin import MOODS, checkin_streak, current_streak, local_today, local_tz_name, parse_day
@@ -140,6 +141,9 @@ def personal_dashboard():
         next_anchor=next_anchor if next_anchor <= today else None,
         grid=grid,
         streak=checkin_streak(today),
+        # GitHub pushes this week (Monday-start buckets from services/github);
+        # None when GitHub is unreachable, so the tile just shows a dash.
+        github_pushes=(lambda g: g["data"][-1] if g else None)(get_weekly_activity(configured_username())),
         prayer_streak=current_streak(prayer_days, today),
         avg_sleep=round(sum(period_sleep) / len(period_sleep)) if period_sleep else None,
         avg_water=round(sum(period_water) / len(period_water), 1) if period_water else None,

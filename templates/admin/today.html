@@ -24,7 +24,7 @@
     <div class="checkin-badges">
       <span class="checkin-save-state" id="saveState" aria-live="polite">Saves automatically</span>
       <span class="checkin-badge"><i data-lucide="flame"></i>{{ streak }}-day streak</span>
-      {% if github %}<span class="checkin-badge checkin-badge--teal"><i data-lucide="git-commit-horizontal"></i>{{ github.data[-1] }} pushes this week</span>{% endif %}
+      <a class="checkin-badge checkin-badge--teal checkin-badge--link" href="{{ url_for('admin.personal_dashboard') }}"><i data-lucide="layout-dashboard"></i>My dashboard</a>
     </div>
   </div>
 
@@ -181,7 +181,7 @@
     <noscript><button type="submit" class="btn btn-primary">Save</button></noscript>
   </form>
 
-  <p class="checkin-dashboard-link"><a href="{{ url_for('admin.personal_dashboard') }}"><i data-lucide="layout-dashboard"></i> See trends, cycle, and logs on your dashboard →</a></p>
+  <p class="checkin-dashboard-link"><a href="{{ url_for('admin.personal_dashboard') }}"><i data-lucide="layout-dashboard"></i> See your week on My dashboard →</a></p>
 
   <section class="card checkin-app" id="appCard">
     <div>

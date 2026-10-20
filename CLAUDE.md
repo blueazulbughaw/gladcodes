@@ -376,3 +376,6 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   turns start/end into minutes (`tracking.record_sleep_event`, stored start
   in `checkin_app_state.sleep_started_at`; gaps under 1h or over 16h are
   ignored) for the morning you woke up. `{"hours"|"minutes"}` still works.
+- GitHub pushes this week is a My dashboard tile (`get_weekly_activity`,
+  dash when GitHub is unreachable), not a Today badge; Today's header has a
+  "My dashboard" link instead.
