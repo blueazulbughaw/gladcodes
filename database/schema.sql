@@ -732,3 +732,7 @@ CREATE TABLE IF NOT EXISTS credit_cards (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 ALTER TABLE checkin_app_state ADD COLUMN IF NOT EXISTS money_currency VARCHAR(8);
+
+-- Bills can be paid by credit card too: a card-paid bill is a card
+-- purchase (spending now, cash flow when the card is paid).
+ALTER TABLE recurring_bills ADD COLUMN IF NOT EXISTS paid_with ENUM('cash', 'card') NOT NULL DEFAULT 'cash' AFTER due_day;

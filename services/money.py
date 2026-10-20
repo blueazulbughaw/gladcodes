@@ -6,8 +6,9 @@ handle the same things:
   amount, category, optional note.
 - Recurring monthly bills are their own list (name, category, amount, due
   day) and get ticked "paid" each month, creating that month's transaction.
-- Credit cards: a purchase made on a card is *spending* on the day it's made
-  (paid_with='card'); paying the card bill later is a *card payment*. Spending
+- Credit cards: a purchase or a monthly bill paid on a card is *spending* on
+  the day it's made (paid_with='card'); paying the card bill later is a
+  *card payment*. Spending
   habits count purchases; cash flow counts money actually leaving (cash/debit
   spending + bills + card payments), so nothing is counted twice.
 - Tithes are tracked against 10% of the month's earnings.
@@ -44,7 +45,7 @@ BILL_CATEGORIES = [
     ("subscriptions", "📺", "Subscriptions"),
     ("insurance", "🛡️", "Other insurance"),
     ("loan", "🏦", "Loan"),
-    ("other_bill", "🧾", "Other bill"),
+    ("other_bill", "🧾", "Other fixed expense"),
 ]
 CATEGORY = {key: (emoji, label) for key, emoji, label in EXPENSE_CATEGORIES + BILL_CATEGORIES}
 PAID_WITH = ("cash", "card")
@@ -91,17 +92,18 @@ def due_date(first, due_day):
 
 
 def summarize(entries):
-    """Month totals. `spending` = what you bought (daily expenses incl. card
-    purchases + bills); `money_out` = what actually left (cash/debit spending
-    + bills + card payments + tithes) so card purchases aren't counted twice."""
+    """Month totals. `spending` = what you bought (daily expenses + bills,
+    however paid); `money_out` = what actually left (cash/debit expenses and
+    bills + card payments + tithes), so anything bought or billed on a credit
+    card is only counted once: when the card bill is paid."""
     t = {kind: Decimal("0") for kind in KINDS}
     card_purchases = Decimal("0")
     for e in entries:
         t[e["kind"]] += Decimal(e["amount"])
-        if e["kind"] == "expense" and e.get("paid_with") == "card":
+        if e["kind"] in ("expense", "bill") and e.get("paid_with") == "card":
             card_purchases += Decimal(e["amount"])
     spending = t["expense"] + t["bill"]
-    money_out = (t["expense"] - card_purchases) + t["bill"] + t["card"] + t["tithe"]
+    money_out = (t["expense"] + t["bill"] - card_purchases) + t["card"] + t["tithe"]
     income = t["income"]
     return {
         "income": income,

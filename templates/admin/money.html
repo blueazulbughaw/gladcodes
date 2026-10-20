@@ -1,6 +1,6 @@
 {% extends "admin/_shell.html" %}
 
-{% block title %}Money{% endblock %}
+{% block title %}Ledger{% endblock %}
 
 {% macro amount_field(placeholder='0.00') %}
 <label class="admin-field money-amount"><span>Amount</span>
@@ -45,11 +45,11 @@
 <div class="container checkin money">
   <div class="admin-page-header">
     <div>
-      <h1>Money</h1>
+      <h1>Ledger</h1>
       <span class="admin-meta">Private: just you.</span>
     </div>
     <div class="checkin-badges">
-      <a class="checkin-badge checkin-badge--teal checkin-badge--link" href="{{ url_for('admin.money_dashboard', m=first.strftime('%Y-%m')) }}"><i data-lucide="pie-chart"></i>Money dashboard</a>
+      <a class="checkin-badge checkin-badge--teal checkin-badge--link" href="{{ url_for('admin.money_dashboard', m=first.strftime('%Y-%m')) }}"><i data-lucide="pie-chart"></i>Financial dashboard</a>
     </div>
   </div>
 
@@ -64,17 +64,17 @@
   </nav>
 
   <div class="money-summary">
-    <div><span>💵 Earned</span><strong>{{ totals.income|money(currency) }}</strong></div>
-    <div><span>🙏 Tithed</span><strong>{{ totals.tithe|money(currency) }}</strong></div>
-    <div><span>🧾 Bills</span><strong>{{ totals.bills|money(currency) }}</strong></div>
-    <div><span>💳 Card payments</span><strong>{{ totals.card_payments|money(currency) }}</strong></div>
-    <div><span>🛒 Daily spending</span><strong>{{ totals.expenses|money(currency) }}</strong></div>
-    <div class="{{ 'is-negative' if totals.left < 0 }}"><span>💰 Left this month</span><strong>{{ totals.left|money(currency) }}</strong></div>
+    <div><span>💵 Income</span><strong>{{ totals.income|money(currency) }}</strong></div>
+    <div><span>🙏 Tithes</span><strong>{{ totals.tithe|money(currency) }}</strong></div>
+    <div><span>🧾 Fixed expenses</span><strong>{{ totals.bills|money(currency) }}</strong></div>
+    <div><span>💳 Credit card payments</span><strong>{{ totals.card_payments|money(currency) }}</strong></div>
+    <div><span>🛒 Variable expenses</span><strong>{{ totals.expenses|money(currency) }}</strong></div>
+    <div class="{{ 'is-negative' if totals.left < 0 }}"><span>💰 Net cash flow</span><strong>{{ totals.left|money(currency) }}</strong></div>
   </div>
 
   <div class="money-grid">
     <section class="card checkin-card checkin-card--wide" id="expense">
-      <h2><i data-lucide="shopping-cart"></i> Daily expenses</h2>
+      <h2><i data-lucide="shopping-cart"></i> Variable expenses</h2>
       <form method="post" action="{{ url_for('admin.money_add') }}" class="money-form money-form--expense">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <input type="hidden" name="kind" value="expense">
@@ -85,26 +85,26 @@
           </select>
         </label>
         <fieldset class="money-paid">
-          <legend>Paid with</legend>
+          <legend>Payment method</legend>
           <label><input type="radio" name="paid_with" value="cash" checked><span><i data-lucide="wallet"></i> Cash / debit</span></label>
           <label><input type="radio" name="paid_with" value="card"><span><i data-lucide="credit-card"></i> Credit card</span></label>
         </fieldset>
         {{ date_field() }}
-        <label class="admin-field money-note"><span>Note <small>optional</small></span><input type="text" name="note" maxlength="1000" placeholder="e.g. Jollibee with the kids"></label>
-        <button type="submit" class="btn btn-primary money-add"><i data-lucide="plus"></i> Add expense</button>
+        <label class="admin-field money-note"><span>Note <small>optional</small></span><input type="text" name="note" maxlength="1000" placeholder="e.g. Lunch with the team"></label>
+        <button type="submit" class="btn btn-primary money-add"><i data-lucide="plus"></i> Record expense</button>
       </form>
       {{ entry_list(by_kind.expense, 'expense', show_category=true) }}
     </section>
 
     <section class="card checkin-card" id="income">
-      <h2><i data-lucide="banknote"></i> Earnings</h2>
+      <h2><i data-lucide="banknote"></i> Income</h2>
       <form method="post" action="{{ url_for('admin.money_add') }}" class="money-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <input type="hidden" name="kind" value="income">
-        <label class="admin-field"><span>Source</span><input type="text" name="name" maxlength="255" placeholder="e.g. Salary, freelance" required></label>
+        <label class="admin-field"><span>Source</span><input type="text" name="name" maxlength="255" placeholder="e.g. Salary, freelance revenue" required></label>
         {{ amount_field() }}
         {{ date_field() }}
-        <button type="submit" class="btn btn-primary money-add"><i data-lucide="plus"></i> Add earnings</button>
+        <button type="submit" class="btn btn-primary money-add"><i data-lucide="plus"></i> Record income</button>
       </form>
       {{ entry_list(by_kind.income, 'income') }}
     </section>
@@ -114,7 +114,7 @@
       {% set remaining = totals.tithe_target - totals.tithe %}
       <div class="money-tithe">
         <div class="money-tithe-bar"><span style="width: {{ [100, ((totals.tithe / totals.tithe_target * 100) if totals.tithe_target else 0)|round|int]|min }}%"></span></div>
-        <p>{{ totals.tithe|money(currency) }} of {{ totals.tithe_target|money(currency) }} <small>(10% of earnings)</small></p>
+        <p>{{ totals.tithe|money(currency) }} of {{ totals.tithe_target|money(currency) }} <small>(10% of income)</small></p>
       </div>
       <form method="post" action="{{ url_for('admin.money_add') }}" class="money-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
@@ -122,52 +122,59 @@
         {{ amount_field(('%.2f'|format(remaining)) if remaining > 0 else '0.00') }}
         {{ date_field() }}
         <label class="admin-field"><span>Note <small>optional</small></span><input type="text" name="note" maxlength="1000" placeholder="e.g. Sunday service"></label>
-        <button type="submit" class="btn btn-primary money-add"><i data-lucide="plus"></i> Add tithe</button>
+        <button type="submit" class="btn btn-primary money-add"><i data-lucide="plus"></i> Record tithe</button>
       </form>
       {{ entry_list(by_kind.tithe, 'tithe') }}
     </section>
 
     <section class="card checkin-card" id="bills">
-      <h2><i data-lucide="receipt"></i> Monthly bills</h2>
+      <h2><i data-lucide="receipt"></i> Fixed expenses <small>monthly, recurring</small></h2>
       {% if bills %}
       <ul class="money-bills">
         {% for bill in bills %}
         <li class="{{ 'is-paid' if bill.payment }}{{ ' is-late' if not bill.payment and bill.due < today }}">
-          <form method="post" action="{{ url_for('admin.money_bill_toggle', bill_id=bill.id) }}">
+          {% set paid_with = bill.payment.paid_with if bill.payment else (bill.paid_with or 'cash') %}
+          <form method="post" action="{{ url_for('admin.money_bill_toggle', bill_id=bill.id) }}" class="money-bill-form" id="billForm{{ bill.id }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <input type="hidden" name="m" value="{{ first.strftime('%Y-%m') }}">
             <button type="submit" class="money-bill-check" aria-pressed="{{ 'true' if bill.payment else 'false' }}" aria-label="{{ 'Mark unpaid' if bill.payment else 'Mark paid' }}: {{ bill.name }}">{% if bill.payment %}<i data-lucide="check"></i>{% endif %}</button>
           </form>
           <span class="money-list-emoji">{{ category.get(bill.category, ('🧾', ''))[0] }}</span>
-          <span class="money-list-what">{{ bill.name }}<small>{% if bill.payment %}Paid {{ bill.payment.entry_date.strftime('%b') }} {{ bill.payment.entry_date.day }}{% else %}Due {{ bill.due.strftime('%b') }} {{ bill.due.day }}{% endif %}</small></span>
+          <span class="money-list-what">{{ bill.name }}{% if bill.payment and paid_with == 'card' %} <i data-lucide="credit-card" class="money-card-icon" aria-label="Paid by credit card"></i>{% endif %}<small>{% if bill.payment %}Paid {{ bill.payment.entry_date.strftime('%b') }} {{ bill.payment.entry_date.day }}{{ ' by credit card' if paid_with == 'card' else ' by cash / debit' }}{% else %}Due {{ bill.due.strftime('%b') }} {{ bill.due.day }}{% endif %}</small></span>
+          {% if not bill.payment %}
+          <select name="paid_with" form="billForm{{ bill.id }}" class="money-bill-with" aria-label="Payment method for {{ bill.name }}">
+            <option value="cash" {{ 'selected' if paid_with == 'cash' }}>💵 Cash / debit</option>
+            <option value="card" {{ 'selected' if paid_with == 'card' }}>💳 Credit card</option>
+          </select>
+          {% endif %}
           <strong class="money-list-amount">{{ (bill.payment.amount if bill.payment else bill.amount)|money(currency) }}</strong>
         </li>
         {% endfor %}
       </ul>
       {% else %}
-      <p class="admin-meta">Add your recurring bills (phone, car insurance, rent…) once, then tick them paid each month.</p>
+      <p class="admin-meta">Add your recurring fixed expenses (phone, car insurance, rent…) once, then mark each one paid every month with its payment method.</p>
       {% endif %}
-      <a class="admin-meta" href="{{ url_for('admin.simple_list', resource='recurring_bills') }}">Manage bills →</a>
+      <a class="admin-meta" href="{{ url_for('admin.simple_list', resource='recurring_bills') }}">Manage fixed expenses →</a>
     </section>
 
     <section class="card checkin-card" id="card">
-      <h2><i data-lucide="credit-card"></i> Credit card bills</h2>
+      <h2><i data-lucide="credit-card"></i> Credit card payments</h2>
       <form method="post" action="{{ url_for('admin.money_add') }}" class="money-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <input type="hidden" name="kind" value="card">
         {% if cards %}
-        <label class="admin-field"><span>Card</span>
+        <label class="admin-field"><span>Account</span>
           <select name="name" required>{% for c in cards %}<option value="{{ c.name }}">{{ c.name }} (due the {{ c.due_day }}{{ 'st' if c.due_day in (1, 21, 31) else 'nd' if c.due_day in (2, 22) else 'rd' if c.due_day in (3, 23) else 'th' }})</option>{% endfor %}</select>
         </label>
         {% else %}
-        <label class="admin-field"><span>Card</span><input type="text" name="name" maxlength="255" placeholder="e.g. BPI Visa" required></label>
+        <label class="admin-field"><span>Account</span><input type="text" name="name" maxlength="255" placeholder="e.g. Visa ending 1234" required></label>
         {% endif %}
         {{ amount_field() }}
         {{ date_field() }}
-        <button type="submit" class="btn btn-primary money-add"><i data-lucide="plus"></i> Add card payment</button>
+        <button type="submit" class="btn btn-primary money-add"><i data-lucide="plus"></i> Record payment</button>
       </form>
       {{ entry_list(by_kind.card, 'card') }}
-      <a class="admin-meta" href="{{ url_for('admin.simple_list', resource='credit_cards') }}">Manage cards →</a>
+      <a class="admin-meta" href="{{ url_for('admin.simple_list', resource='credit_cards') }}">Manage card accounts →</a>
     </section>
   </div>
 

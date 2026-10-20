@@ -49,6 +49,16 @@ class MoneyMathTests(unittest.TestCase):
         self.assertEqual(totals["tithe_target"], Decimal("500.00"))
         self.assertEqual(totals["savings_rate"], 78)
 
+    def test_bills_paid_by_card_count_once(self):
+        totals = money.summarize([
+            entry("income", "1000"),
+            entry("bill", "100", category="phone", paid_with="card"),
+            entry("card", "100"),
+        ])
+        self.assertEqual(totals["spending"], Decimal("100"))
+        self.assertEqual(totals["card_purchases"], Decimal("100"))
+        self.assertEqual(totals["money_out"], Decimal("100"))  # only the card payment left the account
+
     def test_by_category_and_daily(self):
         rows = money.by_category([entry("expense", "50", category="food"), entry("expense", "30", category="food"),
                                   entry("bill", "100", category="phone"), entry("income", "999")])
@@ -65,11 +75,11 @@ class MoneyMathTests(unittest.TestCase):
 class MoneyPageTests(unittest.TestCase):
     ENTRIES = [
         entry("income", "5000", name="Salary", id_=1),
-        entry("expense", "250", category="gas", paid_with="cash", note="Shell", id_=2),
-        entry("expense", "1200", category="groceries", paid_with="card", note="SM Hypermarket", id_=3),
+        entry("expense", "250", category="gas", paid_with="cash", note="Fuel", id_=2),
+        entry("expense", "1200", category="groceries", paid_with="card", note="Weekly groceries", id_=3),
         entry("tithe", "300", id_=4),
     ]
-    BILLS = [{"id": 9, "name": "Globe postpaid", "category": "phone", "amount": Decimal("1299"), "due_day": 15, "is_active": 1}]
+    BILLS = [{"id": 9, "name": "Phone plan", "category": "phone", "amount": Decimal("1299"), "due_day": 15, "is_active": 1}]
 
     def setUp(self):
         self.app = create_app()
@@ -82,7 +92,7 @@ class MoneyPageTests(unittest.TestCase):
             patch("blueprints.admin.money.local_today", return_value=TODAY),
             patch("blueprints.admin.money.money.entries_between", return_value=self.ENTRIES),
             patch("blueprints.admin.money.money.active_bills", return_value=self.BILLS),
-            patch("blueprints.admin.money.money.active_cards", return_value=[{"id": 1, "name": "BPI Visa", "due_day": 5}]),
+            patch("blueprints.admin.money.money.active_cards", return_value=[{"id": 1, "name": "Visa ending 1234", "due_day": 5}]),
             patch("blueprints.admin.money.money.bill_payment", return_value=None),
             patch("blueprints.admin.money.money.currency", return_value="₱"),
         ]
@@ -94,17 +104,17 @@ class MoneyPageTests(unittest.TestCase):
             p.stop()
 
     def test_entry_page_has_every_section(self):
-        body = self.client.get("/gc-admin/money").get_data(as_text=True)
-        for text in ("Daily expenses", "Earnings", "Tithes", "Monthly bills", "Credit card bills",
-                     "October 2026", "₱5,000.00", "Globe postpaid", "Due Oct 15", "BPI Visa", "SM Hypermarket",
+        body = self.client.get("/gc-admin/finance/ledger").get_data(as_text=True)
+        for text in ("Ledger", "Variable expenses", "Income", "Tithes", "Fixed expenses", "Credit card payments", "Net cash flow",
+                     "October 2026", "₱5,000.00", "Phone plan", "Due Oct 15", "Visa ending 1234", "Weekly groceries",
                      '<option value="gas">⛽ Gas</option>', '<option value="food">🍔 Food &amp; eating out</option>',
-                     'name="entry_date" value="2026-10-20"', '₱300.00 of ₱500.00'):
+                     'name="entry_date" value="2026-10-20"', '₱300.00 of ₱500.00', 'Payment method', 'Lunch with the team'):
             self.assertIn(text, body)
         self.assertIn('name="robots" content="noindex, nofollow"', body)
 
     @patch("blueprints.admin.money.money.add_entry")
     def test_add_expense_validates_and_saves(self, add):
-        resp = self.client.post("/gc-admin/money/add", data={
+        resp = self.client.post("/gc-admin/finance/ledger/add", data={
             "csrf_token": "test-csrf", "kind": "expense", "amount": "1,250.75", "category": "food",
             "paid_with": "card", "entry_date": "2026-10-18", "note": " Lunch "})
         self.assertEqual(resp.status_code, 302)
@@ -114,37 +124,38 @@ class MoneyPageTests(unittest.TestCase):
 
     @patch("blueprints.admin.money.money.add_entry")
     def test_bad_amount_or_category_never_saves_junk(self, add):
-        self.client.post("/gc-admin/money/add", data={"csrf_token": "test-csrf", "kind": "expense", "amount": "abc"})
+        self.client.post("/gc-admin/finance/ledger/add", data={"csrf_token": "test-csrf", "kind": "expense", "amount": "abc"})
         add.assert_not_called()
-        self.client.post("/gc-admin/money/add", data={"csrf_token": "test-csrf", "kind": "expense", "amount": "5", "category": "<script>"})
+        self.client.post("/gc-admin/finance/ledger/add", data={"csrf_token": "test-csrf", "kind": "expense", "amount": "5", "category": "<script>"})
         self.assertEqual(add.call_args.kwargs["category"], "other")
-        resp = self.client.post("/gc-admin/money/add", data={"csrf_token": "test-csrf", "kind": "hacker", "amount": "5"})
+        resp = self.client.post("/gc-admin/finance/ledger/add", data={"csrf_token": "test-csrf", "kind": "hacker", "amount": "5"})
         self.assertEqual(resp.status_code, 400)
 
     @patch("blueprints.admin.money.money.add_entry")
     def test_ticking_a_bill_records_its_payment(self, add):
-        self.client.post("/gc-admin/money/bill/9/toggle", data={"csrf_token": "test-csrf", "m": "2026-10"})
+        self.client.post("/gc-admin/finance/ledger/bill/9/toggle", data={"csrf_token": "test-csrf", "m": "2026-10", "paid_with": "card"})
         self.assertEqual(add.call_args.args, ("bill", TODAY, Decimal("1299")))
         self.assertEqual(add.call_args.kwargs["bill_id"], 9)
+        self.assertEqual(add.call_args.kwargs["paid_with"], "card")
 
     @patch("blueprints.admin.money.money.delete_entry")
     def test_unticking_a_bill_removes_the_payment(self, delete):
         with patch("blueprints.admin.money.money.bill_payment", return_value={"id": 77}):
-            self.client.post("/gc-admin/money/bill/9/toggle", data={"csrf_token": "test-csrf", "m": "2026-10"})
+            self.client.post("/gc-admin/finance/ledger/bill/9/toggle", data={"csrf_token": "test-csrf", "m": "2026-10"})
         delete.assert_called_once_with(77)
 
     def test_dashboard_renders_spending_habits(self):
-        body = self.client.get("/gc-admin/money/dashboard").get_data(as_text=True)
-        for text in ("Money dashboard", "Where it went", "Spending by day", "Earned vs spent", "Bills this month",
-                     "Biggest expenses", "Groceries<span class=\"money-cat-bar\">", "83%", "₱4,450.00",
+        body = self.client.get("/gc-admin/finance/dashboard").get_data(as_text=True)
+        for text in ("Financial dashboard", "Expenses by category", "Daily expenses", "Income vs expenses", "Fixed expenses this month",
+                     "Largest transactions", "Total expenses", "savings rate", "Groceries<span class=\"money-cat-bar\">", "83%", "₱4,450.00",
                      "On credit card ₱1,200.00", "Cash / debit ₱250.00"):
             self.assertIn(text, body)
 
     def test_pages_are_private_and_posts_need_csrf(self):
         anon = self.app.test_client()
-        for path in ("/gc-admin/money", "/gc-admin/money/dashboard"):
+        for path in ("/gc-admin/finance/ledger", "/gc-admin/finance/dashboard"):
             self.assertEqual(anon.get(path).status_code, 302)
-        resp = self.client.post("/gc-admin/money/add", data={"kind": "expense", "amount": "5"})
+        resp = self.client.post("/gc-admin/finance/ledger/add", data={"kind": "expense", "amount": "5"})
         self.assertEqual(resp.status_code, 400)
 
 

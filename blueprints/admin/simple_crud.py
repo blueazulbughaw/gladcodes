@@ -247,21 +247,23 @@ RESOURCES = {
     # Money (private): monthly recurring bills ticked paid on /gc-admin/money.
     "recurring_bills": {
         "table": "recurring_bills",
-        "title": "Monthly bills",
-        "add_button_label": "Add bill",
+        "title": "Fixed expenses",
+        "add_button_label": "Add fixed expense",
         "order_by": "due_day, sort_order",
         "list_view": "cards",
         "add_via_page": True,
         "card_title_field": "name",
         "default_checked": ["is_active"],
         "fields": [
-            ("name", "text", "Bill (e.g. Globe postpaid, car insurance)"),
+            ("name", "text", "Expense (e.g. Phone plan, car insurance)"),
             ("category", "select", "Category"),
             ("amount", "text", "Usual amount"),
             ("due_day", "select", "Due day of the month"),
+            ("paid_with", "select", "Usual payment method"),
             ("is_active", "checkbox", "Still paying this"),
         ],
         "select_options": {
+            "paid_with": ["cash", "card"],
             "category": ["phone", "car_insurance", "rent", "utilities", "internet", "subscriptions", "insurance", "loan", "other_bill"],
             "due_day": [str(n) for n in range(1, 32)],
         },
@@ -269,8 +271,8 @@ RESOURCES = {
     # Money (private): credit cards whose bills are paid on /gc-admin/money.
     "credit_cards": {
         "table": "credit_cards",
-        "title": "Credit cards",
-        "add_button_label": "Add card",
+        "title": "Credit card accounts",
+        "add_button_label": "Add account",
         "order_by": "sort_order, id",
         "list_view": "cards",
         "add_via_page": True,
@@ -278,7 +280,7 @@ RESOURCES = {
         "reorderable": True,
         "default_checked": ["is_active"],
         "fields": [
-            ("name", "text", "Card (e.g. BPI Visa)"),
+            ("name", "text", "Account (e.g. Visa ending 1234)"),
             ("due_day", "select", "Payment due day"),
             ("is_active", "checkbox", "Still using this card"),
         ],

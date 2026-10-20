@@ -37,9 +37,10 @@
     <a href="{{ url_for('admin.today') }}" class="{{ 'active' if request.endpoint == 'admin.today' }}"><i data-lucide="sun"></i><span>Today</span></a>
     <a href="{{ url_for('admin.personal_dashboard') }}" class="{{ 'active' if request.endpoint == 'admin.personal_dashboard' }}"><i data-lucide="layout-dashboard"></i><span>My dashboard</span></a>
     <a href="{{ url_for('admin.simple_list', resource='medications') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'medications' }}"><i data-lucide="pill"></i><span>Medicines</span></a>
-    <a href="{{ url_for('admin.money_index') }}" class="{{ 'active' if request.endpoint in ('admin.money_index',) or (request.view_args and request.view_args.get('resource') in ('recurring_bills', 'credit_cards')) }}"><i data-lucide="wallet"></i><span>Money</span></a>
-    <a href="{{ url_for('admin.money_dashboard') }}" class="{{ 'active' if request.endpoint == 'admin.money_dashboard' }}"><i data-lucide="pie-chart"></i><span>Money dashboard</span></a>
     <a href="{{ url_for('admin.simple_list', resource='app_ideas') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'app_ideas' }}"><i data-lucide="lightbulb"></i><span>App ideas</span></a>
+    <span class="admin-nav-group">Financial</span>
+    <a href="{{ url_for('admin.money_index') }}" class="{{ 'active' if request.endpoint in ('admin.money_index',) or (request.view_args and request.view_args.get('resource') in ('recurring_bills', 'credit_cards')) }}"><i data-lucide="book-open-check"></i><span>Ledger</span></a>
+    <a href="{{ url_for('admin.money_dashboard') }}" class="{{ 'active' if request.endpoint == 'admin.money_dashboard' }}"><i data-lucide="pie-chart"></i><span>Financial dashboard</span></a>
     <span class="admin-nav-group">Website</span>
     <a href="{{ url_for('public.home') }}" target="_blank" rel="noopener"><i data-lucide="external-link"></i><span>View site</span></a>
     <a href="{{ url_for('admin.index') }}" class="{{ 'active' if request.endpoint == 'admin.index' }}"><i data-lucide="home"></i><span>Site dashboard</span></a>

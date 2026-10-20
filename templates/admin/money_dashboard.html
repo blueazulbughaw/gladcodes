@@ -1,15 +1,15 @@
 {% extends "admin/_shell.html" %}
 
-{% block title %}Money dashboard{% endblock %}
+{% block title %}Financial dashboard{% endblock %}
 
 {% block content %}
 <div class="container checkin money personal">
   <div class="admin-page-header">
     <div>
-      <h1>Money dashboard</h1>
+      <h1>Financial dashboard</h1>
       <span class="admin-meta">Private: just you.</span>
     </div>
-    <a class="btn btn-primary" href="{{ url_for('admin.money_index', m=first.strftime('%Y-%m')) }}"><i data-lucide="plus"></i> Add money</a>
+    <a class="btn btn-primary" href="{{ url_for('admin.money_index', m=first.strftime('%Y-%m')) }}"><i data-lucide="plus"></i> New transaction</a>
   </div>
 
   <nav class="checkin-daynav" aria-label="Choose a month">
@@ -25,17 +25,17 @@
   {# Cash flow: money in vs. money that actually left (card purchases are
      counted when the card bill is paid, not twice). #}
   <div class="overview-cards personal-tiles money-tiles">
-    <div class="overview-card"><span class="overview-value">💵 {{ totals.income|money(currency) }}</span><span class="overview-label">Earned</span></div>
-    <div class="overview-card"><span class="overview-value">🙏 {{ totals.tithe|money(currency) }}</span><span class="overview-label">Tithed{% if totals.tithe_target %} · {{ ((totals.tithe / totals.income * 100)|round|int) if totals.income else 0 }}%{% endif %}</span></div>
-    <div class="overview-card"><span class="overview-value">🛒 {{ totals.spending|money(currency) }}</span><span class="overview-label">Spent (bills + daily)</span></div>
-    <div class="overview-card"><span class="overview-value">💳 {{ totals.card_payments|money(currency) }}</span><span class="overview-label">Card payments</span></div>
-    <div class="overview-card {{ 'is-negative' if totals.left < 0 }}"><span class="overview-value">💰 {{ totals.left|money(currency) }}</span><span class="overview-label">Left{% if totals.savings_rate is not none %} · {{ totals.savings_rate }}% saved{% endif %}</span></div>
-    <div class="overview-card"><span class="overview-value">📅 {{ avg_daily|money(currency) }}</span><span class="overview-label">Avg daily spending</span></div>
+    <div class="overview-card"><span class="overview-value">💵 {{ totals.income|money(currency) }}</span><span class="overview-label">Income</span></div>
+    <div class="overview-card"><span class="overview-value">🙏 {{ totals.tithe|money(currency) }}</span><span class="overview-label">Tithes{% if totals.tithe_target %} · {{ ((totals.tithe / totals.income * 100)|round|int) if totals.income else 0 }}% of income{% endif %}</span></div>
+    <div class="overview-card"><span class="overview-value">🛒 {{ totals.spending|money(currency) }}</span><span class="overview-label">Total expenses</span></div>
+    <div class="overview-card"><span class="overview-value">💳 {{ totals.card_payments|money(currency) }}</span><span class="overview-label">Credit card payments</span></div>
+    <div class="overview-card {{ 'is-negative' if totals.left < 0 }}"><span class="overview-value">💰 {{ totals.left|money(currency) }}</span><span class="overview-label">Net cash flow{% if totals.savings_rate is not none %} · {{ totals.savings_rate }}% savings rate{% endif %}</span></div>
+    <div class="overview-card"><span class="overview-value">📅 {{ avg_daily|money(currency) }}</span><span class="overview-label">Average daily expenses</span></div>
   </div>
 
   <div class="money-dash-grid">
     <section class="card chart-card">
-      <h3>Where it went</h3>
+      <h3>Expenses by category</h3>
       {% if category_rows %}
       <div class="money-donut"><canvas id="categoryChart" height="220"></canvas></div>
       <ul class="money-cats">
@@ -49,11 +49,11 @@
         </li>
         {% endfor %}
       </ul>
-      {% else %}<p class="admin-meta">No spending logged this month yet.</p>{% endif %}
+      {% else %}<p class="admin-meta">No expenses recorded this month yet.</p>{% endif %}
     </section>
 
     <section class="card chart-card">
-      <h3>Spending by day</h3>
+      <h3>Daily expenses</h3>
       <canvas id="dailyChart" height="220"></canvas>
       <div class="money-split">
         <span><i data-lucide="wallet"></i> Cash / debit {{ cash_spend|money(currency) }}</span>
@@ -62,12 +62,12 @@
     </section>
 
     <section class="card chart-card">
-      <h3>Earned vs spent, 6 months</h3>
+      <h3>Income vs expenses, 6 months</h3>
       <canvas id="trendChart" height="220"></canvas>
     </section>
 
     <section class="card">
-      <h3 class="money-h3">🧾 Bills this month</h3>
+      <h3 class="money-h3">🧾 Fixed expenses this month</h3>
       {% if bills %}
       <ul class="money-bills money-bills--compact">
         {% for bill in bills %}
@@ -79,9 +79,9 @@
         </li>
         {% endfor %}
       </ul>
-      {% else %}<p class="admin-meta"><a href="{{ url_for('admin.simple_list', resource='recurring_bills') }}">Add your monthly bills</a> to see them here.</p>{% endif %}
+      {% else %}<p class="admin-meta"><a href="{{ url_for('admin.simple_list', resource='recurring_bills') }}">Add your fixed expenses</a> to track them here.</p>{% endif %}
 
-      <h3 class="money-h3">💸 Biggest expenses</h3>
+      <h3 class="money-h3">💸 Largest transactions</h3>
       {% if biggest %}
       <ul class="money-list">
         {% for e in biggest %}
@@ -107,10 +107,10 @@
     if (!window.GladCharts) return;
     var money = {{ currency|tojson }};
     GladCharts.doughnutChart("categoryChart", {{ chart.cat_labels|tojson }}, {{ chart.cat_data|tojson }}, money);
-    GladCharts.barChart("dailyChart", {{ chart.day_labels|tojson }}, {{ chart.day_data|tojson }}, "Spent");
+    GladCharts.barChart("dailyChart", {{ chart.day_labels|tojson }}, {{ chart.day_data|tojson }}, "Expenses");
     GladCharts.groupedBarChart("trendChart", {{ chart.trend_labels|tojson }}, [
-      { label: "Earned", data: {{ chart.trend_income|tojson }} },
-      { label: "Spent", data: {{ chart.trend_spending|tojson }} }
+      { label: "Income", data: {{ chart.trend_income|tojson }} },
+      { label: "Expenses", data: {{ chart.trend_spending|tojson }} }
     ]);
   });
 </script>

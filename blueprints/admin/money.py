@@ -1,5 +1,6 @@
-"""Money: a one-page entry form like Today (/gc-admin/money) and a money
-dashboard (/gc-admin/money/dashboard). See services/money.py for how
+"""Financial: the Ledger, a one-page entry form like Today
+(/gc-admin/finance/ledger), and the Financial dashboard
+(/gc-admin/finance/dashboard). See services/money.py for how
 spending vs. cash flow is counted (credit cards aren't double-counted)."""
 from datetime import date
 from decimal import Decimal
@@ -35,7 +36,7 @@ def money_filter(amount, symbol="$"):
     return money.fmt(amount, symbol)
 
 
-@admin_bp.route("/money")
+@admin_bp.route("/finance/ledger")
 def money_index():
     today = local_today()
     first = money.parse_month(request.args.get("m"), today)
@@ -67,7 +68,7 @@ def money_index():
     )
 
 
-@admin_bp.route("/money/add", methods=["POST"])
+@admin_bp.route("/finance/ledger/add", methods=["POST"])
 def money_add():
     today = local_today()
     kind = request.form.get("kind", "")
@@ -91,13 +92,13 @@ def money_add():
     return redirect(_month_url("admin.money_index", min(first, today.replace(day=1)), kind))
 
 
-@admin_bp.route("/money/entry/<int:entry_id>/delete", methods=["POST"])
+@admin_bp.route("/finance/ledger/entry/<int:entry_id>/delete", methods=["POST"])
 def money_delete(entry_id):
     money.delete_entry(entry_id)
     return redirect(url_for("admin.money_index", m=request.form.get("m")) + "#" + (request.form.get("kind") or ""))
 
 
-@admin_bp.route("/money/bill/<int:bill_id>/toggle", methods=["POST"])
+@admin_bp.route("/finance/ledger/bill/<int:bill_id>/toggle", methods=["POST"])
 def money_bill_toggle(bill_id):
     """Tick a recurring bill paid for the month (records that month's
     payment at the bill's amount), or untick it (removes the payment)."""
@@ -112,17 +113,21 @@ def money_bill_toggle(bill_id):
             abort(404)
         amount = money.parse_amount(request.form.get("amount")) or Decimal(bill["amount"])
         when = today if first == today.replace(day=1) else money.due_date(first, bill["due_day"])
-        money.add_entry("bill", when, amount, category=bill["category"], name=bill["name"], bill_id=bill_id)
+        paid_with = request.form.get("paid_with")
+        if paid_with not in money.PAID_WITH:
+            paid_with = bill.get("paid_with") or "cash"
+        money.add_entry("bill", when, amount, category=bill["category"], name=bill["name"],
+                        paid_with=paid_with, bill_id=bill_id)
     return redirect(_month_url("admin.money_index", first, "bills"))
 
 
-@admin_bp.route("/money/currency", methods=["POST"])
+@admin_bp.route("/finance/ledger/currency", methods=["POST"])
 def money_currency():
     money.set_currency(request.form.get("currency", ""))
     return redirect(url_for("admin.money_index", m=request.form.get("m")))
 
 
-@admin_bp.route("/money/dashboard")
+@admin_bp.route("/finance/dashboard")
 def money_dashboard():
     today = local_today()
     first = money.parse_month(request.args.get("m"), today)
@@ -164,7 +169,7 @@ def money_dashboard():
         prev_totals=prev_totals,
         category_rows=category_rows,
         avg_daily=(totals["expenses"] / days_so_far) if days_so_far else Decimal("0"),
-        cash_spend=totals["expenses"] - totals["card_purchases"],
+        cash_spend=totals["spending"] - totals["card_purchases"],
         biggest=sorted(expenses, key=lambda e: Decimal(e["amount"]), reverse=True)[:5],
         bills=bills,
         category=money.CATEGORY,

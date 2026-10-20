@@ -379,19 +379,26 @@ yet to gate access to (`blueprints/api/` is still just stubs).
 - GitHub pushes this week is a My dashboard tile (`get_weekly_activity`,
   dash when GitHub is unreachable), not a Today badge; Today's header has a
   "My dashboard" link instead.
-- **Money** (Personal nav, private): `/gc-admin/money` is a one-page entry
-  form like Today (month nav `?m=YYYY-MM`, no future months): Daily expenses
-  (amount, category dropdown `money.EXPENSE_CATEGORIES`, paid with cash/debit
-  or credit card, date defaulting to today, note), Earnings, Tithes (vs 10% of
-  earnings), Monthly bills (`recurring_bills` simple_crud; tick paid each
-  month = one `kind='bill'` entry with `bill_id`), Credit card bills
-  (`credit_cards` simple_crud; payments are `kind='card'`). Everything is one
-  `money_entries` table. Counting follows YNAB/Monarch so cards aren't
-  double-counted: card *purchases* are spending when made; card *payments* are
-  cash flow. `spending` = expenses + bills; `money_out` = cash/debit
-  expenses + bills + card payments + tithes; `left` = income - money_out
-  (`services/money.summarize`). `/gc-admin/money/dashboard`: totals, savings
-  rate, category doughnut + bars with vs-last-month arrows, spending by day,
-  cash vs card split, 6-month earned vs spent, bills paid/overdue, biggest
-  expenses. Currency symbol lives in `checkin_app_state.money_currency`
-  (never `site_settings`, which is public).
+- **Financial** (its own sidebar group, below Personal; private like all of
+  /gc-admin, linked from nowhere public). UI uses accounting terms by
+  request (no "money"): **Ledger** `/gc-admin/finance/ledger` is a one-page
+  entry form like Today (month nav `?m=YYYY-MM`, no future months):
+  Variable expenses (amount, category dropdown `money.EXPENSE_CATEGORIES`,
+  payment method cash/debit or credit card, date defaulting to today,
+  note), Income, Tithes (vs 10% of income), Fixed expenses (monthly
+  recurring, `recurring_bills` simple_crud with a usual `paid_with`; marked
+  paid each month with a payment method = one `kind='bill'` entry with
+  `bill_id`), Credit card payments (`credit_cards` simple_crud "card
+  accounts"; `kind='card'`). One `money_entries` table. Counting follows
+  YNAB/Monarch so cards aren't double-counted: anything bought or billed on a
+  card is spending when made; the card payment is cash flow. `spending` =
+  expenses + bills; `money_out` = cash/debit expenses + cash/debit bills +
+  card payments + tithes; net cash flow = income - money_out
+  (`services/money.summarize`). **Financial dashboard**
+  `/gc-admin/finance/dashboard`: income, tithes % of income, total expenses,
+  card payments, net cash flow + savings rate, expenses by category
+  (doughnut + bars, vs last month), daily expenses, cash vs card, 6-month
+  income vs expenses, fixed expenses paid/overdue, largest transactions.
+  Endpoint names stay `admin.money_*`. Currency symbol lives in
+  `checkin_app_state.money_currency` (never `site_settings`, which is public).
+  Placeholder/sample text stays neutral (no culture-specific brands).
