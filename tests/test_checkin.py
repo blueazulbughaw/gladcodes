@@ -150,6 +150,43 @@ class TodayPageTests(unittest.TestCase):
             "csrf_token": "test-csrf", "medication_id": "7", "dose_index": "9", "taken": "1"})
         self.assertEqual(bad.status_code, 400)
 
+    def _render(self, path):
+        from services import tracking as real
+        with patch("blueprints.admin.checkin.get_weekly_activity", return_value=None),              patch("blueprints.admin.checkin.configured_username", return_value=None),              patch("blueprints.admin.checkin.local_tz_name", return_value="UTC"),              patch("blueprints.admin.checkin.local_now", return_value=datetime(2026, 10, 16, 20, 0)),              patch("blueprints.admin.checkin.query", return_value=[]),              patch("blueprints.admin.checkin.query_one", return_value=None) as q1,              patch("blueprints.admin.checkin.tracking") as t:
+            t.active_medications.return_value = []
+            t.doses_taken.return_value = {}
+            t.sleep_by_day.return_value = {}
+            t.app_minutes_by_day.return_value = {}
+            t.tracking_status.return_value = {"last_sleep": None, "last_app": None}
+            t.TRACKED_APP = "Instagram"
+            body = self.client.get(path).get_data(as_text=True)
+        return body, q1
+
+    def test_past_day_can_be_opened_and_saves_to_that_day(self):
+        body, q1 = self._render("/gc-admin/today?date=2026-10-14")
+        self.assertIn("You're editing <strong>Wednesday, October 14, 2026</strong>", body)
+        self.assertIn('name="checkin_date" value="2026-10-14"', body)   # autosave posts this day
+        self.assertIn('href="/gc-admin/today?date=2026-10-13"', body)  # previous day
+        self.assertIn('href="/gc-admin/today?date=2026-10-15"', body)  # next day
+        self.assertEqual(q1.call_args_list[0][0][1], (date(2026, 10, 14),))  # loads that day's entry
+
+    def test_today_has_no_next_day_and_future_dates_clamp_to_today(self):
+        body, _ = self._render("/gc-admin/today")
+        self.assertIn('checkin-daynav-step is-disabled', body)
+        self.assertNotIn("You're editing", body)
+        self.assertIn('max="2026-10-16"', body)
+        future, _ = self._render("/gc-admin/today?date=2030-01-01")
+        self.assertIn('name="checkin_date" value="2026-10-16"', future)
+
+    @patch("blueprints.admin.checkin.saved_timezone", return_value=None)
+    @patch("blueprints.admin.checkin.local_now", return_value=datetime(2026, 10, 16, 20, 0))
+    @patch("blueprints.admin.checkin.execute")
+    def test_autosave_for_a_past_day_writes_that_day(self, mock_execute, *_):
+        self.client.post("/gc-admin/today", headers={"X-Requested-With": "fetch"},
+                         data={"csrf_token": "test-csrf", "checkin_date": "2026-10-14", "win": "Remembered it"})
+        params = mock_execute.call_args[0][1]
+        self.assertEqual(params[0], date(2026, 10, 14))
+
     def test_today_requires_login_silently(self):
         anon = self.app.test_client()
         resp = anon.get("/gc-admin/today")

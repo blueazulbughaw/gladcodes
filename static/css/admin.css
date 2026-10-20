@@ -649,3 +649,28 @@ body.admin-body { display: flex; min-height: 100vh; align-items: stretch; }
 .checkin-glass input:focus-visible + span { outline: 2px solid var(--teal); outline-offset: 2px; }
 .checkin-glass svg { width: 18px; height: 18px; }
 @media (prefers-reduced-motion: reduce) { .checkin-glass span { transition: none; } }
+
+/* Today: day navigation (edit any earlier day). */
+.checkin-daynav { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 1rem; }
+.checkin-daynav-step {
+  display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.45rem 0.75rem; border-radius: 999px;
+  background: var(--card); box-shadow: var(--shadow-card); color: var(--navy); font-size: 0.85rem; font-weight: 600; text-decoration: none; white-space: nowrap;
+}
+.checkin-daynav-step:hover { text-decoration: none; color: var(--teal); }
+.checkin-daynav-step svg { width: 16px; height: 16px; }
+.checkin-daynav-step.is-disabled { opacity: 0.35; box-shadow: none; }
+.checkin-daynav-pick input {
+  font-family: var(--font-body); font-size: 0.9rem; padding: 0.45rem 0.7rem; border-radius: 999px;
+  border: 1px solid rgba(var(--navy-rgb), 0.18); background: var(--card); color: var(--navy);
+}
+.checkin-pastday {
+  display: flex; align-items: flex-start; gap: 0.55rem; margin-bottom: 1rem;
+  padding: 0.75rem 1rem; border-radius: 12px; background: rgba(231, 169, 60, 0.15); color: #7a5410; font-size: 0.9rem;
+}
+.checkin-pastday p { margin: 0; line-height: 1.45; }
+.checkin-pastday svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 0.1rem; }
+.checkin-pastday a { font-weight: 600; color: #7a5410; }
+a.personal-date { color: var(--teal); text-decoration: none; }
+a.personal-date:hover { text-decoration: underline; }
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+@media (max-width: 420px) { .checkin-daynav-step span { display: none; } }

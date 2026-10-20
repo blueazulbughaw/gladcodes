@@ -347,3 +347,8 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   gratitude, win, notes (reflection questions are end-of-day). The evening
   reminder counts the evening half done once night prayer, win, or mood is
   set. My dashboard shows average water and a "My prayers" log.
+- Any past day is editable: Today has prev/next arrows and a date picker
+  (`?date=YYYY-MM-DD`, clamped to today; no future days) plus an amber
+  "You're editing <day>" banner. Autosave, medicine doses and tracked
+  sleep/Instagram all follow the selected day. Dates on My dashboard link
+  to that day's check-in.

@@ -19,7 +19,6 @@
       <span class="admin-meta">{{ day.strftime('%A') }}, {{ day|human_date }}</span>
       {% else %}
       <h1>{{ day.strftime('%A') }}, {{ day|human_date }}</h1>
-      <a class="admin-meta" href="{{ url_for('admin.today') }}">← Back to today</a>
       {% endif %}
     </div>
     <div class="checkin-badges">
@@ -28,6 +27,26 @@
       {% if github %}<span class="checkin-badge checkin-badge--teal"><i data-lucide="git-commit-horizontal"></i>{{ github.data[-1] }} pushes this week</span>{% endif %}
     </div>
   </div>
+
+  {# Day navigation: go back to any earlier day to fill in what you forgot.
+     Future days aren't allowed (the server clamps ?date= to today). #}
+  {% macro day_url(d) %}{{ url_for('admin.today') if d == today_date else url_for('admin.today', date=d.isoformat()) }}{% endmacro %}
+  <nav class="checkin-daynav" aria-label="Choose a day">
+    <a class="checkin-daynav-step" href="{{ day_url(prev_day) }}" aria-label="Previous day"><i data-lucide="chevron-left"></i><span>{{ prev_day.strftime('%a %b') }} {{ prev_day.day }}</span></a>
+    <form class="checkin-daynav-pick" method="get" action="{{ url_for('admin.today') }}">
+      <label class="visually-hidden" for="dayPicker">Go to day</label>
+      <input type="date" id="dayPicker" name="date" value="{{ day.isoformat() }}" max="{{ today_date.isoformat() }}" onchange="this.form.submit()">
+      <noscript><button type="submit" class="btn-secondary-admin">Go</button></noscript>
+    </form>
+    {% if next_day %}
+    <a class="checkin-daynav-step" href="{{ day_url(next_day) }}" aria-label="Next day"><span>{{ 'Today' if next_day == today_date else next_day.strftime('%a %b') ~ ' ' ~ next_day.day }}</span><i data-lucide="chevron-right"></i></a>
+    {% else %}
+    <span class="checkin-daynav-step is-disabled" aria-hidden="true"><span>Today</span><i data-lucide="chevron-right"></i></span>
+    {% endif %}
+  </nav>
+  {% if not is_today %}
+  <div class="checkin-pastday"><i data-lucide="history"></i><p>You're editing <strong>{{ day.strftime('%A') }}, {{ day|human_date }}</strong>. Everything you change saves to that day. <a href="{{ url_for('admin.today') }}">Back to today</a></p></div>
+  {% endif %}
 
   {# No Save button: every change is saved in the background (see script below). #}
   <form method="post" class="checkin-form" id="checkinForm" action="{{ url_for('admin.today') }}">

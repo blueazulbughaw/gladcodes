@@ -46,7 +46,7 @@
       {% if mood_reasons %}
       <ul class="personal-list">
         {% for row in mood_reasons %}
-        <li><span class="personal-date">{{ row.checkin_date.strftime('%b %d') }}</span><span aria-label="Mood {{ row.mood }} of 5">{{ moods[row.mood - 1][1] }}</span><span>{{ row.mood_reason or '—' }}</span></li>
+        <li><a class="personal-date" href="{{ url_for('admin.today', date=row.checkin_date.isoformat()) }}" title="Edit this day">{{ row.checkin_date.strftime('%b %d') }}</a><span aria-label="Mood {{ row.mood }} of 5">{{ moods[row.mood - 1][1] }}</span><span>{{ row.mood_reason or '—' }}</span></li>
         {% endfor %}
       </ul>
       {% else %}<p class="admin-meta">Nothing yet. Your mood and reasons from Today show up here.</p>{% endif %}
@@ -58,7 +58,7 @@
       <p class="admin-meta">{% if cycle.average_cycle %}Average cycle: <strong>{{ cycle.average_cycle }} days</strong>{% else %}Log one more period to see your average cycle.{% endif %}</p>
       <ul class="personal-list">
         {% for start, end in periods %}
-        <li><span class="personal-date">{{ start.strftime('%b %d') }}{% if end != start %} – {{ end.strftime('%b %d') }}{% endif %}</span><span>{{ (end - start).days + 1 }} day{{ 's' if end != start }}</span></li>
+        <li><a class="personal-date" href="{{ url_for('admin.today', date=start.isoformat()) }}" title="Edit this day">{{ start.strftime('%b %d') }}{% if end != start %} – {{ end.strftime('%b %d') }}{% endif %}</a><span>{{ (end - start).days + 1 }} day{{ 's' if end != start }}</span></li>
         {% endfor %}
       </ul>
       {% else %}<p class="admin-meta">Tick <strong>Period day</strong> on Today each day of your period. Start and end dates, cycle length, and the next expected date show up here.</p>{% endif %}
@@ -118,7 +118,7 @@
       {% if rows %}
       <ul class="personal-list personal-list--log">
         {% for row in rows %}
-        <li><span class="personal-date">{{ row.checkin_date.strftime('%b %d') }}</span><span>{{ row.text }}</span></li>
+        <li><a class="personal-date" href="{{ url_for('admin.today', date=row.checkin_date.isoformat()) }}" title="Edit this day">{{ row.checkin_date.strftime('%b %d') }}</a><span>{{ row.text }}</span></li>
         {% endfor %}
       </ul>
       {% else %}<p class="admin-meta">Nothing yet.</p>{% endif %}

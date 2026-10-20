@@ -207,6 +207,10 @@ def today():
         "today.html",
         day=day,
         is_today=day == today_date,
+        # Day navigation: edit any past day (forgot something yesterday?).
+        prev_day=day - timedelta(days=1),
+        next_day=day + timedelta(days=1) if day < today_date else None,
+        today_date=today_date,
         entry=entry,
         greeting=greeting,
         streak=checkin_streak(today_date),
