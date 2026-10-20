@@ -132,8 +132,9 @@ def _checkin_values():
         _scale("mood"),
         _text("mood_reason"),
         _scale("energy"),
-        _flag("morning_prayer"),
-        _flag("night_prayer"),
+        # No checkboxes for prayers any more: writing a prayer is what counts.
+        1 if _text("morning_prayer_note") else 0,
+        1 if _text("night_prayer_note") else 0,
         _flag("exercised"),
         _flag("period_day"),
         _text("reading"),

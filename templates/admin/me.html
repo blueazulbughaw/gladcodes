@@ -7,142 +7,85 @@
   <div class="admin-page-header">
     <div>
       <h1>My dashboard</h1>
-      <span class="admin-meta">Private: just you. The website dashboard is separate.</span>
+      <span class="admin-meta">Private: just you.</span>
     </div>
     <a class="btn btn-primary" href="{{ url_for('admin.today') }}"><i data-lucide="sun"></i> Today's check-in</a>
   </div>
 
-  <div class="overview-cards">
-    <div class="overview-card"><span class="overview-value">{{ streak }}</span><span class="overview-label">Check-in streak (days)</span></div>
-    <div class="overview-card"><span class="overview-value">{{ prayer_streak }}</span><span class="overview-label">Morning + night prayer streak</span></div>
-    <div class="overview-card"><span class="overview-value">{{ med_pct ~ '%' if med_pct is not none else '—' }}</span><span class="overview-label">Medicine taken, last 7 days</span></div>
-    <div class="overview-card"><span class="overview-value">{% if avg_sleep is not none %}{{ avg_sleep // 60 }}h {{ '%02d'|format(avg_sleep % 60) }}m{% else %}—{% endif %}</span><span class="overview-label">Average sleep, last 7 days</span></div>
-    <div class="overview-card"><span class="overview-value">{{ (avg_water ~ '/8') if avg_water is not none else '—' }}</span><span class="overview-label">Glasses of water a day, last 7 days</span></div>
-    <div class="overview-card"><span class="overview-value">{{ (avg_app ~ 'm') if avg_app is not none else '—' }}</span><span class="overview-label">{{ tracked_app }} per day, last 7 days</span></div>
-    <div class="overview-card">
-      <span class="overview-value overview-value--small">{% if cycle.next_start %}{{ cycle.next_start|human_date }}{% else %}—{% endif %}</span>
-      <span class="overview-label">{% if cycle.next_start %}Next period expected ({% if cycle.days_until >= 0 %}in {{ cycle.days_until }} days{% else %}{{ -cycle.days_until }} days late{% endif %}){% else %}Next period: needs two logged periods{% endif %}</span>
+  <div class="personal-toolbar">
+    <div class="personal-tabs" role="tablist">
+      <a role="tab" class="{{ 'active' if view == 'week' }}" aria-selected="{{ 'true' if view == 'week' else 'false' }}" href="{{ url_for('admin.personal_dashboard', view='week', d=days[0].isoformat()) }}">Weekly</a>
+      <a role="tab" class="{{ 'active' if view == 'month' }}" aria-selected="{{ 'true' if view == 'month' else 'false' }}" href="{{ url_for('admin.personal_dashboard', view='month', d=days[0].isoformat()) }}">Monthly</a>
+    </div>
+    <div class="personal-period">
+      <a class="checkin-daynav-step" href="{{ url_for('admin.personal_dashboard', view=view, d=prev_anchor.isoformat()) }}" aria-label="Previous {{ view }}"><i data-lucide="chevron-left"></i></a>
+      <strong>{{ title }}</strong>
+      {% if next_anchor %}
+      <a class="checkin-daynav-step" href="{{ url_for('admin.personal_dashboard', view=view, d=next_anchor.isoformat()) }}" aria-label="Next {{ view }}"><i data-lucide="chevron-right"></i></a>
+      {% else %}
+      <span class="checkin-daynav-step is-disabled" aria-hidden="true"><i data-lucide="chevron-right"></i></span>
+      {% endif %}
     </div>
   </div>
+
+  <div class="overview-cards personal-tiles">
+    <div class="overview-card"><span class="overview-value">🔥 {{ streak }}</span><span class="overview-label">Check-in streak</span></div>
+    <div class="overview-card"><span class="overview-value">🙏 {{ prayer_streak }}</span><span class="overview-label">Prayer streak</span></div>
+    <div class="overview-card"><span class="overview-value">😴 {% if avg_sleep is not none %}{{ avg_sleep // 60 }}h{{ '%02d'|format(avg_sleep % 60) }}{% else %}—{% endif %}</span><span class="overview-label">Avg sleep</span></div>
+    <div class="overview-card"><span class="overview-value">💧 {{ avg_water if avg_water is not none else '—' }}</span><span class="overview-label">Avg glasses</span></div>
+    <div class="overview-card"><span class="overview-value">📱 {{ (avg_app ~ 'm') if avg_app is not none else '—' }}</span><span class="overview-label">Avg {{ tracked_app }}</span></div>
+    <div class="overview-card"><span class="overview-value overview-value--small">🩸 {% if cycle.next_start %}{{ cycle.next_start.strftime('%b') }} {{ cycle.next_start.day }}{% else %}—{% endif %}</span><span class="overview-label">Next period</span></div>
+  </div>
+
+  {# Emoji/check grid: one column per day; tap a day to open its check-in,
+     where everything written lives (no sentences here, by request). #}
+  <section class="card personal-grid-card">
+    <div class="habit-scroll">
+      <table class="habit-grid habit-grid--{{ view }}">
+        <thead>
+          <tr>
+            <th scope="col" class="habit-label"></th>
+            {% for d in days %}
+            <th scope="col" class="{{ 'is-today' if d == today }}{{ ' is-future' if d > today }}">
+              {% if d <= today %}<a href="{{ url_for('admin.today', date=d.isoformat()) }}" title="Open {{ d|human_date }}">{% endif %}
+              <span class="habit-dow">{{ d.strftime('%a')[0] }}</span><span class="habit-dom">{{ d.day }}</span>
+              {% if d <= today %}</a>{% endif %}
+            </th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in grid %}
+          <tr>
+            <th scope="row" class="habit-label" title="{{ row.label }}"><span aria-hidden="true">{{ row.emoji }}</span> <span class="habit-label-text">{{ row.label }}</span></th>
+            {% for cell in row.cells %}
+            <td class="habit-cell habit-cell--{{ cell.state }}{{ ' is-today' if days[loop.index0] == today }}">{{ cell.text }}</td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
 
   <div class="checkin-charts">
-    <div class="card chart-card">
-      <h3>Mood and energy, last {{ chart.labels|length }} days</h3>
-      <canvas id="moodChart" height="220"></canvas>
-    </div>
-    <div class="card chart-card">
-      <h3>Sleep (hours), last 14 days</h3>
-      <canvas id="sleepChart" height="220"></canvas>
-    </div>
-    <div class="card chart-card">
-      <h3>{{ tracked_app }} minutes, last 14 days</h3>
-      <canvas id="appChart" height="220"></canvas>
-    </div>
+    <div class="card chart-card"><h3>😊 Mood</h3><canvas id="moodChart" height="200"></canvas></div>
+    <div class="card chart-card"><h3>⚡ Energy</h3><canvas id="energyChart" height="200"></canvas></div>
+    <div class="card chart-card"><h3>😴 Sleep (hours)</h3><canvas id="sleepChart" height="200"></canvas></div>
+    <div class="card chart-card"><h3>📱 {{ tracked_app }} (minutes)</h3><canvas id="appChart" height="200"></canvas></div>
   </div>
 
-  <div class="personal-grid">
-    <section class="card">
-      <h2><i data-lucide="smile"></i> Why I felt that way</h2>
-      {% if mood_reasons %}
-      <ul class="personal-list">
-        {% for row in mood_reasons %}
-        <li><a class="personal-date" href="{{ url_for('admin.today', date=row.checkin_date.isoformat()) }}" title="Edit this day">{{ row.checkin_date.strftime('%b %d') }}</a><span aria-label="Mood {{ row.mood }} of 5">{{ moods[row.mood - 1][1] }}</span><span>{{ row.mood_reason or '—' }}</span></li>
-        {% endfor %}
-      </ul>
-      {% else %}<p class="admin-meta">Nothing yet. Your mood and reasons from Today show up here.</p>{% endif %}
-    </section>
-
-    <section class="card">
-      <h2><i data-lucide="droplet"></i> Period cycle</h2>
-      {% if periods %}
-      <p class="admin-meta">{% if cycle.average_cycle %}Average cycle: <strong>{{ cycle.average_cycle }} days</strong>{% else %}Log one more period to see your average cycle.{% endif %}</p>
-      <ul class="personal-list">
-        {% for start, end in periods %}
-        <li><a class="personal-date" href="{{ url_for('admin.today', date=start.isoformat()) }}" title="Edit this day">{{ start.strftime('%b %d') }}{% if end != start %} – {{ end.strftime('%b %d') }}{% endif %}</a><span>{{ (end - start).days + 1 }} day{{ 's' if end != start }}</span></li>
-        {% endfor %}
-      </ul>
-      {% else %}<p class="admin-meta">Tick <strong>Period day</strong> on Today each day of your period. Start and end dates, cycle length, and the next expected date show up here.</p>{% endif %}
-    </section>
-
-    <section class="card">
-      <h2><i data-lucide="pill"></i> Medicine, last 7 days</h2>
-      {% if adherence %}
-      {# Stacked per medicine (name + %, then 7 equal day squares) so it always
-         fits a phone-width card; a wide table didn't. #}
-      <div class="med-week">
-        {% for med in adherence %}
-        <div class="med-week-row">
-          <div class="med-week-head">
-            <strong>{{ med.name }}</strong>
-            {% if med.pct is not none %}<span class="med-week-pct {{ 'is-good' if med.pct >= 90 else ('is-ok' if med.pct >= 60 else 'is-low') }}">{{ med.pct }}%</span>{% endif %}
-          </div>
-          <div class="med-week-days">
-            {% for cell in med.cells %}
-            {% if cell.due %}
-              {% set state = 'full' if cell.taken == cell.expected else ('part' if cell.taken else 'none') %}
-              {% set mark = '✓' if state == 'full' else (cell.taken ~ '/' ~ cell.expected) %}
-              {% set tip = cell.taken ~ ' of ' ~ cell.expected ~ ' taken' %}
-            {% elif cell.taken %}
-              {% set state, mark, tip = 'full', '✓', cell.taken ~ ' taken (as needed)' %}
-            {% else %}
-              {% set state, mark, tip = 'off', '–', 'not due' %}
-            {% endif %}
-            <div class="med-day med-day--{{ state }}" title="{{ cell.day|human_date }}: {{ tip }}">
-              <span class="med-day-label">{{ cell.day.strftime('%a')[0] }}</span>
-              <span class="med-day-box">{{ mark }}</span>
-            </div>
-            {% endfor %}
-          </div>
-        </div>
-        {% endfor %}
-        <p class="med-week-legend"><span class="med-day--full"><b>✓</b> all taken</span><span class="med-day--part"><b>1/3</b> some</span><span class="med-day--none"><b>0/3</b> missed</span><span class="med-day--off"><b>–</b> not due</span></p>
-      </div>
-      {% else %}<p class="admin-meta"><a href="{{ url_for('admin.simple_list', resource='medications') }}">Add your medicines</a> to track them here.</p>{% endif %}
-    </section>
-
-    <section class="card">
-      <h2><i data-lucide="lightbulb"></i> App ideas</h2>
-      {% if app_ideas %}
-      <ul class="personal-list personal-ideas">
-        {% for idea in app_ideas %}
-        <li><a href="{{ url_for('admin.simple_edit', resource='app_ideas', row_id=idea.id) }}"><strong>{{ idea.idea }}</strong>{% if idea.details %}<span>{{ idea.details }}</span>{% endif %}</a></li>
-        {% endfor %}
-      </ul>
-      {% else %}<p class="admin-meta">No ideas yet.</p>{% endif %}
-      <a class="admin-meta" href="{{ url_for('admin.simple_create', resource='app_ideas') }}">+ Add idea</a>
-    </section>
-
-    <section class="card">
-      <h2><i data-lucide="utensils"></i> Food log</h2>
-      {% if food_log %}
-      <ul class="personal-list personal-food">
-        {% for row in food_log %}
-        <li>
-          <a class="personal-date" href="{{ url_for('admin.today', date=row.checkin_date.isoformat()) }}" title="Edit this day">{{ row.checkin_date.strftime('%b %d') }}</a>
-          <dl>
-            {% for label, value in [('Breakfast', row.food_breakfast), ('Lunch', row.food_lunch), ('Dinner', row.food_dinner), ('Snacks', row.food_snacks)] %}
-            {% if value %}<div><dt>{{ label }}</dt><dd>{{ value }}</dd></div>{% endif %}
-            {% endfor %}
-          </dl>
-        </li>
-        {% endfor %}
-      </ul>
-      {% else %}<p class="admin-meta">Nothing yet. Log your meals on Today.</p>{% endif %}
-    </section>
-
-    {% for title, icon, rows in logs %}
-    <section class="card">
-      <h2><i data-lucide="{{ icon }}"></i> {{ title }}</h2>
-      {% if rows %}
-      <ul class="personal-list personal-list--log">
-        {% for row in rows %}
-        <li><a class="personal-date" href="{{ url_for('admin.today', date=row.checkin_date.isoformat()) }}" title="Edit this day">{{ row.checkin_date.strftime('%b %d') }}</a><span>{{ row.text }}</span></li>
-        {% endfor %}
-      </ul>
-      {% else %}<p class="admin-meta">Nothing yet.</p>{% endif %}
-    </section>
-    {% endfor %}
-  </div>
+  <section class="card personal-cycle">
+    <h2>🩸 Period cycle</h2>
+    {% if periods %}
+    <div class="personal-cycle-row">
+      {% if cycle.average_cycle %}<span class="cycle-chip">🔁 {{ cycle.average_cycle }}d cycle</span>{% endif %}
+      {% for start, end in periods %}
+      <a class="cycle-chip" href="{{ url_for('admin.today', date=start.isoformat()) }}">{{ start.strftime('%b') }} {{ start.day }}{% if end != start %}–{{ end.day if end.month == start.month else end.strftime('%b ') ~ end.day }}{% endif %} · {{ (end - start).days + 1 }}d</a>
+      {% endfor %}
+    </div>
+    {% else %}<p class="admin-meta">🩸 Tick Period day on Today.</p>{% endif %}
+  </section>
 
   <section class="card personal-tracking" id="tracking">
     <h2><i data-lucide="radio"></i> Phone tracking</h2>
@@ -175,12 +118,13 @@
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     if (window.GladCharts) {
-      GladCharts.multiLineChart("moodChart", {{ chart.labels|tojson }}, [
-        { label: "Mood", data: {{ chart.mood|tojson }} },
-        { label: "Energy", data: {{ chart.energy|tojson }} }
-      ], { min: 1, max: 5 });
-      GladCharts.barChart("sleepChart", {{ chart.sleep_labels|tojson }}, {{ chart.sleep|tojson }}, "Hours");
-      GladCharts.barChart("appChart", {{ chart.sleep_labels|tojson }}, {{ chart.app|tojson }}, "Minutes");
+      var labels = {{ chart.labels|tojson }};
+      GladCharts.multiLineChart("moodChart", labels, [{ label: "Mood", data: {{ chart.mood|tojson }} }],
+        { min: 1, max: 5, tickLabels: {{ chart.mood_ticks|tojson }} });
+      GladCharts.multiLineChart("energyChart", labels, [{ label: "Energy", data: {{ chart.energy|tojson }} }],
+        { min: 1, max: 5, tickLabels: {{ chart.energy_ticks|tojson }}, colorIndex: 2 });
+      GladCharts.barChart("sleepChart", labels, {{ chart.sleep|tojson }}, "Hours");
+      GladCharts.barChart("appChart", labels, {{ chart.app|tojson }}, "Minutes");
     }
     var token = document.getElementById("trackToken");
     if (!token) return;

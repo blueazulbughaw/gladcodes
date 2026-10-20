@@ -580,30 +580,6 @@ body.admin-body { display: flex; min-height: 100vh; align-items: stretch; }
 .personal-list--log li span:last-child { white-space: pre-line; }
 .personal-date { flex-shrink: 0; min-width: 4.2rem; font-size: 0.78rem; font-weight: 600; color: rgba(var(--navy-rgb), 0.55); }
 
-/* Medicine week (My dashboard): stacked rows, 7 equal day squares. */
-.med-week { display: flex; flex-direction: column; gap: 0.9rem; }
-.med-week-row { display: flex; flex-direction: column; gap: 0.4rem; min-width: 0; }
-.med-week-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; font-size: 0.9rem; }
-.med-week-head strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.med-week-pct { flex-shrink: 0; font-size: 0.75rem; font-weight: 700; padding: 0.1rem 0.5rem; border-radius: 999px; }
-.med-week-pct.is-good { background: rgba(59, 165, 93, 0.14); color: #2a7a44; }
-.med-week-pct.is-ok { background: rgba(231, 169, 60, 0.18); color: #9a6a12; }
-.med-week-pct.is-low { background: rgba(179, 38, 30, 0.1); color: #b3261e; }
-.med-week-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.3rem; }
-.med-day { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; min-width: 0; }
-.med-day-label { font-size: 0.65rem; font-weight: 600; color: rgba(var(--navy-rgb), 0.45); }
-.med-day-box {
-  display: flex; align-items: center; justify-content: center;
-  width: 100%; max-width: 40px; height: 28px; border-radius: 7px;
-  font-size: 0.68rem; font-weight: 700; white-space: nowrap;
-}
-.med-day--full .med-day-box, .med-week-legend .med-day--full b { background: rgba(59, 165, 93, 0.16); color: #2a7a44; }
-.med-day--part .med-day-box, .med-week-legend .med-day--part b { background: rgba(231, 169, 60, 0.2); color: #9a6a12; }
-.med-day--none .med-day-box, .med-week-legend .med-day--none b { background: rgba(179, 38, 30, 0.1); color: #b3261e; }
-.med-day--off .med-day-box, .med-week-legend .med-day--off b { background: rgba(var(--navy-rgb), 0.04); color: rgba(var(--navy-rgb), 0.3); }
-.med-week-legend { display: flex; flex-wrap: wrap; gap: 0.35rem 0.8rem; margin: 0.2rem 0 0; font-size: 0.7rem; color: rgba(var(--navy-rgb), 0.55); }
-.med-week-legend b { display: inline-block; min-width: 1.6rem; padding: 0 0.25rem; margin-right: 0.2rem; border-radius: 5px; text-align: center; font-size: 0.65rem; }
-
 .personal-tracking { margin-top: 1.5rem; }
 .personal-tracking-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.5rem 1rem; margin: 1rem 0; font-size: 0.88rem; }
 .personal-tracking-grid dt { font-weight: 600; }
@@ -613,9 +589,6 @@ body.admin-body { display: flex; min-height: 100vh; align-items: stretch; }
   .personal-tracking-grid { grid-template-columns: 1fr; }
   .checkin-tracked { grid-template-columns: 1fr; }
 }
-.personal-ideas li a { display: flex; flex-direction: column; color: var(--navy); }
-.personal-ideas li a:hover { text-decoration: none; color: var(--teal); }
-.personal-ideas li span { font-size: 0.82rem; color: rgba(var(--navy-rgb), 0.6); white-space: pre-line; }
 .checkin-card > a.admin-meta { display: inline-flex; align-items: center; gap: 0.35rem; }
 .checkin-card > a.admin-meta svg { width: 15px; height: 15px; }
 
@@ -683,9 +656,59 @@ a.personal-date:hover { text-decoration: underline; }
 /* Food log: the four meals in a 2x2 grid inside the full-width card. */
 .checkin-food { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
 @media (min-width: 700px) { .checkin-food { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.personal-food { max-height: 360px; overflow-y: auto; }
-.personal-food li { align-items: flex-start; }
-.personal-food dl { margin: 0; display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
-.personal-food dl div { display: flex; gap: 0.4rem; }
-.personal-food dt { flex-shrink: 0; min-width: 4.6rem; font-weight: 600; color: rgba(var(--navy-rgb), 0.55); font-size: 0.8rem; }
-.personal-food dd { margin: 0; white-space: pre-line; }
+
+/* My dashboard: Weekly/Monthly tabs, period arrows, emoji/check grid. */
+.personal-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem; }
+.personal-tabs { display: inline-flex; padding: 4px; border-radius: 999px; background: var(--card); box-shadow: var(--shadow-card); }
+.personal-tabs a { padding: 0.45rem 1.1rem; border-radius: 999px; font-weight: 600; font-size: 0.9rem; color: var(--navy); text-decoration: none; }
+.personal-tabs a.active { background: var(--navy); color: #fff; }
+.personal-period { display: flex; align-items: center; gap: 0.6rem; }
+.personal-period strong { font-family: var(--font-heading); min-width: 8.5rem; text-align: center; }
+.personal-tiles .overview-value { font-size: 1.45rem; }
+.personal-grid-card { padding: 0.75rem !important; margin-bottom: 1.5rem; }
+.habit-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.habit-grid { border-collapse: separate; border-spacing: 3px; width: 100%; font-size: 0.85rem; }
+.habit-grid th, .habit-grid td { text-align: center; padding: 0; }
+.habit-grid thead th { font-weight: 600; color: rgba(var(--navy-rgb), 0.5); padding-bottom: 0.25rem; }
+.habit-grid thead th a { display: flex; flex-direction: column; align-items: center; color: inherit; text-decoration: none; padding: 0.15rem 0; border-radius: 8px; }
+.habit-grid thead th a:hover { background: rgba(var(--teal-rgb), 0.1); color: var(--teal); }
+.habit-dow { font-size: 0.68rem; }
+.habit-dom { font-size: 0.85rem; color: var(--navy); }
+.habit-grid thead th.is-today .habit-dom { color: #fff; background: var(--teal); border-radius: 999px; padding: 0 0.4rem; }
+.habit-grid thead th.is-future { opacity: 0.45; }
+.habit-label {
+  position: sticky; left: 0; z-index: 1; background: var(--card);
+  text-align: left !important; white-space: nowrap; font-weight: 600; font-size: 0.82rem; padding-right: 0.5rem !important; color: var(--navy);
+}
+.habit-cell { height: 32px; min-width: 32px; border-radius: 8px; background: rgba(var(--navy-rgb), 0.04); font-weight: 700; line-height: 32px; }
+.habit-grid--month .habit-cell { min-width: 28px; height: 28px; line-height: 28px; font-size: 0.78rem; }
+.habit-cell--done { background: rgba(59, 165, 93, 0.16); color: #2a7a44; }
+.habit-cell--part { background: rgba(231, 169, 60, 0.2); color: #9a6a12; }
+.habit-cell--missed { background: rgba(179, 38, 30, 0.1); }
+.habit-cell--off { background: transparent; }
+.habit-cell--future { background: transparent; border: 1px dashed rgba(var(--navy-rgb), 0.1); }
+.habit-cell--emoji { background: transparent; font-size: 1.15rem; font-weight: 400; }
+.habit-grid--month .habit-cell--emoji { font-size: 0.95rem; }
+.habit-cell[class*="habit-cell--water-"] { color: #1d5f99; }
+.habit-cell--water-1, .habit-cell--water-2 { background: rgba(63, 136, 197, 0.1); }
+.habit-cell--water-3, .habit-cell--water-4 { background: rgba(63, 136, 197, 0.18); }
+.habit-cell--water-5, .habit-cell--water-6 { background: rgba(63, 136, 197, 0.28); }
+.habit-cell--water-7, .habit-cell--water-8 { background: rgba(63, 136, 197, 0.42); color: #0f3d66; }
+.habit-cell.is-today { box-shadow: inset 0 0 0 2px rgba(var(--teal-rgb), 0.35); }
+.personal-cycle { margin-top: 0.5rem; }
+.personal-cycle h2 { font-size: 1.05rem; margin: 0 0 0.75rem; }
+.personal-cycle-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.cycle-chip { padding: 0.35rem 0.75rem; border-radius: 999px; background: rgba(179, 38, 30, 0.07); color: #8a2a24; font-size: 0.85rem; font-weight: 600; text-decoration: none; }
+a.cycle-chip:hover { background: rgba(179, 38, 30, 0.14); text-decoration: none; }
+.habit-grid thead th > span { display: block; }  /* future days aren't links: stack day letter + date too */
+.personal-tiles { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.75rem; }
+.personal-tiles .overview-card { padding: 0.9rem 1rem; }
+@media (max-width: 1100px) { .personal-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 600px) {
+  .personal-tiles { gap: 0.5rem; }
+  .personal-tiles .overview-card { padding: 0.7rem 0.6rem; text-align: center; align-items: center; }
+  .personal-tiles .overview-value { font-size: 1.05rem; white-space: nowrap; }
+  .personal-tiles .overview-label { font-size: 0.7rem; }
+  .habit-label-text { display: none; }  /* phones: emoji-only row labels */
+  .habit-label span[aria-hidden] { font-size: 1.05rem; }
+}

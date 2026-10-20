@@ -91,7 +91,7 @@ class TodayPageTests(unittest.TestCase):
         resp = self.client.get("/gc-admin/today")
         self.assertEqual(resp.status_code, 200)
         body = resp.get_data(as_text=True)
-        for text in ("Good morning, Glad", "Morning prayer", "Night prayer", "Why do you feel that way?",
+        for text in ("Good morning, Glad", "Why do you feel that way?",
                      "Bible passage", "Psalm 23", "Thoughts on the devotion", "Learnings", "Flask url_defaults",
                      "Period day", "Vitamin D", "7h 15m", "23 min", "Saves automatically"):
             self.assertIn(text, body)
@@ -125,7 +125,8 @@ class TodayPageTests(unittest.TestCase):
         self.assertIn('class="card checkin-card checkin-card--wide">', body.split("> My emotions</h2>")[1])
         self.assertNotIn("Word &amp; learning", body)
         self.assertIn("My prayer", morning)
-        self.assertIn("Night prayer", evening)
+        self.assertNotIn('name="morning_prayer"', body)   # no prayer checkboxes, just the boxes
+        self.assertNotIn('name="night_prayer"', body)
         self.assertIn("Thank you for this day.", evening)  # evening prayer box
         self.assertNotIn("Wins", summary)
         self.assertNotIn("Notes", summary)
@@ -145,7 +146,7 @@ class TodayPageTests(unittest.TestCase):
     def test_autosave_post_returns_json_and_sanitizes(self, mock_execute, *_):
         resp = self.client.post("/gc-admin/today", headers={"X-Requested-With": "fetch"}, data={
             "csrf_token": "test-csrf", "checkin_date": "2026-10-16",
-            "mood": "9", "energy": "4", "morning_prayer": "1", "period_day": "1",
+            "mood": "9", "energy": "4", "period_day": "1",
             "mood_reason": "  Good sleep  ", "bible_passage": "John 15", "learnings": "Jinja macros",
             "morning_prayer_note": "Thank you for today", "water": ["1", "2", "3", "3", "9"],
             "night_prayer_note": "Goodnight prayer", "devotion_thoughts": "Trust",
@@ -159,8 +160,8 @@ class TodayPageTests(unittest.TestCase):
         self.assertIsNone(fields["mood"])            # 9 is out of range
         self.assertEqual(fields["energy"], 4)
         self.assertEqual(fields["mood_reason"], "Good sleep")
-        self.assertEqual(fields["morning_prayer"], 1)
-        self.assertEqual(fields["night_prayer"], 0)
+        self.assertEqual(fields["morning_prayer"], 1)  # written morning prayer counts as prayed
+        self.assertEqual(fields["night_prayer"], 1)    # and so does the evening one
         self.assertEqual(fields["period_day"], 1)
         self.assertEqual(fields["bible_passage"], "John 15")
         self.assertEqual(fields["learnings"], "Jinja macros")

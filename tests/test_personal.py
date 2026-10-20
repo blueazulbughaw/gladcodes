@@ -95,6 +95,21 @@ class PhoneTrackingEndpointTests(unittest.TestCase):
         self.assertEqual(bad.status_code, 400)
 
 
+class PeriodDaysTests(unittest.TestCase):
+    def test_week_runs_sunday_to_saturday(self):
+        from blueprints.admin.personal import period_days
+        days, prev, nxt = period_days("week", date(2026, 10, 19))  # a Monday
+        self.assertEqual((days[0], days[-1]), (date(2026, 10, 18), date(2026, 10, 24)))
+        self.assertEqual(days[0].strftime("%a"), "Sun")
+        self.assertEqual((prev, nxt), (date(2026, 10, 11), date(2026, 10, 25)))
+
+    def test_month(self):
+        from blueprints.admin.personal import period_days
+        days, prev, nxt = period_days("month", date(2026, 2, 14))
+        self.assertEqual((days[0], days[-1], len(days)), (date(2026, 2, 1), date(2026, 2, 28), 28))
+        self.assertEqual((prev, nxt), (date(2026, 1, 1), date(2026, 3, 1)))
+
+
 class PersonalDashboardTests(unittest.TestCase):
     def setUp(self):
         self.app = create_app()
@@ -104,48 +119,73 @@ class PersonalDashboardTests(unittest.TestCase):
             self.client.set_cookie(COOKIE_NAME, issue_token("glad"))
         self.client.set_cookie(CSRF_COOKIE_NAME, "test-csrf")
 
-    @patch("blueprints.admin.personal.checkin_streak", return_value=3)
-    @patch("blueprints.admin.personal.local_tz_name", return_value="America/New_York")
-    @patch("blueprints.admin.personal.local_today", return_value=TODAY)
-    @patch("blueprints.admin.personal.tracking")
-    @patch("blueprints.admin.personal.query")
-    def test_dashboard_renders(self, mock_query, mock_tracking, *_):
+    ENTRY = {"checkin_date": TODAY, "mood": 4, "energy": 5, "morning_prayer": 0, "night_prayer": 0,
+             "morning_prayer_note": "Guide me", "night_prayer_note": None, "bible_passage": "Psalm 23",
+             "devotion_thoughts": None, "water_glasses": 6, "exercised": 1, "period_day": 0,
+             "food_breakfast": "Oatmeal", "food_lunch": None, "food_dinner": "Sinigang", "food_snacks": None,
+             "reading": None, "learnings": "Jinja", "win": None}
+
+    def render(self, path):
         def fake_query(sql, *args):
-            if "food_breakfast, food_lunch" in sql:
-                return [{"checkin_date": TODAY, "food_breakfast": "Oatmeal", "food_lunch": None, "food_dinner": "Sinigang", "food_snacks": None}]
-            if "FROM app_ideas" in sql:
-                return [{"id": 5, "idea": "Prayer streak widget", "details": "Android home screen"}]
             if "period_day = 1" in sql:
                 return [{"checkin_date": date(2026, 9, 18)}, {"checkin_date": date(2026, 9, 19)}]
-            if "AS text" in sql:
-                if "bible_passage" in sql:
-                    return [{"checkin_date": TODAY, "text": "Psalm 23"}]
-                return [{"checkin_date": TODAY, "text": "Jinja macros"}] if "learnings" in sql else []
-            if "mood_reason" in sql and "LIMIT 14" in sql:
-                return [{"checkin_date": TODAY, "mood": 4, "mood_reason": "Good sleep"}]
-            return [{"checkin_date": TODAY, "mood": 4, "energy": 3, "morning_prayer": 1, "night_prayer": 1, "water_glasses": 6}]
+            if "morning_prayer = 1 AND night_prayer = 1" in sql:
+                return []
+            return [self.ENTRY]
 
-        mock_query.side_effect = fake_query
-        mock_tracking.sleep_by_day.return_value = {TODAY: 420}
-        mock_tracking.app_minutes_by_day.return_value = {TODAY: 30}
-        mock_tracking.active_medications.return_value = []
-        mock_tracking.doses_taken.return_value = {}
-        mock_tracking.periods_from_days.side_effect = tracking.periods_from_days
-        mock_tracking.cycle_summary.side_effect = tracking.cycle_summary
-        mock_tracking.ingest_token.return_value = "secret-token"
-        mock_tracking.tracking_status.return_value = {"last_sleep": None, "last_app": None}
-        mock_tracking.TRACKED_APP = "Instagram"
-
-        resp = self.client.get("/gc-admin/me")
+        with patch("blueprints.admin.personal.checkin_streak", return_value=3), \
+             patch("blueprints.admin.personal.local_tz_name", return_value="UTC"), \
+             patch("blueprints.admin.personal.local_today", return_value=TODAY), \
+             patch("blueprints.admin.personal.query", side_effect=fake_query), \
+             patch("blueprints.admin.personal.tracking") as t:
+            t.sleep_by_day.return_value = {TODAY: 420}
+            t.app_minutes_by_day.return_value = {TODAY: 30}
+            t.active_medications.return_value = [{"id": 1, "name": "Vitamin D", "frequency": "daily", "doses_per_day": 2, "start_date": None}]
+            t.doses_taken.return_value = {(1, TODAY): {1}}
+            t.medication_due.side_effect = tracking.medication_due
+            t.dose_count.side_effect = tracking.dose_count
+            t.periods_from_days.side_effect = tracking.periods_from_days
+            t.cycle_summary.side_effect = tracking.cycle_summary
+            t.ingest_token.return_value = "secret-token"
+            t.tracking_status.return_value = {"last_sleep": None, "last_app": None}
+            t.TRACKED_APP = "Instagram"
+            resp = self.client.get(path)
         self.assertEqual(resp.status_code, 200)
-        body = resp.get_data(as_text=True)
-        for text in ("My dashboard", "Good sleep", "Psalm 23", "What I learned", "Jinja macros",
-                     "Prayer streak widget", "Android home screen", "/gc-admin/app_ideas/5/edit", "Sep 18 – Sep 19", "Period cycle",
-                     "/gc-admin/track/sleep", "7h 00m", "6.0/8", "Glasses of water", "Food log", "Oatmeal", "Sinigang"):
-            self.assertIn(text, body)
+        return resp.get_data(as_text=True)
+
+    def test_weekly_grid_starts_sunday_and_shows_only_emojis_and_checks(self):
+        body = self.render("/gc-admin/me")  # TODAY is Friday Oct 16
+        self.assertIn("Oct 11 – Oct 17", body)                   # Sunday..Saturday
+        first_day = body.split('class="habit-dow">')[1][:1]
+        self.assertEqual(first_day, "S")
+        self.assertIn('href="/gc-admin/today?date=2026-10-11"', body)
+        self.assertIn('habit-cell--emoji is-today">🙂', body)   # mood 4
+        self.assertIn('habit-cell--emoji is-today">⚡', body)    # energy 5
+        self.assertIn('habit-cell--part is-today">✓', body)      # 1 of 2 doses: amber check, no numbers
+        self.assertNotIn("%", body.split('class="habit-grid')[1].split("</table>")[0])
+        self.assertIn('habit-cell--water-6 is-today">6', body)
+        # Sentences are gone: only the grid, graphs, cycle chips and phone setup.
+        content = body.split('<main class="admin-main">')[1]  # the sidebar still links App ideas
+        for gone in ("Why I felt that way", "Food log", "Oatmeal", "Psalm 23", "App ideas", "Guide me", "Jinja"):
+            self.assertNotIn(gone, content)
         self.assertIn('data-token="secret-token"', body)
-        self.assertNotIn(">secret-token<", body)  # masked until "Show"
+        self.assertNotIn(">secret-token<", body)
         self.assertIn('name="robots" content="noindex, nofollow"', body)
+
+    def test_prayer_rows_check_when_a_prayer_was_written(self):
+        body = self.render("/gc-admin/me")
+        grid = body.split('class="habit-grid')[1]
+        morning = grid.split("Morning prayer</span></th>")[1].split("</tr>")[0]
+        evening = grid.split("Evening prayer</span></th>")[1].split("</tr>")[0]
+        self.assertIn('habit-cell--done is-today">✓', morning)   # wrote a morning prayer
+        self.assertIn('habit-cell--empty is-today">', evening)   # no evening prayer written
+
+    def test_monthly_tab_and_period_navigation(self):
+        body = self.render("/gc-admin/me?view=month&d=2026-10-05")
+        self.assertIn("October 2026", body)
+        self.assertEqual(body.count('class="habit-dom">'), 31)
+        self.assertIn('href="/gc-admin/me?view=month&amp;d=2026-09-01"', body)  # previous month
+        self.assertIn("checkin-daynav-step is-disabled", body)                  # no future months
 
     def test_dashboard_requires_login(self):
         resp = self.app.test_client().get("/gc-admin/me")

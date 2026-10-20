@@ -60,7 +60,8 @@
 
   // Several series on one axis (e.g. mood/energy/focus). Gaps (null) are
   // bridged so a missed day doesn't break the line. opts.min/opts.max pin
-  // the y-axis, e.g. to a 1–5 scale.
+  // the y-axis, e.g. to a 1–5 scale; opts.tickLabels swaps axis numbers for
+  // labels (emojis); opts.colorIndex shifts the line colour.
   function multiLineChart(canvasId, labels, series, opts) {
     var el = document.getElementById(canvasId);
     if (!el) return null;
@@ -71,7 +72,7 @@
       data: {
         labels: labels,
         datasets: series.map(function (s, i) {
-          var color = colors[i % colors.length];
+          var color = colors[(i + (opts.colorIndex || 0)) % colors.length];
           return {
             label: s.label,
             data: s.data,
@@ -85,8 +86,13 @@
       },
       options: {
         responsive: true,
-        plugins: { legend: { display: true, position: "bottom" } },
-        scales: { y: { min: opts.min, max: opts.max, ticks: { stepSize: 1 } } },
+        plugins: { legend: { display: series.length > 1, position: "bottom" } },
+        scales: { y: { min: opts.min, max: opts.max, ticks: {
+          stepSize: 1,
+          // opts.tickLabels ({"1": "...", ...}) shows emojis on the axis instead of numbers.
+          font: opts.tickLabels ? { size: 16 } : undefined,
+          callback: function (value) { return opts.tickLabels ? (opts.tickLabels[String(value)] || "") : value; }
+        } } },
       },
     });
   }

@@ -348,12 +348,25 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   (`food_breakfast/lunch/dinner/snacks`, 2x2 inside); **Learnings** (what
   did you read `reading`, learnings, wins `win`, notes) | **My emotions**
   (mood + why, energy, gratitude); then **Evening** prayers last at full
-  width (`checkin-card--wide`: night prayer + `night_prayer_note`). The
-  evening reminder counts the evening half done once night prayer, win, or
-  mood is set. My dashboard shows average water, a 14-day food log, plus
-  morning/evening prayer and devotion-thoughts logs.
+  width (`checkin-card--wide`: `night_prayer_note`). Prayers have **no
+  checkboxes**: writing the prayer is what counts, and save sets the
+  `morning_prayer`/`night_prayer` flags from whether the note has text (so
+  the prayer streak and evening reminder keep working). The evening
+  reminder counts the evening half done once night prayer, win, or mood is
+  set.
 - Any past day is editable: Today has prev/next arrows and a date picker
   (`?date=YYYY-MM-DD`, clamped to today; no future days) plus an amber
   "You're editing <day>" banner. Autosave, medicine doses and tracked
   sleep/Instagram all follow the selected day. Dates on My dashboard link
   to that day's check-in.
+- **My dashboard is emojis and checks only, no sentences** (by request):
+  Weekly (Sunday–Saturday) / Monthly tabs with prev/next (`?view=week|month
+  &d=YYYY-MM-DD`, no future periods); compact emoji stat tiles; one
+  `habit-grid` (days as columns, `personal.build_grid`): mood + energy
+  emojis (`ENERGY_EMOJI`), ✓ for prayers (written), devotion, each meal
+  logged, moved, learnings; medicine is checks only (green all doses, amber
+  some, empty missed, blank not due, never numbers/%); water shows the glass
+  count shaded by amount; 🩸 period. Mood/energy graphs use emoji y-axis
+  ticks (`charts.js` `tickLabels`); sleep/Instagram bar charts; period
+  cycle as chips. Written content lives on each day's check-in: day headers
+  link to `/gc-admin/today?date=…`. Phones show emoji-only row labels.

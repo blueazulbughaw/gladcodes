@@ -1,7 +1,9 @@
 """Personal dashboard (/gc-admin/me): everything from the daily check-in
 and the phone, kept separate from the website CMS dashboard (/gc-admin/).
-Mood + reasons, prayers, medicines, sleep, Instagram time, period cycle,
-the logs (Bible passages, learnings, reading, gratitude), and the app idea list.
+Weekly (Sunday-Saturday) or monthly view: an emoji/check grid (mood, energy,
+prayers, devotion, medicines, water, movement, period, meals, learnings),
+mood/energy/sleep/Instagram graphs, and the period cycle. No sentences here
+by request: tapping a day opens that day's check-in with everything written.
 
 Also the phone-automation endpoints (/gc-admin/track/*), authenticated by a
 bearer token instead of the JWT cookie, since an iPhone Shortcut / Android
@@ -17,8 +19,8 @@ from services import tracking
 from . import admin_bp
 from .checkin import MOODS, checkin_streak, current_streak, local_today, local_tz_name, parse_day
 
-CHART_DAYS = 30
-LOG_LIMIT = 30
+ENERGY_EMOJI = {1: "🪫", 2: "😴", 3: "🙂", 4: "💪", 5: "⚡"}
+VIEWS = ("week", "month")
 
 
 def _series(by_day, days, key):
@@ -28,22 +30,71 @@ def _series(by_day, days, key):
     ]
 
 
-def medication_adherence(meds, taken, days):
-    """Per medicine: 7 day cells (taken/expected doses, or None if not due)."""
-    rows = []
+def period_days(view, anchor):
+    """(days, prev_anchor, next_anchor) for the week (Sunday-Saturday) or the
+    calendar month containing `anchor`."""
+    if view == "month":
+        first = anchor.replace(day=1)
+        nxt = (first + timedelta(days=32)).replace(day=1)
+        days = [first + timedelta(days=i) for i in range((nxt - first).days)]
+        return days, (first - timedelta(days=1)).replace(day=1), nxt
+    start = anchor - timedelta(days=(anchor.weekday() + 1) % 7)  # back to Sunday
+    days = [start + timedelta(days=i) for i in range(7)]
+    return days, start - timedelta(days=7), start + timedelta(days=7)
+
+
+def _check(value):
+    return {"text": "✓", "state": "done"} if value else {"text": "", "state": "empty"}
+
+
+def medicine_cell(med, day, taken):
+    """Checks only: ✓ all doses, amber ✓ some, empty if missed, blank if not due."""
+    got = len(taken.get((med["id"], day), ()))
+    if not tracking.medication_due(med, day) or med["frequency"] == "as_needed":
+        return {"text": "✓", "state": "done"} if got else {"text": "", "state": "off"}
+    if got >= tracking.dose_count(med):
+        return {"text": "✓", "state": "done"}
+    return {"text": "✓", "state": "part"} if got else {"text": "", "state": "missed"}
+
+
+def build_grid(days, by_day, meds, taken, today):
+    """Rows of emoji/check cells, one column per day, for the dashboard grid.
+    No sentences: the words live on each day's check-in (tap the day)."""
+    mood_emoji = {value: emoji for value, emoji, _ in MOODS}
+
+    def row(emoji, label, cell_fn):
+        cells = []
+        for d in days:
+            entry = by_day.get(d)
+            if d > today:
+                cells.append({"text": "", "state": "future"})
+            else:
+                cells.append(cell_fn(d, entry))
+        return {"emoji": emoji, "label": label, "cells": cells}
+
+    def field(key):
+        return lambda d, e: _check(e and e[key])
+
+    rows = [
+        row("😊", "Mood", lambda d, e: {"text": mood_emoji.get(e["mood"], ""), "state": "emoji"} if e and e["mood"] else {"text": "", "state": "empty"}),
+        row("⚡", "Energy", lambda d, e: {"text": ENERGY_EMOJI.get(e["energy"], ""), "state": "emoji"} if e and e["energy"] else {"text": "", "state": "empty"}),
+        # A prayer counts when it's written (older days also used a checkbox).
+        row("🙏", "Morning prayer", lambda d, e: _check(e and (e["morning_prayer_note"] or e["morning_prayer"]))),
+        row("📖", "Devotion", lambda d, e: _check(e and (e["bible_passage"] or e["devotion_thoughts"]))),
+    ]
     for med in meds:
-        cells, expected_total, taken_total = [], 0, 0
-        for day in days:
-            if not tracking.medication_due(med, day) or med["frequency"] == "as_needed":
-                cells.append({"day": day, "due": False, "taken": len(taken.get((med["id"], day), ())), "expected": 0})
-                continue
-            expected = tracking.dose_count(med)
-            got = min(expected, len(taken.get((med["id"], day), ())))
-            expected_total += expected
-            taken_total += got
-            cells.append({"day": day, "due": True, "taken": got, "expected": expected})
-        pct = round(taken_total / expected_total * 100) if expected_total else None
-        rows.append({"name": med["name"], "cells": cells, "pct": pct})
+        rows.append(row("💊", med["name"], lambda d, e, med=med: medicine_cell(med, d, taken)))
+    rows += [
+        row("💧", "Water", lambda d, e: {"text": str(e["water_glasses"]), "state": "water-%d" % min(8, e["water_glasses"])} if e and e["water_glasses"] else {"text": "", "state": "empty"}),
+        row("🏃", "Moved", field("exercised")),
+        row("🩸", "Period", lambda d, e: {"text": "🩸", "state": "emoji"} if e and e["period_day"] else {"text": "", "state": "empty"}),
+        row("🍳", "Breakfast", field("food_breakfast")),
+        row("🥗", "Lunch", field("food_lunch")),
+        row("🍲", "Dinner", field("food_dinner")),
+        row("🍎", "Snacks", field("food_snacks")),
+        row("📚", "Learnings", lambda d, e: _check(e and (e["reading"] or e["learnings"] or e["win"]))),
+        row("🌙", "Evening prayer", lambda d, e: _check(e and (e["night_prayer_note"] or e["night_prayer"]))),
+    ]
     return rows
 
 
@@ -51,81 +102,60 @@ def medication_adherence(meds, taken, days):
 def personal_dashboard():
     today = local_today()
     tz_name = local_tz_name()
-    days = [today - timedelta(days=i) for i in range(CHART_DAYS - 1, -1, -1)]
-    week = days[-7:]
+    view = request.args.get("view") if request.args.get("view") in VIEWS else "week"
+    anchor = parse_day(request.args.get("d"), today)
+    days, prev_anchor, next_anchor = period_days(view, anchor)
+    past = [d for d in days if d <= today]
 
-    rows = query("SELECT * FROM daily_checkins WHERE checkin_date >= %s ORDER BY checkin_date", (days[0],))
+    rows = query(
+        "SELECT * FROM daily_checkins WHERE checkin_date BETWEEN %s AND %s ORDER BY checkin_date",
+        (days[0], days[-1]),
+    )
     by_day = {row["checkin_date"]: row for row in rows}
-
-    sleep = tracking.sleep_by_day(days)
-    app_minutes = tracking.app_minutes_by_day(tracking.TRACKED_APP, days[-14:], tz_name)
-
-    prayer_days = [d for d, r in by_day.items() if r["morning_prayer"] and r["night_prayer"]]
-    week_sleep = [sleep[d] for d in week if d in sleep]
-    week_water = [by_day[d]["water_glasses"] for d in week if d in by_day]
-    week_app = [app_minutes.get(d, 0) for d in week]
-
+    sleep = tracking.sleep_by_day(past)
+    app_minutes = tracking.app_minutes_by_day(tracking.TRACKED_APP, past, tz_name)
     meds = tracking.active_medications()
-    adherence = medication_adherence(meds, tracking.doses_taken(week[0], week[-1]), week)
-    med_pcts = [m["pct"] for m in adherence if m["pct"] is not None]
+    grid = build_grid(days, by_day, meds, tracking.doses_taken(days[0], days[-1]), today)
 
-    period_days = [r["checkin_date"] for r in query("SELECT checkin_date FROM daily_checkins WHERE period_day = 1")]
-    periods = tracking.periods_from_days(period_days)
+    prayer_days = [r["checkin_date"] for r in query(
+        "SELECT checkin_date FROM daily_checkins WHERE morning_prayer = 1 AND night_prayer = 1 AND checkin_date <= %s",
+        (today,),
+    )]
+    period_sleep = [sleep[d] for d in past if d in sleep]
+    period_water = [by_day[d]["water_glasses"] for d in past if d in by_day]
+    period_app = [app_minutes.get(d, 0) for d in past]
+
+    period_rows = query("SELECT checkin_date FROM daily_checkins WHERE period_day = 1")
+    periods = tracking.periods_from_days([r["checkin_date"] for r in period_rows])
     cycle = tracking.cycle_summary(periods, today)
 
-    def log(column):
-        # column comes from the fixed tuple below, never from input.
-        return query(
-            f"SELECT checkin_date, {column} AS text FROM daily_checkins WHERE {column} IS NOT NULL AND {column} <> '' "
-            f"ORDER BY checkin_date DESC LIMIT {LOG_LIMIT}"
-        )
-
-    logs = [
-        ("Bible passages", "book-heart", log("bible_passage")),
-        ("Morning prayers", "sun", log("morning_prayer_note")),
-        ("Evening prayers", "moon-star", log("night_prayer_note")),
-        ("Thoughts on the devotion", "book-heart", log("devotion_thoughts")),
-        ("What I learned", "graduation-cap", log("learnings")),
-        ("Reading", "book-open", log("reading")),
-        ("Thankful for", "heart", log("grateful")),
-    ]
-    app_ideas = query("SELECT id, idea, details FROM app_ideas ORDER BY sort_order, id DESC")
-    food_log = query(
-        "SELECT checkin_date, food_breakfast, food_lunch, food_dinner, food_snacks FROM daily_checkins "
-        "WHERE COALESCE(food_breakfast, food_lunch, food_dinner, food_snacks) IS NOT NULL "
-        "ORDER BY checkin_date DESC LIMIT 14"
-    )
-    mood_reasons = query(
-        "SELECT checkin_date, mood, mood_reason FROM daily_checkins WHERE mood IS NOT NULL "
-        "ORDER BY checkin_date DESC LIMIT 14"
-    )
-
+    short = "%a" if view == "week" else "%d"
     return render_template(
         "me.html",
+        view=view,
+        days=days,
         today=today,
-        moods=MOODS,
+        title=(f"{days[0]:%b} {days[0].day} – {days[-1]:%b} {days[-1].day}" if view == "week" else f"{days[0]:%B %Y}"),
+        prev_anchor=prev_anchor,
+        next_anchor=next_anchor if next_anchor <= today else None,
+        grid=grid,
         streak=checkin_streak(today),
         prayer_streak=current_streak(prayer_days, today),
-        avg_sleep=round(sum(week_sleep) / len(week_sleep)) if week_sleep else None,
-        avg_water=round(sum(week_water) / len(week_water), 1) if week_water else None,
-        avg_app=round(sum(week_app) / len(week_app)) if any(week_app) else None,
-        med_pct=round(sum(med_pcts) / len(med_pcts)) if med_pcts else None,
+        avg_sleep=round(sum(period_sleep) / len(period_sleep)) if period_sleep else None,
+        avg_water=round(sum(period_water) / len(period_water), 1) if period_water else None,
+        avg_app=round(sum(period_app) / len(period_app)) if any(period_app) else None,
         tracked_app=tracking.TRACKED_APP,
         chart={
-            "labels": [d.strftime("%b %d") for d in days],
+            "labels": [d.strftime(short).lstrip("0") for d in days],
             "mood": _series(by_day, days, "mood"),
             "energy": _series(by_day, days, "energy"),
-            "sleep_labels": [d.strftime("%b %d") for d in days[-14:]],
-            "sleep": [round(sleep[d] / 60, 1) if d in sleep else None for d in days[-14:]],
-            "app": [app_minutes.get(d, 0) for d in days[-14:]],
+            "sleep": [round(sleep[d] / 60, 1) if d in sleep else None for d in days],
+            "app": [app_minutes.get(d) if d <= today else None for d in days],
+            "mood_ticks": {str(v): e for v, e, _ in MOODS},
+            "energy_ticks": {str(k): v for k, v in ENERGY_EMOJI.items()},
         },
-        adherence=adherence,
         periods=list(reversed(periods))[:6],
         cycle=cycle,
-        mood_reasons=mood_reasons,
-        logs=logs,
-        app_ideas=app_ideas,
-        food_log=food_log,
         token=tracking.ingest_token(),
         site_base=current_app.config["PUBLIC_SITE_URL"].rstrip("/"),
         status=tracking.tracking_status(),
