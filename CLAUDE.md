@@ -339,3 +339,11 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   `apple-touch-icon.png`) are the mark on a navy tile and are linked from
   base_public only: the admin keeps its own Today PWA icons, and the admin
   login stays unbranded.
+- Today's order (by request): **Morning** = morning prayer + a "My prayer"
+  text box (`morning_prayer_note`); Medicine; Word & learning; Body (sleep/
+  Instagram tracked, **water** = 8 tappable glasses saved as
+  `water_glasses` 0-8: tapping glass N fills 1..N, tapping the last filled
+  one empties it); **Evening** = night prayer, then mood + why, energy,
+  gratitude, win, notes (reflection questions are end-of-day). The evening
+  reminder counts the evening half done once night prayer, win, or mood is
+  set. My dashboard shows average water and a "My prayers" log.

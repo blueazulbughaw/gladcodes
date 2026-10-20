@@ -635,3 +635,17 @@ body.admin-body { display: flex; min-height: 100vh; align-items: stretch; }
 @media (max-width: 860px) {
   .admin-backbar { padding: 1rem 1rem 0; }
 }
+
+/* Water: 8 tappable glasses (tap N fills 1..N; JS in today.html). */
+.checkin-glasses { display: grid; grid-template-columns: repeat(8, minmax(0, 40px)); gap: 0.35rem; }
+.checkin-glass { position: relative; }
+.checkin-glass input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.checkin-glass span {
+  display: flex; align-items: center; justify-content: center; height: 40px; border-radius: 10px;
+  border: 1px solid rgba(var(--navy-rgb), 0.15); color: rgba(var(--navy-rgb), 0.3);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.checkin-glass input:checked + span { background: rgba(63, 136, 197, 0.14); border-color: var(--ocean); color: var(--ocean); }
+.checkin-glass input:focus-visible + span { outline: 2px solid var(--teal); outline-offset: 2px; }
+.checkin-glass svg { width: 18px; height: 18px; }
+@media (prefers-reduced-motion: reduce) { .checkin-glass span { transition: none; } }

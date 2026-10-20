@@ -62,6 +62,7 @@ def personal_dashboard():
 
     prayer_days = [d for d, r in by_day.items() if r["morning_prayer"] and r["night_prayer"]]
     week_sleep = [sleep[d] for d in week if d in sleep]
+    week_water = [by_day[d]["water_glasses"] for d in week if d in by_day]
     week_app = [app_minutes.get(d, 0) for d in week]
 
     meds = tracking.active_medications()
@@ -81,6 +82,7 @@ def personal_dashboard():
 
     logs = [
         ("Bible passages", "book-heart", log("bible_passage")),
+        ("My prayers", "sun", log("morning_prayer_note")),
         ("What I learned", "graduation-cap", log("learnings")),
         ("Reading", "book-open", log("reading")),
         ("Thankful for", "heart", log("grateful")),
@@ -98,6 +100,7 @@ def personal_dashboard():
         streak=checkin_streak(today),
         prayer_streak=current_streak(prayer_days, today),
         avg_sleep=round(sum(week_sleep) / len(week_sleep)) if week_sleep else None,
+        avg_water=round(sum(week_water) / len(week_water), 1) if week_water else None,
         avg_app=round(sum(week_app) / len(week_app)) if any(week_app) else None,
         med_pct=round(sum(med_pcts) / len(med_pcts)) if med_pcts else None,
         tracked_app=tracking.TRACKED_APP,

@@ -1,6 +1,7 @@
 """Private daily check-in (/gc-admin/today): prayers, mood + why, energy,
 gratitude, medicine doses, Bible passage, reading, learnings, body
-(movement, period day), and the evening close. Autosaves: no Save button.
+(water, movement, period day), and the evening reflection (mood, why,
+energy, gratitude, win). Autosaves: no Save button.
 Sleep and Instagram time are shown but never typed; the phone sends them
 (personal.py /track/*). Login lands here until today's entry exists.
 
@@ -98,6 +99,11 @@ def hour_label(hour: int) -> str:
     return f"{hour % 12 or 12}{'am' if hour < 12 else 'pm'}"
 
 
+def _water() -> int:
+    """Glasses of water: how many of the 8 glass checkboxes are ticked."""
+    return len({v for v in request.form.getlist("water") if v in {str(n) for n in range(1, 9)}})
+
+
 def _flag(name):
     return 1 if request.form.get(name) else 0
 
@@ -113,6 +119,7 @@ def checkin_streak(today: date):
 CHECKIN_FIELDS = (
     "mood", "mood_reason", "energy", "morning_prayer", "night_prayer", "exercised",
     "period_day", "reading", "learnings", "bible_passage", "grateful", "win", "notes",
+    "morning_prayer_note", "water_glasses",
 )
 
 
@@ -132,6 +139,8 @@ def _checkin_values():
         _text("grateful"),
         _text("win"),
         _text("notes"),
+        _text("morning_prayer_note"),
+        _water(),
     )
 
 

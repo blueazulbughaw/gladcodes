@@ -8,7 +8,7 @@ from blueprints.admin.csrf import CSRF_COOKIE_NAME
 from services.push import generate_vapid_keypair
 from services.reminders import due_reminder, reminder_text
 
-EVENING_EMPTY = {"win": None, "night_prayer": 0, "bible_passage": None}
+EVENING_EMPTY = {"win": None, "night_prayer": 0, "bible_passage": None, "mood": None}
 EVENING_DONE = dict(EVENING_EMPTY, night_prayer=1)
 
 

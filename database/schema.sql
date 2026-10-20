@@ -667,3 +667,8 @@ INSERT INTO app_ideas (idea, created_at)
 SELECT LEFT(d.app_ideas, 255), d.checkin_date FROM daily_checkins d
 WHERE d.app_ideas IS NOT NULL AND d.app_ideas <> ''
   AND NOT EXISTS (SELECT 1 FROM app_ideas a WHERE a.idea = LEFT(d.app_ideas, 255));
+
+-- Check-in v2.2: a space to write the morning prayer, and water intake
+-- (0-8 glasses). Mood/why/energy/gratitude are now asked in the evening.
+ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS morning_prayer_note TEXT AFTER morning_prayer;
+ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS water_glasses TINYINT NOT NULL DEFAULT 0;

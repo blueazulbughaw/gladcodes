@@ -121,7 +121,7 @@ class PersonalDashboardTests(unittest.TestCase):
                 return [{"checkin_date": TODAY, "text": "Jinja macros"}] if "learnings" in sql else []
             if "mood_reason" in sql and "LIMIT 14" in sql:
                 return [{"checkin_date": TODAY, "mood": 4, "mood_reason": "Good sleep"}]
-            return [{"checkin_date": TODAY, "mood": 4, "energy": 3, "morning_prayer": 1, "night_prayer": 1}]
+            return [{"checkin_date": TODAY, "mood": 4, "energy": 3, "morning_prayer": 1, "night_prayer": 1, "water_glasses": 6}]
 
         mock_query.side_effect = fake_query
         mock_tracking.sleep_by_day.return_value = {TODAY: 420}
@@ -139,7 +139,7 @@ class PersonalDashboardTests(unittest.TestCase):
         body = resp.get_data(as_text=True)
         for text in ("My dashboard", "Good sleep", "Psalm 23", "What I learned", "Jinja macros",
                      "Prayer streak widget", "Android home screen", "/gc-admin/app_ideas/5/edit", "Sep 18 – Sep 19", "Period cycle",
-                     "/gc-admin/track/sleep", "7h 00m"):
+                     "/gc-admin/track/sleep", "7h 00m", "6.0/8", "Glasses of water"):
             self.assertIn(text, body)
         self.assertIn('data-token="secret-token"', body)
         self.assertNotIn(">secret-token<", body)  # masked until "Show"

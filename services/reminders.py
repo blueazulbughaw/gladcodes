@@ -11,7 +11,7 @@ from database.db import transaction
 
 
 def evening_done(entry) -> bool:
-    return bool(entry and (entry["night_prayer"] or entry["win"]))
+    return bool(entry and (entry["night_prayer"] or entry["win"] or entry["mood"]))
 
 
 def due_reminder(hour, morning_hour, evening_hour, entry):
@@ -24,10 +24,10 @@ def due_reminder(hour, morning_hour, evening_hour, entry):
 
 def reminder_text(kind, entry):
     if kind == "morning":
-        return "Good morning ☀️", "Morning prayer, then check in before Instagram: how you feel, your medicine, what you're thankful for."
+        return "Good morning ☀️", "Start with your morning prayer, then your medicine and a glass of water, before Instagram."
     if entry and entry["bible_passage"]:
-        return "Night prayer time 🌙", "Close the day: night prayer and your win of the day."
-    return "Night prayer time 🌙", "Close the day: night prayer, today's Bible passage, and your win."
+        return "Night prayer time 🌙", "Close the day: how you felt and why, what you're thankful for, and your win."
+    return "Night prayer time 🌙", "Close the day: how you felt, what you're thankful for, and today's Bible passage."
 
 
 def claim_reminder(marker: str) -> bool:
