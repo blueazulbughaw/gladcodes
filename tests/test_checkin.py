@@ -110,14 +110,16 @@ class TodayPageTests(unittest.TestCase):
         for label in ("What did you read?", "Book, article, docs: anything counts", "Learnings", "Wins", "Notes"):
             self.assertIn(label, learnings)
         self.assertNotIn("Daily summary", body)
-        # Devotion comes right after the morning prayer, before Medicine.
-        self.assertLess(body.index("> Morning</h2>"), body.index("> Devotion</h2>"))
-        self.assertLess(body.index("> Devotion</h2>"), body.index("> Medicine</h2>"))
+        # Pairs (Morning|Devotion, Medicine|Body, Learnings|My emotions), prayers last.
+        order = ["> Morning</h2>", "> Devotion</h2>", "> Medicine</h2>", "> Body</h2>",
+                 "> Learnings</h2>", "> My emotions</h2>", "> Evening</h2>"]
+        positions = [body.index(h) for h in order]
+        self.assertEqual(positions, sorted(positions))
+        self.assertIn('class="card checkin-card checkin-card--wide">', body.split("> My emotions</h2>")[1])
         self.assertNotIn("Word &amp; learning", body)
         self.assertIn("My prayer", morning)
         self.assertIn("Night prayer", evening)
         self.assertIn("Thank you for this day.", evening)  # evening prayer box
-        self.assertLess(body.index("> Evening</h2>"), body.index("My emotions</h2>"))
         self.assertNotIn("Wins", summary)
         self.assertNotIn("Notes", summary)
         for question in ("How are you feeling?", "Why do you feel that way?", "Energy", "What are you thankful for today?"):

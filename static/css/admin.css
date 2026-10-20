@@ -442,7 +442,12 @@ body.admin-body { display: flex; min-height: 100vh; align-items: stretch; }
 }
 .checkin-saved svg { width: 18px; height: 18px; }
 
-.checkin-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; align-items: start; }
+.checkin-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.5rem; align-items: stretch; }
+/* Pairs side by side from tablet width up; --wide cards span the row. */
+@media (min-width: 900px) {
+  .checkin-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .checkin-card--wide, .checkin-form > noscript { grid-column: 1 / -1; }
+}
 .checkin-card { display: flex; flex-direction: column; gap: 1.1rem; }
 .checkin-card h2 { display: flex; align-items: center; gap: 0.5rem; font-size: 1.15rem; margin: 0; }
 .checkin-card h2 small, .checkin-scale legend small { font-family: var(--font-body); font-size: 0.8rem; font-weight: 400; color: rgba(var(--navy-rgb), 0.55); }

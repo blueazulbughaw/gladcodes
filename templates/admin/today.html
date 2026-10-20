@@ -54,6 +54,8 @@
     <input type="hidden" name="checkin_date" value="{{ day.isoformat() }}">
     <input type="hidden" name="tz" id="checkinTz" value="">
 
+    {# Desktop: cards sit in pairs (Morning|Devotion, Medicine|Body,
+       Learnings|My emotions), prayers last at full width. Phones: one column. #}
     <section class="card checkin-card">
       <h2><i data-lucide="sunrise"></i> Morning</h2>
       {{ check('morning_prayer', 'Morning prayer', 'sun') }}
@@ -92,15 +94,6 @@
     </section>
 
     <section class="card checkin-card">
-      <h2><i data-lucide="graduation-cap"></i> Learnings</h2>
-      {{ textbox('reading', 'What did you read?', hint='Book, article, docs: anything counts') }}
-      {{ textbox('learnings', 'Learnings', rows=3) }}
-      {{ textbox('win', 'Wins') }}
-      {{ textbox('notes', 'Notes') }}
-      <a class="admin-meta" href="{{ url_for('admin.simple_create', resource='app_ideas') }}"><i data-lucide="lightbulb"></i> Got an app idea? Add it to your list →</a>
-    </section>
-
-    <section class="card checkin-card">
       <h2><i data-lucide="heart-pulse"></i> Body</h2>
       <div class="checkin-tracked">
         <div class="checkin-tracked-item">
@@ -135,9 +128,12 @@
     </section>
 
     <section class="card checkin-card">
-      <h2><i data-lucide="moon"></i> Evening</h2>
-      {{ check('night_prayer', 'Night prayer', 'moon-star') }}
-      {{ textbox('night_prayer_note', 'My prayer', rows=4, placeholder='Write your prayer for tonight…') }}
+      <h2><i data-lucide="graduation-cap"></i> Learnings</h2>
+      {{ textbox('reading', 'What did you read?', hint='Book, article, docs: anything counts') }}
+      {{ textbox('learnings', 'Learnings', rows=3) }}
+      {{ textbox('win', 'Wins') }}
+      {{ textbox('notes', 'Notes') }}
+      <a class="admin-meta" href="{{ url_for('admin.simple_create', resource='app_ideas') }}"><i data-lucide="lightbulb"></i> Got an app idea? Add it to your list →</a>
     </section>
 
     <section class="card checkin-card">
@@ -165,6 +161,12 @@
       </fieldset>
 
       {{ textbox('grateful', 'What are you thankful for today?', rows=3, placeholder='1.\n2.\n3.') }}
+    </section>
+
+    <section class="card checkin-card checkin-card--wide">
+      <h2><i data-lucide="moon"></i> Evening</h2>
+      {{ check('night_prayer', 'Night prayer', 'moon-star') }}
+      {{ textbox('night_prayer_note', 'My prayer', rows=4, placeholder='Write your prayer for tonight…') }}
     </section>
 
     <noscript><button type="submit" class="btn btn-primary">Save</button></noscript>
