@@ -691,3 +691,44 @@ ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS food_snacks TEXT;
 -- Sleep from a phone's bedtime/Sleep mode: "start" stores the time here,
 -- "end" turns it into minutes for the morning you woke up (sleep_logs).
 ALTER TABLE checkin_app_state ADD COLUMN IF NOT EXISTS sleep_started_at DATETIME;
+
+-- Personal money tracker (/gc-admin/money). Private: never read publicly.
+-- One transaction table for everything; kind says what it is. Expenses
+-- paid by credit card are paid_with='card' (spending now); paying the card
+-- bill later is kind='card' (cash flow), so nothing is double-counted.
+CREATE TABLE IF NOT EXISTS money_entries (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    kind ENUM('income', 'tithe', 'bill', 'card', 'expense') NOT NULL,
+    entry_date DATE NOT NULL,
+    amount DECIMAL(12, 2) NOT NULL,
+    category VARCHAR(50),
+    name VARCHAR(255),
+    note TEXT,
+    paid_with ENUM('cash', 'card'),
+    bill_id INT,
+    created_at DATETIME NOT NULL,
+    KEY idx_money_date (entry_date),
+    KEY idx_money_bill (bill_id, entry_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Monthly recurring bills (phone, car insurance, ...): ticked paid each month.
+CREATE TABLE IF NOT EXISTS recurring_bills (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    category VARCHAR(50) NOT NULL DEFAULT 'other_bill',
+    amount DECIMAL(12, 2) NOT NULL DEFAULT 0,
+    due_day TINYINT NOT NULL DEFAULT 1,
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
+    sort_order INT NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Credit cards whose bills get paid each month (kept apart from recurring bills).
+CREATE TABLE IF NOT EXISTS credit_cards (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    due_day TINYINT NOT NULL DEFAULT 1,
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
+    sort_order INT NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+ALTER TABLE checkin_app_state ADD COLUMN IF NOT EXISTS money_currency VARCHAR(8);

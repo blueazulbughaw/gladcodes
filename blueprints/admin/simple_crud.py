@@ -244,6 +244,46 @@ RESOURCES = {
             "frequency": ["daily", "every_other_day", "weekly", "as_needed"],
         },
     },
+    # Money (private): monthly recurring bills ticked paid on /gc-admin/money.
+    "recurring_bills": {
+        "table": "recurring_bills",
+        "title": "Monthly bills",
+        "add_button_label": "Add bill",
+        "order_by": "due_day, sort_order",
+        "list_view": "cards",
+        "add_via_page": True,
+        "card_title_field": "name",
+        "default_checked": ["is_active"],
+        "fields": [
+            ("name", "text", "Bill (e.g. Globe postpaid, car insurance)"),
+            ("category", "select", "Category"),
+            ("amount", "text", "Usual amount"),
+            ("due_day", "select", "Due day of the month"),
+            ("is_active", "checkbox", "Still paying this"),
+        ],
+        "select_options": {
+            "category": ["phone", "car_insurance", "rent", "utilities", "internet", "subscriptions", "insurance", "loan", "other_bill"],
+            "due_day": [str(n) for n in range(1, 32)],
+        },
+    },
+    # Money (private): credit cards whose bills are paid on /gc-admin/money.
+    "credit_cards": {
+        "table": "credit_cards",
+        "title": "Credit cards",
+        "add_button_label": "Add card",
+        "order_by": "sort_order, id",
+        "list_view": "cards",
+        "add_via_page": True,
+        "card_title_field": "name",
+        "reorderable": True,
+        "default_checked": ["is_active"],
+        "fields": [
+            ("name", "text", "Card (e.g. BPI Visa)"),
+            ("due_day", "select", "Payment due day"),
+            ("is_active", "checkbox", "Still using this card"),
+        ],
+        "select_options": {"due_day": [str(n) for n in range(1, 32)]},
+    },
     # Personal idea bank (private), listed on /gc-admin/me.
     "app_ideas": {
         "table": "app_ideas",
@@ -313,6 +353,9 @@ def _parse_field(config, field_name, field_type):
     if field_type == "select":
         options = config.get("select_options", {}).get(field_name, [])
         return raw if raw in options else (options[0] if options else raw)
+    if config.get("table") == "recurring_bills" and field_name == "amount":
+        from services.money import parse_amount
+        return parse_amount(raw) or 0
     if field_type == "url":
         return raw.strip() or None
     if field_type == "icon":

@@ -97,5 +97,36 @@
     });
   }
 
-  window.GladCharts = { lineChart: lineChart, barChart: barChart, multiLineChart: multiLineChart };
+  var spread = ["#0E8A8A", "#3F88C5", "#E7A93C", "#5EC4C4", "#1A2E44", "#3BA55D", "#C0638E", "#8C6BC2", "#D9774B", "#7A8B99", "#B5A642", "#4FA3A3", "#9A6A12"];
+
+  // Spending by category. `currency` prefixes tooltip amounts.
+  function doughnutChart(canvasId, labels, data, currency) {
+    var el = document.getElementById(canvasId);
+    if (!el) return null;
+    return new Chart(el, {
+      type: "doughnut",
+      data: { labels: labels, datasets: [{ data: data, backgroundColor: spread, borderWidth: 2, borderColor: "#fff" }] },
+      options: {
+        responsive: true, cutout: "62%",
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: function (ctx) { return " " + ctx.label + ": " + (currency || "") + ctx.parsed.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); } } }
+        }
+      }
+    });
+  }
+
+  // Side-by-side bars per label (e.g. earned vs spent per month).
+  function groupedBarChart(canvasId, labels, series) {
+    var el = document.getElementById(canvasId);
+    if (!el) return null;
+    var colors = [palette.teal, "#E7A93C", palette.ocean];
+    return new Chart(el, {
+      type: "bar",
+      data: { labels: labels, datasets: series.map(function (s, i) { return { label: s.label, data: s.data, backgroundColor: colors[i % colors.length], borderRadius: 6 }; }) },
+      options: { responsive: true, plugins: { legend: { display: true, position: "bottom" } }, scales: { y: { beginAtZero: true } } }
+    });
+  }
+
+  window.GladCharts = { lineChart: lineChart, barChart: barChart, multiLineChart: multiLineChart, doughnutChart: doughnutChart, groupedBarChart: groupedBarChart };
 })();

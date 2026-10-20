@@ -1,0 +1,117 @@
+{% extends "admin/_shell.html" %}
+
+{% block title %}Money dashboard{% endblock %}
+
+{% block content %}
+<div class="container checkin money personal">
+  <div class="admin-page-header">
+    <div>
+      <h1>Money dashboard</h1>
+      <span class="admin-meta">Private: just you.</span>
+    </div>
+    <a class="btn btn-primary" href="{{ url_for('admin.money_index', m=first.strftime('%Y-%m')) }}"><i data-lucide="plus"></i> Add money</a>
+  </div>
+
+  <nav class="checkin-daynav" aria-label="Choose a month">
+    <a class="checkin-daynav-step" href="{{ url_for('admin.money_dashboard', m=prev_month.strftime('%Y-%m')) }}" aria-label="Previous month"><i data-lucide="chevron-left"></i><span>{{ prev_month.strftime('%b') }}</span></a>
+    <strong class="money-month">{{ first.strftime('%B %Y') }}</strong>
+    {% if next_month %}
+    <a class="checkin-daynav-step" href="{{ url_for('admin.money_dashboard', m=next_month.strftime('%Y-%m')) }}" aria-label="Next month"><span>{{ next_month.strftime('%b') }}</span><i data-lucide="chevron-right"></i></a>
+    {% else %}
+    <span class="checkin-daynav-step is-disabled" aria-hidden="true"><i data-lucide="chevron-right"></i></span>
+    {% endif %}
+  </nav>
+
+  {# Cash flow: money in vs. money that actually left (card purchases are
+     counted when the card bill is paid, not twice). #}
+  <div class="overview-cards personal-tiles money-tiles">
+    <div class="overview-card"><span class="overview-value">💵 {{ totals.income|money(currency) }}</span><span class="overview-label">Earned</span></div>
+    <div class="overview-card"><span class="overview-value">🙏 {{ totals.tithe|money(currency) }}</span><span class="overview-label">Tithed{% if totals.tithe_target %} · {{ ((totals.tithe / totals.income * 100)|round|int) if totals.income else 0 }}%{% endif %}</span></div>
+    <div class="overview-card"><span class="overview-value">🛒 {{ totals.spending|money(currency) }}</span><span class="overview-label">Spent (bills + daily)</span></div>
+    <div class="overview-card"><span class="overview-value">💳 {{ totals.card_payments|money(currency) }}</span><span class="overview-label">Card payments</span></div>
+    <div class="overview-card {{ 'is-negative' if totals.left < 0 }}"><span class="overview-value">💰 {{ totals.left|money(currency) }}</span><span class="overview-label">Left{% if totals.savings_rate is not none %} · {{ totals.savings_rate }}% saved{% endif %}</span></div>
+    <div class="overview-card"><span class="overview-value">📅 {{ avg_daily|money(currency) }}</span><span class="overview-label">Avg daily spending</span></div>
+  </div>
+
+  <div class="money-dash-grid">
+    <section class="card chart-card">
+      <h3>Where it went</h3>
+      {% if category_rows %}
+      <div class="money-donut"><canvas id="categoryChart" height="220"></canvas></div>
+      <ul class="money-cats">
+        {% for r in category_rows %}
+        <li>
+          <span class="money-list-emoji">{{ r.emoji }}</span>
+          <span class="money-cat-name">{{ r.label }}<span class="money-cat-bar"><span style="width: {{ r.share }}%"></span></span></span>
+          <span class="money-cat-share">{{ r.share }}%</span>
+          <strong>{{ r.total|money(currency) }}</strong>
+          <span class="money-change {{ 'is-up' if r.change > 0 else 'is-down' if r.change < 0 else '' }}" title="vs last month">{% if r.change > 0 %}▲{% elif r.change < 0 %}▼{% else %}·{% endif %}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}<p class="admin-meta">No spending logged this month yet.</p>{% endif %}
+    </section>
+
+    <section class="card chart-card">
+      <h3>Spending by day</h3>
+      <canvas id="dailyChart" height="220"></canvas>
+      <div class="money-split">
+        <span><i data-lucide="wallet"></i> Cash / debit {{ cash_spend|money(currency) }}</span>
+        <span><i data-lucide="credit-card"></i> On credit card {{ totals.card_purchases|money(currency) }}</span>
+      </div>
+    </section>
+
+    <section class="card chart-card">
+      <h3>Earned vs spent, 6 months</h3>
+      <canvas id="trendChart" height="220"></canvas>
+    </section>
+
+    <section class="card">
+      <h3 class="money-h3">🧾 Bills this month</h3>
+      {% if bills %}
+      <ul class="money-bills money-bills--compact">
+        {% for bill in bills %}
+        <li class="{{ 'is-paid' if bill.payment }}{{ ' is-late' if not bill.payment and bill.due < today }}">
+          <span class="money-bill-dot">{% if bill.payment %}✓{% endif %}</span>
+          <span class="money-list-emoji">{{ category.get(bill.category, ('🧾', ''))[0] }}</span>
+          <span class="money-list-what">{{ bill.name }}<small>{% if bill.payment %}Paid{% elif bill.due < today %}Overdue · {{ bill.due.strftime('%b') }} {{ bill.due.day }}{% else %}Due {{ bill.due.strftime('%b') }} {{ bill.due.day }}{% endif %}</small></span>
+          <strong class="money-list-amount">{{ (bill.payment.amount if bill.payment else bill.amount)|money(currency) }}</strong>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}<p class="admin-meta"><a href="{{ url_for('admin.simple_list', resource='recurring_bills') }}">Add your monthly bills</a> to see them here.</p>{% endif %}
+
+      <h3 class="money-h3">💸 Biggest expenses</h3>
+      {% if biggest %}
+      <ul class="money-list">
+        {% for e in biggest %}
+        <li>
+          <span class="money-list-date">{{ e.entry_date.strftime('%b') }} {{ e.entry_date.day }}</span>
+          <span class="money-list-emoji">{{ category.get(e.category, ('📦', ''))[0] }}</span>
+          <span class="money-list-what">{{ e.note or category.get(e.category, ('', ''))[1] }}</span>
+          <strong class="money-list-amount">{{ e.amount|money(currency) }}</strong>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}<p class="admin-meta">Nothing yet.</p>{% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}" defer></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    if (!window.GladCharts) return;
+    var money = {{ currency|tojson }};
+    GladCharts.doughnutChart("categoryChart", {{ chart.cat_labels|tojson }}, {{ chart.cat_data|tojson }}, money);
+    GladCharts.barChart("dailyChart", {{ chart.day_labels|tojson }}, {{ chart.day_data|tojson }}, "Spent");
+    GladCharts.groupedBarChart("trendChart", {{ chart.trend_labels|tojson }}, [
+      { label: "Earned", data: {{ chart.trend_income|tojson }} },
+      { label: "Spent", data: {{ chart.trend_spending|tojson }} }
+    ]);
+  });
+</script>
+{% endblock %}

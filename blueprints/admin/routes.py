@@ -59,6 +59,7 @@ def inject_csrf():
 # lists sit under Today rather than the site dashboard.
 NO_BACK_ENDPOINTS = {"admin.today", "admin.index", "admin.login"}
 PERSONAL_RESOURCES = {"medications", "app_ideas"}
+MONEY_RESOURCES = {"recurring_bills", "credit_cards"}
 
 
 def back_url():
@@ -72,7 +73,9 @@ def back_url():
     resource = (request.view_args or {}).get("resource")
     if resource and endpoint != "admin.simple_list":
         return url_for("admin.simple_list", resource=resource)
-    if resource in PERSONAL_RESOURCES or endpoint == "admin.personal_dashboard":
+    if resource in MONEY_RESOURCES:
+        return url_for("admin.money_index")
+    if resource in PERSONAL_RESOURCES or endpoint in ("admin.personal_dashboard", "admin.money_index"):
         return url_for("admin.today")
     name = endpoint.split(".", 1)[-1]
     index = f"admin.{name.rsplit('_', 1)[0]}_index"  # journal_edit -> journal_index
