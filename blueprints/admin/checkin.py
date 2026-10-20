@@ -1,7 +1,7 @@
 """Private daily check-in (/gc-admin/today): prayers, mood + why, energy,
 gratitude, medicine doses, Bible passage, reading, learnings, body
-(water, movement, period day), and the evening reflection (mood, why,
-energy, gratitude, win). Autosaves: no Save button.
+(water, movement, period day), the evening prayer, and the daily summary
+(mood, why, energy, gratitude, win). Autosaves: no Save button.
 Sleep and Instagram time are shown but never typed; the phone sends them
 (personal.py /track/*). Login lands here until today's entry exists.
 
@@ -119,7 +119,7 @@ def checkin_streak(today: date):
 CHECKIN_FIELDS = (
     "mood", "mood_reason", "energy", "morning_prayer", "night_prayer", "exercised",
     "period_day", "reading", "learnings", "bible_passage", "grateful", "win", "notes",
-    "morning_prayer_note", "water_glasses",
+    "morning_prayer_note", "water_glasses", "night_prayer_note",
 )
 
 
@@ -141,6 +141,7 @@ def _checkin_values():
         _text("notes"),
         _text("morning_prayer_note"),
         _water(),
+        _text("night_prayer_note"),
     )
 
 

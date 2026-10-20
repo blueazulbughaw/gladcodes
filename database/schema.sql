@@ -672,3 +672,7 @@ WHERE d.app_ideas IS NOT NULL AND d.app_ideas <> ''
 -- (0-8 glasses). Mood/why/energy/gratitude are now asked in the evening.
 ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS morning_prayer_note TEXT AFTER morning_prayer;
 ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS water_glasses TINYINT NOT NULL DEFAULT 0;
+
+-- Check-in v2.3: a space to write the evening prayer too (mirrors the
+-- morning). Mood/why/energy/gratitude/win now live in a "Daily summary" card.
+ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS night_prayer_note TEXT AFTER night_prayer;

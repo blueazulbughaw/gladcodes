@@ -130,6 +130,11 @@
     <section class="card checkin-card">
       <h2><i data-lucide="moon"></i> Evening</h2>
       {{ check('night_prayer', 'Night prayer', 'moon-star') }}
+      {{ textbox('night_prayer_note', 'My prayer', rows=4, placeholder='Write your prayer for tonight…') }}
+    </section>
+
+    <section class="card checkin-card">
+      <h2><i data-lucide="notebook-pen"></i> Daily summary</h2>
       <fieldset class="checkin-scale">
         <legend>How are you feeling?</legend>
         <div class="checkin-options">
