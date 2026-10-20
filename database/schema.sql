@@ -687,3 +687,7 @@ ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS food_breakfast TEXT;
 ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS food_lunch TEXT;
 ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS food_dinner TEXT;
 ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS food_snacks TEXT;
+
+-- Sleep from a phone's bedtime/Sleep mode: "start" stores the time here,
+-- "end" turns it into minutes for the morning you woke up (sleep_logs).
+ALTER TABLE checkin_app_state ADD COLUMN IF NOT EXISTS sleep_started_at DATETIME;

@@ -122,6 +122,37 @@ def record_sleep(day, minutes: int) -> None:
     )
 
 
+MIN_SLEEP = timedelta(hours=1)    # shorter = a nap or a mode flick, ignored
+MAX_SLEEP = timedelta(hours=16)   # longer = a missed "end", ignored
+
+
+def sleep_minutes_between(started, ended):
+    """Minutes asleep between a Sleep-mode start and end, or None if the gap
+    doesn't look like a night's sleep."""
+    if not started or ended <= started:
+        return None
+    gap = ended - started
+    if not MIN_SLEEP <= gap <= MAX_SLEEP:
+        return None
+    return round(gap.total_seconds() / 60)
+
+
+def record_sleep_event(event: str, wake_day) -> int:
+    """'start' (Sleep mode on) remembers the time; 'end' (Sleep mode off)
+    saves the minutes in between for `wake_day`. Returns minutes saved
+    (0 when nothing was saved)."""
+    now = utc_now()
+    if event == "start":
+        execute("UPDATE checkin_app_state SET sleep_started_at = %s WHERE id = 1", (now,))
+        return 0
+    row = query_one("SELECT sleep_started_at FROM checkin_app_state WHERE id = 1")
+    minutes = sleep_minutes_between(row["sleep_started_at"] if row else None, now)
+    execute("UPDATE checkin_app_state SET sleep_started_at = NULL WHERE id = 1")
+    if minutes:
+        record_sleep(wake_day, minutes)
+    return minutes or 0
+
+
 def record_app_event(app: str, event: str) -> None:
     now = utc_now()
     if event == "opened":

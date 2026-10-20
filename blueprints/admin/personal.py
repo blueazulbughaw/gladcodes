@@ -183,10 +183,16 @@ def _payload():
 
 @admin_bp.route("/track/sleep", methods=["POST"])
 def track_sleep():
-    """{"hours": 7.25} or {"minutes": 435}, optional "date" (YYYY-MM-DD,
-    defaults to today = the morning you woke up)."""
+    """Either {"event": "start" | "end"} from a phone automation on Sleep /
+    bedtime mode turning on and off (the server works out the hours), or a
+    finished night: {"hours": 7.25} / {"minutes": 435}, optional "date"
+    (YYYY-MM-DD, defaults to today = the morning you woke up)."""
     _require_token()
     data = _payload()
+    event = (data.get("event") or "").strip().lower()
+    if event in ("start", "end"):
+        minutes = tracking.record_sleep_event(event, local_today())
+        return jsonify({"ok": True, "minutes": minutes})
     try:
         if data.get("minutes") not in (None, ""):
             minutes = round(float(data["minutes"]))

@@ -370,3 +370,9 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   ticks (`charts.js` `tickLabels`); sleep/Instagram bar charts; period
   cycle as chips. Written content lives on each day's check-in: day headers
   link to `/gc-admin/today?date=…`. Phones show emoji-only row labels.
+- Phone tracking on Glad's Samsung uses MacroDroid: Instagram open/close ->
+  `/track/app` {"event": "opened"|"closed"}; Sleep mode / Do Not
+  Disturb on/off -> `/track/sleep` {"event": "start"|"end"}. The server
+  turns start/end into minutes (`tracking.record_sleep_event`, stored start
+  in `checkin_app_state.sleep_started_at`; gaps under 1h or over 16h are
+  ignored) for the morning you woke up. `{"hours"|"minutes"}` still works.

@@ -64,6 +64,18 @@ class AppMinutesTests(unittest.TestCase):
         self.assertEqual(end, datetime(2026, 10, 16, 16))
 
 
+class SleepModeTests(unittest.TestCase):
+    def test_minutes_between_start_and_end(self):
+        start = datetime(2026, 10, 18, 15, 0)  # UTC
+        self.assertEqual(tracking.sleep_minutes_between(start, start + timedelta(hours=7, minutes=20)), 440)
+
+    def test_naps_and_missed_ends_are_ignored(self):
+        start = datetime(2026, 10, 18, 15, 0)
+        self.assertIsNone(tracking.sleep_minutes_between(start, start + timedelta(minutes=40)))
+        self.assertIsNone(tracking.sleep_minutes_between(start, start + timedelta(hours=20)))
+        self.assertIsNone(tracking.sleep_minutes_between(None, start))
+
+
 class PhoneTrackingEndpointTests(unittest.TestCase):
     def setUp(self):
         self.app = create_app()
@@ -84,6 +96,15 @@ class PhoneTrackingEndpointTests(unittest.TestCase):
         mock_record.assert_called_once_with(TODAY, 435)
         bad = self.client.post("/gc-admin/track/sleep", json={"hours": 30}, headers={"Authorization": "Bearer t"})
         self.assertEqual(bad.status_code, 400)
+
+    @patch("blueprints.admin.personal.local_today", return_value=TODAY)
+    @patch("blueprints.admin.personal.tracking.record_sleep_event", return_value=440)
+    @patch("blueprints.admin.personal.tracking.token_matches", return_value=True)
+    def test_sleep_mode_start_and_end_events(self, _, mock_event, __):
+        self.client.post("/gc-admin/track/sleep", json={"event": "start"}, headers={"Authorization": "Bearer t"})
+        resp = self.client.post("/gc-admin/track/sleep", json={"event": "END"}, headers={"Authorization": "Bearer t"})
+        self.assertEqual(resp.get_json(), {"ok": True, "minutes": 440})
+        self.assertEqual([c.args for c in mock_event.call_args_list], [("start", TODAY), ("end", TODAY)])
 
     @patch("blueprints.admin.personal.tracking.record_app_event")
     @patch("blueprints.admin.personal.tracking.token_matches", return_value=True)
