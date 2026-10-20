@@ -90,6 +90,11 @@ def personal_dashboard():
         ("Thankful for", "heart", log("grateful")),
     ]
     app_ideas = query("SELECT id, idea, details FROM app_ideas ORDER BY sort_order, id DESC")
+    food_log = query(
+        "SELECT checkin_date, food_breakfast, food_lunch, food_dinner, food_snacks FROM daily_checkins "
+        "WHERE COALESCE(food_breakfast, food_lunch, food_dinner, food_snacks) IS NOT NULL "
+        "ORDER BY checkin_date DESC LIMIT 14"
+    )
     mood_reasons = query(
         "SELECT checkin_date, mood, mood_reason FROM daily_checkins WHERE mood IS NOT NULL "
         "ORDER BY checkin_date DESC LIMIT 14"
@@ -120,6 +125,7 @@ def personal_dashboard():
         mood_reasons=mood_reasons,
         logs=logs,
         app_ideas=app_ideas,
+        food_log=food_log,
         token=tracking.ingest_token(),
         site_base=current_app.config["PUBLIC_SITE_URL"].rstrip("/"),
         status=tracking.tracking_status(),

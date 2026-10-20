@@ -679,3 +679,13 @@ a.personal-date { color: var(--teal); text-decoration: none; }
 a.personal-date:hover { text-decoration: underline; }
 .visually-hidden { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 @media (max-width: 420px) { .checkin-daynav-step span { display: none; } }
+
+/* Food log: the four meals in a 2x2 grid inside the full-width card. */
+.checkin-food { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+@media (min-width: 700px) { .checkin-food { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.personal-food { max-height: 360px; overflow-y: auto; }
+.personal-food li { align-items: flex-start; }
+.personal-food dl { margin: 0; display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+.personal-food dl div { display: flex; gap: 0.4rem; }
+.personal-food dt { flex-shrink: 0; min-width: 4.6rem; font-weight: 600; color: rgba(var(--navy-rgb), 0.55); font-size: 0.8rem; }
+.personal-food dd { margin: 0; white-space: pre-line; }

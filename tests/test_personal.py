@@ -111,6 +111,8 @@ class PersonalDashboardTests(unittest.TestCase):
     @patch("blueprints.admin.personal.query")
     def test_dashboard_renders(self, mock_query, mock_tracking, *_):
         def fake_query(sql, *args):
+            if "food_breakfast, food_lunch" in sql:
+                return [{"checkin_date": TODAY, "food_breakfast": "Oatmeal", "food_lunch": None, "food_dinner": "Sinigang", "food_snacks": None}]
             if "FROM app_ideas" in sql:
                 return [{"id": 5, "idea": "Prayer streak widget", "details": "Android home screen"}]
             if "period_day = 1" in sql:
@@ -139,7 +141,7 @@ class PersonalDashboardTests(unittest.TestCase):
         body = resp.get_data(as_text=True)
         for text in ("My dashboard", "Good sleep", "Psalm 23", "What I learned", "Jinja macros",
                      "Prayer streak widget", "Android home screen", "/gc-admin/app_ideas/5/edit", "Sep 18 – Sep 19", "Period cycle",
-                     "/gc-admin/track/sleep", "7h 00m", "6.0/8", "Glasses of water"):
+                     "/gc-admin/track/sleep", "7h 00m", "6.0/8", "Glasses of water", "Food log", "Oatmeal", "Sinigang"):
             self.assertIn(text, body)
         self.assertIn('data-token="secret-token"', body)
         self.assertNotIn(">secret-token<", body)  # masked until "Show"

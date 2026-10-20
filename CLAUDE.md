@@ -344,13 +344,14 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   `morning_prayer_note`) | **Devotion** (Bible passage + `devotion_thoughts`);
   **Medicine** | **Body** (sleep/Instagram tracked, **water** = 8 tappable
   glasses saved as `water_glasses` 0-8: tapping glass N fills 1..N, tapping
-  the last filled one empties it, plus moved/period); **Learnings** (what
+  the last filled one empties it, plus moved/period); **Food** full width
+  (`food_breakfast/lunch/dinner/snacks`, 2x2 inside); **Learnings** (what
   did you read `reading`, learnings, wins `win`, notes) | **My emotions**
   (mood + why, energy, gratitude); then **Evening** prayers last at full
   width (`checkin-card--wide`: night prayer + `night_prayer_note`). The
   evening reminder counts the evening half done once night prayer, win, or
-  mood is set. My dashboard shows average water plus morning/evening prayer
-  and devotion-thoughts logs.
+  mood is set. My dashboard shows average water, a 14-day food log, plus
+  morning/evening prayer and devotion-thoughts logs.
 - Any past day is editable: Today has prev/next arrows and a date picker
   (`?date=YYYY-MM-DD`, clamped to today; no future days) plus an amber
   "You're editing <day>" banner. Autosave, medicine doses and tracked

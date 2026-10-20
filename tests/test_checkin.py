@@ -74,6 +74,7 @@ class TodayPageTests(unittest.TestCase):
             "grateful": "Coffee", "learnings": "Flask url_defaults", "win": None, "notes": None,
             "morning_prayer_note": "Lord, guide my work today.", "water_glasses": 3,
             "night_prayer_note": "Thank you for this day.", "devotion_thoughts": "Rest in Him.",
+            "food_breakfast": "Oatmeal", "food_lunch": "Adobo", "food_dinner": None, "food_snacks": "Mango",
         }
         mock_tracking.active_medications.return_value = [
             {"id": 7, "name": "Vitamin D", "notes": "with food", "frequency": "daily", "doses_per_day": 3, "start_date": None},
@@ -110,6 +111,12 @@ class TodayPageTests(unittest.TestCase):
         for label in ("What did you read?", "Book, article, docs: anything counts", "Learnings", "Wins", "Notes"):
             self.assertIn(label, learnings)
         self.assertNotIn("Daily summary", body)
+        food = body.split("> Food</h2>")[1].split("</section>")[0]
+        for label, value in (("Breakfast", "Oatmeal"), ("Lunch", "Adobo"), ("Dinner", ""), ("Snacks", "Mango")):
+            self.assertIn(label, food)
+            self.assertIn(value, food)
+        self.assertLess(body.index("> Body</h2>"), body.index("> Food</h2>"))
+        self.assertLess(body.index("> Food</h2>"), body.index("> Learnings</h2>"))
         # Pairs (Morning|Devotion, Medicine|Body, Learnings|My emotions), prayers last.
         order = ["> Morning</h2>", "> Devotion</h2>", "> Medicine</h2>", "> Body</h2>",
                  "> Learnings</h2>", "> My emotions</h2>", "> Evening</h2>"]
@@ -142,6 +149,7 @@ class TodayPageTests(unittest.TestCase):
             "mood_reason": "  Good sleep  ", "bible_passage": "John 15", "learnings": "Jinja macros",
             "morning_prayer_note": "Thank you for today", "water": ["1", "2", "3", "3", "9"],
             "night_prayer_note": "Goodnight prayer", "devotion_thoughts": "Trust",
+            "food_breakfast": " Eggs ", "food_snacks": "Nuts",
         })
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.get_json(), {"ok": True})
@@ -160,7 +168,10 @@ class TodayPageTests(unittest.TestCase):
         self.assertEqual(fields["morning_prayer_note"], "Thank you for today")
         self.assertEqual(fields["water_glasses"], 3)
         self.assertEqual(fields["night_prayer_note"], "Goodnight prayer")
-        self.assertEqual(fields["devotion_thoughts"], "Trust")  # duplicates and out-of-range values ignored
+        self.assertEqual(fields["devotion_thoughts"], "Trust")
+        self.assertEqual(fields["food_breakfast"], "Eggs")
+        self.assertIsNone(fields["food_lunch"])
+        self.assertEqual(fields["food_snacks"], "Nuts")  # duplicates and out-of-range values ignored
 
     @patch("blueprints.admin.checkin.saved_timezone", return_value=None)
     @patch("blueprints.admin.checkin.tracking.set_dose")

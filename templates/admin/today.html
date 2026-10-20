@@ -54,8 +54,9 @@
     <input type="hidden" name="checkin_date" value="{{ day.isoformat() }}">
     <input type="hidden" name="tz" id="checkinTz" value="">
 
-    {# Desktop: cards sit in pairs (Morning|Devotion, Medicine|Body,
-       Learnings|My emotions), prayers last at full width. Phones: one column. #}
+    {# Desktop: cards sit in pairs (Morning|Devotion, Medicine|Body), the
+       food log full width, then Learnings|My emotions, and prayers last at
+       full width. Phones: one column in the same order. #}
     <section class="card checkin-card">
       <h2><i data-lucide="sunrise"></i> Morning</h2>
       {{ check('morning_prayer', 'Morning prayer', 'sun') }}
@@ -124,6 +125,16 @@
       <div class="checkin-row">
         {{ check('exercised', 'Moved my body', 'footprints') }}
         {{ check('period_day', 'Period day', 'droplet') }}
+      </div>
+    </section>
+
+    <section class="card checkin-card checkin-card--wide">
+      <h2><i data-lucide="utensils"></i> Food</h2>
+      <div class="checkin-food">
+        {{ textbox('food_breakfast', 'Breakfast', placeholder='e.g. Oatmeal, banana, coffee') }}
+        {{ textbox('food_lunch', 'Lunch') }}
+        {{ textbox('food_dinner', 'Dinner') }}
+        {{ textbox('food_snacks', 'Snacks') }}
       </div>
     </section>
 

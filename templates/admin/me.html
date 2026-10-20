@@ -112,6 +112,24 @@
       <a class="admin-meta" href="{{ url_for('admin.simple_create', resource='app_ideas') }}">+ Add idea</a>
     </section>
 
+    <section class="card">
+      <h2><i data-lucide="utensils"></i> Food log</h2>
+      {% if food_log %}
+      <ul class="personal-list personal-food">
+        {% for row in food_log %}
+        <li>
+          <a class="personal-date" href="{{ url_for('admin.today', date=row.checkin_date.isoformat()) }}" title="Edit this day">{{ row.checkin_date.strftime('%b %d') }}</a>
+          <dl>
+            {% for label, value in [('Breakfast', row.food_breakfast), ('Lunch', row.food_lunch), ('Dinner', row.food_dinner), ('Snacks', row.food_snacks)] %}
+            {% if value %}<div><dt>{{ label }}</dt><dd>{{ value }}</dd></div>{% endif %}
+            {% endfor %}
+          </dl>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}<p class="admin-meta">Nothing yet. Log your meals on Today.</p>{% endif %}
+    </section>
+
     {% for title, icon, rows in logs %}
     <section class="card">
       <h2><i data-lucide="{{ icon }}"></i> {{ title }}</h2>

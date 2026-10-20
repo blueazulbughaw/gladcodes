@@ -1,7 +1,8 @@
 """Private daily check-in (/gc-admin/today): prayers, mood + why, energy,
 gratitude, medicine doses, devotion (Bible passage + thoughts), learnings
 (reading, learnings, wins, notes), body
-(water, movement, period day), the evening prayer, and My emotions
+(water, movement, period day), the food log (breakfast, lunch, dinner,
+snacks), the evening prayer, and My emotions
 (mood, why, energy, gratitude). Autosaves: no Save button.
 Sleep and Instagram time are shown but never typed; the phone sends them
 (personal.py /track/*). Login lands here until today's entry exists.
@@ -121,6 +122,7 @@ CHECKIN_FIELDS = (
     "mood", "mood_reason", "energy", "morning_prayer", "night_prayer", "exercised",
     "period_day", "reading", "learnings", "bible_passage", "grateful", "win", "notes",
     "morning_prayer_note", "water_glasses", "night_prayer_note", "devotion_thoughts",
+    "food_breakfast", "food_lunch", "food_dinner", "food_snacks",
 )
 
 
@@ -144,6 +146,10 @@ def _checkin_values():
         _water(),
         _text("night_prayer_note"),
         _text("devotion_thoughts"),
+        _text("food_breakfast"),
+        _text("food_lunch"),
+        _text("food_dinner"),
+        _text("food_snacks"),
     )
 
 

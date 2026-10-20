@@ -681,3 +681,9 @@ ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS night_prayer_note TEXT AFTER
 -- thoughts on the devotion) and Learnings (read, learnings, wins, notes);
 -- the Daily summary card becomes "My emotions".
 ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS devotion_thoughts TEXT AFTER bible_passage;
+
+-- Check-in v2.5: food log (what I ate at each meal).
+ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS food_breakfast TEXT;
+ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS food_lunch TEXT;
+ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS food_dinner TEXT;
+ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS food_snacks TEXT;
