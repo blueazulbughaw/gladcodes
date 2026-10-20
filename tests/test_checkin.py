@@ -73,7 +73,7 @@ class TodayPageTests(unittest.TestCase):
             "exercised": 0, "period_day": 0, "reading": "DDIA", "bible_passage": "Psalm 23",
             "grateful": "Coffee", "learnings": "Flask url_defaults", "win": None, "notes": None,
             "morning_prayer_note": "Lord, guide my work today.", "water_glasses": 3,
-            "night_prayer_note": "Thank you for this day.",
+            "night_prayer_note": "Thank you for this day.", "devotion_thoughts": "Rest in Him.",
         }
         mock_tracking.active_medications.return_value = [
             {"id": 7, "name": "Vitamin D", "notes": "with food", "frequency": "daily", "doses_per_day": 3, "start_date": None},
@@ -91,7 +91,7 @@ class TodayPageTests(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         body = resp.get_data(as_text=True)
         for text in ("Good morning, Glad", "Morning prayer", "Night prayer", "Why do you feel that way?",
-                     "What Bible passage did you read today?", "Psalm 23", "What did you learn today?", "Flask url_defaults",
+                     "Bible passage", "Psalm 23", "Thoughts on the devotion", "Learnings", "Flask url_defaults",
                      "Period day", "Vitamin D", "7h 15m", "23 min", "Saves automatically"):
             self.assertIn(text, body)
         self.assertNotIn("Weekly pill", body)  # due Wednesdays, today is Friday
@@ -102,12 +102,25 @@ class TodayPageTests(unittest.TestCase):
         # Morning is prayer only; how you feel / why / energy / thankful are asked in the Evening.
         morning = body.split('data-lucide="sunrise"')[1].split("</section>")[0]
         evening = body.split('data-lucide="moon"></i> Evening')[1].split("</section>")[0]
-        summary = body.split("Daily summary</h2>")[1].split("</section>")[0]
+        summary = body.split("My emotions</h2>")[1].split("</section>")[0]
+        devotion = body.split("Devotion</h2>")[1].split("</section>")[0]
+        learnings = body.split("Learnings</h2>")[1].split("</section>")[0]
+        self.assertIn("Psalm 23", devotion)
+        self.assertIn("Rest in Him.", devotion)
+        for label in ("What did you read?", "Book, article, docs: anything counts", "Learnings", "Wins", "Notes"):
+            self.assertIn(label, learnings)
+        self.assertNotIn("Daily summary", body)
+        # Devotion comes right after the morning prayer, before Medicine.
+        self.assertLess(body.index("> Morning</h2>"), body.index("> Devotion</h2>"))
+        self.assertLess(body.index("> Devotion</h2>"), body.index("> Medicine</h2>"))
+        self.assertNotIn("Word &amp; learning", body)
         self.assertIn("My prayer", morning)
         self.assertIn("Night prayer", evening)
         self.assertIn("Thank you for this day.", evening)  # evening prayer box
-        self.assertLess(body.index("> Evening</h2>"), body.index("Daily summary</h2>"))
-        for question in ("How are you feeling?", "Why do you feel that way?", "Energy", "What are you thankful for today?", "Win of the day"):
+        self.assertLess(body.index("> Evening</h2>"), body.index("My emotions</h2>"))
+        self.assertNotIn("Wins", summary)
+        self.assertNotIn("Notes", summary)
+        for question in ("How are you feeling?", "Why do you feel that way?", "Energy", "What are you thankful for today?"):
             self.assertNotIn(question, morning)
             self.assertNotIn(question, evening)
             self.assertIn(question, summary)
@@ -126,7 +139,7 @@ class TodayPageTests(unittest.TestCase):
             "mood": "9", "energy": "4", "morning_prayer": "1", "period_day": "1",
             "mood_reason": "  Good sleep  ", "bible_passage": "John 15", "learnings": "Jinja macros",
             "morning_prayer_note": "Thank you for today", "water": ["1", "2", "3", "3", "9"],
-            "night_prayer_note": "Goodnight prayer",
+            "night_prayer_note": "Goodnight prayer", "devotion_thoughts": "Trust",
         })
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.get_json(), {"ok": True})
@@ -144,7 +157,8 @@ class TodayPageTests(unittest.TestCase):
         self.assertNotIn("app_ideas", fields)
         self.assertEqual(fields["morning_prayer_note"], "Thank you for today")
         self.assertEqual(fields["water_glasses"], 3)
-        self.assertEqual(fields["night_prayer_note"], "Goodnight prayer")  # duplicates and out-of-range values ignored
+        self.assertEqual(fields["night_prayer_note"], "Goodnight prayer")
+        self.assertEqual(fields["devotion_thoughts"], "Trust")  # duplicates and out-of-range values ignored
 
     @patch("blueprints.admin.checkin.saved_timezone", return_value=None)
     @patch("blueprints.admin.checkin.tracking.set_dose")

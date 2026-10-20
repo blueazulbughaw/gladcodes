@@ -339,16 +339,17 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   `apple-touch-icon.png`) are the mark on a navy tile and are linked from
   base_public only: the admin keeps its own Today PWA icons, and the admin
   login stays unbranded.
-- Today's order (by request): **Morning** = morning prayer + a "My prayer"
-  text box (`morning_prayer_note`); Medicine; Word & learning; Body (sleep/
+- Today's order (by request): **Morning** = morning prayer + "My prayer"
+  box (`morning_prayer_note`); **Devotion** = Bible passage +
+  `devotion_thoughts`; Medicine; **Learnings** = what did you read
+  (`reading`), learnings, wins (`win`), notes, app-idea link; Body (sleep/
   Instagram tracked, **water** = 8 tappable glasses saved as
   `water_glasses` 0-8: tapping glass N fills 1..N, tapping the last filled
   one empties it); **Evening** = night prayer + its own "My prayer" box
-  (`night_prayer_note`), mirroring the morning; **Daily summary** = mood +
-  why, energy, gratitude, win, notes (reflection questions are end-of-day).
-  The evening reminder counts the evening half done once night prayer, win,
-  or mood is set. My dashboard shows average water plus "Morning prayers"
-  and "Evening prayers" logs.
+  (`night_prayer_note`); **My emotions** = mood + why, energy, gratitude
+  (end-of-day reflection). The evening reminder counts the evening half
+  done once night prayer, win, or mood is set. My dashboard shows average
+  water plus morning/evening prayer and devotion-thoughts logs.
 - Any past day is editable: Today has prev/next arrows and a date picker
   (`?date=YYYY-MM-DD`, clamped to today; no future days) plus an amber
   "You're editing <day>" banner. Autosave, medicine doses and tracked

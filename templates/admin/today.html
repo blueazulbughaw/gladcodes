@@ -62,6 +62,12 @@
     </section>
 
     <section class="card checkin-card">
+      <h2><i data-lucide="book-heart"></i> Devotion</h2>
+      {{ textbox('bible_passage', 'Bible passage', placeholder='e.g. Psalm 23, John 15:1-17') }}
+      {{ textbox('devotion_thoughts', 'Thoughts on the devotion', rows=4) }}
+    </section>
+
+    <section class="card checkin-card">
       <h2><i data-lucide="pill"></i> Medicine</h2>
       {% if medications %}
       <div class="checkin-meds">
@@ -86,10 +92,11 @@
     </section>
 
     <section class="card checkin-card">
-      <h2><i data-lucide="book-heart"></i> Word &amp; learning</h2>
-      {{ textbox('bible_passage', 'What Bible passage did you read today?', placeholder='e.g. Psalm 23, John 15:1-17') }}
-      {{ textbox('reading', 'What else did you read?', hint='Book, article, docs: anything counts') }}
-      {{ textbox('learnings', 'What did you learn today?', rows=3) }}
+      <h2><i data-lucide="graduation-cap"></i> Learnings</h2>
+      {{ textbox('reading', 'What did you read?', hint='Book, article, docs: anything counts') }}
+      {{ textbox('learnings', 'Learnings', rows=3) }}
+      {{ textbox('win', 'Wins') }}
+      {{ textbox('notes', 'Notes') }}
       <a class="admin-meta" href="{{ url_for('admin.simple_create', resource='app_ideas') }}"><i data-lucide="lightbulb"></i> Got an app idea? Add it to your list →</a>
     </section>
 
@@ -134,7 +141,7 @@
     </section>
 
     <section class="card checkin-card">
-      <h2><i data-lucide="notebook-pen"></i> Daily summary</h2>
+      <h2><i data-lucide="heart"></i> My emotions</h2>
       <fieldset class="checkin-scale">
         <legend>How are you feeling?</legend>
         <div class="checkin-options">
@@ -158,8 +165,6 @@
       </fieldset>
 
       {{ textbox('grateful', 'What are you thankful for today?', rows=3, placeholder='1.\n2.\n3.') }}
-      {{ textbox('win', 'Win of the day') }}
-      {{ textbox('notes', 'Notes') }}
     </section>
 
     <noscript><button type="submit" class="btn btn-primary">Save</button></noscript>

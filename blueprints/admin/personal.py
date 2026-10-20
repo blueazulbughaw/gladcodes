@@ -84,6 +84,7 @@ def personal_dashboard():
         ("Bible passages", "book-heart", log("bible_passage")),
         ("Morning prayers", "sun", log("morning_prayer_note")),
         ("Evening prayers", "moon-star", log("night_prayer_note")),
+        ("Thoughts on the devotion", "book-heart", log("devotion_thoughts")),
         ("What I learned", "graduation-cap", log("learnings")),
         ("Reading", "book-open", log("reading")),
         ("Thankful for", "heart", log("grateful")),

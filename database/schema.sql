@@ -676,3 +676,8 @@ ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS water_glasses TINYINT NOT NU
 -- Check-in v2.3: a space to write the evening prayer too (mirrors the
 -- morning). Mood/why/energy/gratitude/win now live in a "Daily summary" card.
 ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS night_prayer_note TEXT AFTER night_prayer;
+
+-- Check-in v2.4: "Word & learning" splits into Devotion (Bible passage +
+-- thoughts on the devotion) and Learnings (read, learnings, wins, notes);
+-- the Daily summary card becomes "My emotions".
+ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS devotion_thoughts TEXT AFTER bible_passage;
