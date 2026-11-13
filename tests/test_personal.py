@@ -160,6 +160,7 @@ class PersonalDashboardTests(unittest.TestCase):
              patch("blueprints.admin.personal.query", side_effect=fake_query), \
              patch("blueprints.admin.personal.configured_username", return_value="glad"), \
              patch("blueprints.admin.personal.get_weekly_activity", return_value={"labels": ["Oct 12"], "data": [2]}), \
+             patch("blueprints.admin.personal.oauth.connection_status", return_value={"connected": False, "last_used": None}), \
              patch("blueprints.admin.personal.tracking") as t:
             t.sleep_by_day.return_value = {TODAY: 420}
             t.app_minutes_by_day.return_value = {TODAY: 30}

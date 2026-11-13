@@ -25,12 +25,16 @@ from .csrf import CSRF_COOKIE_NAME, csrf_cookie_missing, get_or_create_csrf_toke
 
 # Phone automations (personal.py): no browser session, so no JWT cookie or
 # CSRF cookie — they authenticate with a bearer token instead.
-TOKEN_ENDPOINTS = {"admin.track_sleep", "admin.track_app"}
+# The Claude connector (connector.py) checks its own OAuth bearer tokens.
+TOKEN_ENDPOINTS = {"admin.track_sleep", "admin.track_app", "admin.mcp", "admin.oauth_token", "admin.oauth_register"}
 
 # Reachable without a session: the login form, the installable app's
 # manifest and service worker, and the cron-pinged reminder tick (see
-# app_shell.py for why each is safe), plus the token-checked endpoints.
-PUBLIC_ENDPOINTS = {"admin.login", "admin.manifest", "admin.service_worker", "admin.reminders_tick"} | TOKEN_ENDPOINTS
+# app_shell.py for why each is safe), plus the token-checked endpoints and
+# the connector's OAuth metadata + approval page (which asks for the
+# password itself when there's no session; see connector.py).
+PUBLIC_ENDPOINTS = {"admin.login", "admin.manifest", "admin.service_worker", "admin.reminders_tick",
+                    "admin.oauth_authorize", "admin.oauth_metadata"} | TOKEN_ENDPOINTS
 
 
 @admin_bp.before_request

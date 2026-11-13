@@ -1,0 +1,38 @@
+{% extends "base_admin.html" %}
+
+{% block title %}Connect Claude{% endblock %}
+
+{% block content %}
+{# Shown once, when Claude's connector asks to connect (connector.py). Asks
+   for the password itself if there's no session. Plain like the login page. #}
+<div class="login-shell">
+  <form class="login-card oauth-card" method="post" action="{{ url_for('admin.oauth_authorize') }}" autocomplete="off">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    {% for name, value in params.items() %}
+    <input type="hidden" name="{{ name }}" value="{{ value }}">
+    {% endfor %}
+    <h1 class="oauth-title">Connect Claude</h1>
+    <p>Claude wants to:</p>
+    <ul class="oauth-list">
+      <li>Save your morning and evening prayers</li>
+      <li>Save your morning devotion and Bible chapters</li>
+      <li>Read a day's prayers and devotion, and your Bible progress</li>
+    </ul>
+    <p class="oauth-note">It can't see or change anything else, and it can't delete anything.</p>
+    <p class="oauth-note">After you allow it, you'll go back to <strong>{{ return_host }}</strong>.</p>
+    {% if error %}<p class="login-error">{{ error }}</p>{% endif %}
+    {% if not signed_in %}
+    <label>
+      <span>Username</span>
+      <input type="text" name="username" required autocapitalize="off" spellcheck="false">
+    </label>
+    <label>
+      <span>Password</span>
+      <input type="password" name="password" required>
+    </label>
+    {% endif %}
+    <button type="submit" name="decision" value="allow" class="btn btn-primary login-submit">Allow</button>
+    <button type="submit" name="decision" value="deny" class="btn-secondary-admin" formnovalidate>Cancel</button>
+  </form>
+</div>
+{% endblock %}

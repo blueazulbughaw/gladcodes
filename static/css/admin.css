@@ -804,3 +804,63 @@ a.cycle-chip:hover { background: rgba(179, 38, 30, 0.14); text-decoration: none;
   .money-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .money-summary strong { font-size: 1rem; text-overflow: clip; }
 }
+
+/* Devotion saved by Claude Duet (Today → Devotion card): read-only
+   infographic drawn from data in the site's own palette, plus the full
+   written devotion. */
+.checkin-card { min-width: 0; }
+.devotion-saved { min-width: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+.devotion-saved-title { display: flex; align-items: center; gap: 0.45rem; margin: 0; font-family: var(--font-heading); font-weight: 600; color: var(--navy); }
+.devotion-saved-title svg { width: 17px; height: 17px; color: var(--warn); }
+.devotion-panel { border: 1px solid rgba(var(--navy-rgb), 0.12); border-radius: 12px; background: var(--sand); }
+.devotion-panel > summary { cursor: pointer; padding: 0.65rem 0.9rem; font-size: 0.88rem; font-weight: 600; color: var(--teal); }
+.devotion-panel[open] > summary { border-bottom: 1px solid rgba(var(--navy-rgb), 0.1); }
+
+.devo-graphic { padding: 1rem 0.9rem 1.1rem; display: flex; flex-direction: column; gap: 0.9rem; }
+.devo-title { font-family: var(--font-heading); font-size: 1.45rem; text-align: center; margin: 0; color: var(--navy); }
+.devo-subtitle { text-align: center; margin: -0.4rem 0 0; color: rgba(var(--navy-rgb), 0.7); font-size: 0.9rem; }
+.devo-graphic blockquote { margin: 0; }
+.devo-graphic blockquote p { margin: 0; font-style: italic; }
+.devo-graphic cite { display: block; margin-top: 0.3rem; font-style: normal; font-size: 0.78rem; color: rgba(var(--navy-rgb), 0.6); }
+.devo-key-verse, .devo-closing { text-align: center; padding: 0.8rem 0.4rem; border-top: 2px solid var(--warn); border-bottom: 2px solid var(--warn); }
+.devo-key-verse p, .devo-closing p { font-family: var(--font-heading); font-size: 1.05rem; color: var(--navy); }
+.devo-closing { border: 0; padding-top: 0.2rem; }
+
+.devo-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0.7rem; }
+.devo-card { --accent: var(--teal); background: var(--card); border-radius: 12px; border-top: 4px solid var(--accent); box-shadow: var(--shadow-card); padding: 0.85rem 0.9rem; display: flex; flex-direction: column; gap: 0.4rem; }
+.devo-card--1 { --accent: var(--ocean); }
+.devo-card--2 { --accent: var(--navy); }
+.devo-card--3 { --accent: var(--warn); }
+.devo-card--4 { --accent: var(--aqua); }
+.devo-card p, .devo-card h4 { margin: 0; }
+.devo-card h4 { font-family: var(--font-heading); font-size: 1.05rem; color: var(--navy); }
+.devo-card > p { font-size: 0.88rem; line-height: 1.5; color: rgba(var(--navy-rgb), 0.85); }
+.devo-card-label { font-size: 0.68rem !important; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent) !important; }
+.devo-card-passage { font-size: 0.8rem !important; color: rgba(var(--navy-rgb), 0.6) !important; }
+.devo-card blockquote { background: rgba(var(--navy-rgb), 0.04); border-left: 3px solid var(--accent); border-radius: 6px; padding: 0.55rem 0.7rem; font-size: 0.85rem; }
+
+.devo-tiles-wrap h4 { font-family: var(--font-heading); text-align: center; margin: 0 0 0.6rem; color: var(--navy); }
+.devo-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.5rem; }
+.devo-tile { border: 1px dashed rgba(var(--navy-rgb), 0.2); border-radius: 10px; padding: 0.6rem; text-align: center; display: flex; flex-direction: column; gap: 0.2rem; background: var(--card); }
+.devo-tile strong { font-family: var(--font-heading); color: var(--teal); }
+.devo-tile span { font-size: 0.82rem; }
+.devo-tile small { font-size: 0.75rem; color: rgba(var(--navy-rgb), 0.6); }
+
+.devo-prose { padding: 0.4rem 1rem 1rem; font-size: 0.92rem; line-height: 1.6; overflow-wrap: anywhere; }
+.devo-prose h1 { font-size: 1.3rem; }
+.devo-prose h2 { font-size: 1.08rem; margin-top: 1.3rem; }
+.devo-prose hr { border: 0; border-top: 1px solid rgba(var(--navy-rgb), 0.12); margin: 1.1rem 0; }
+.devo-prose table { width: 100%; border-collapse: collapse; font-size: 0.85rem; display: block; overflow-x: auto; }
+.devo-prose th, .devo-prose td { border: 1px solid rgba(var(--navy-rgb), 0.15); padding: 0.4rem 0.5rem; text-align: left; vertical-align: top; }
+
+/* Claude connector approval page (oauth_authorize.html). */
+.oauth-card { max-width: 400px; }
+.oauth-card p { margin: 0; }
+.oauth-title { font-size: 1.35rem; margin: 0; }
+.oauth-list { margin: 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: 0.3rem; }
+.oauth-note { font-size: 0.85rem; color: rgba(var(--navy-rgb), 0.65); }
+
+/* My dashboard: Claude connector card. */
+.personal-connector .connector-state { display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 600; }
+.personal-connector .connector-state::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: rgba(var(--navy-rgb), 0.3); }
+.personal-connector .connector-state.is-on::before { background: var(--success); }

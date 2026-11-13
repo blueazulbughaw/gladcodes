@@ -736,3 +736,59 @@ ALTER TABLE checkin_app_state ADD COLUMN IF NOT EXISTS money_currency VARCHAR(8)
 -- Bills can be paid by credit card too: a card-paid bill is a card
 -- purchase (spending now, cash flow when the card is paid).
 ALTER TABLE recurring_bills ADD COLUMN IF NOT EXISTS paid_with ENUM('cash', 'card') NOT NULL DEFAULT 'cash' AFTER due_day;
+
+-- Devotion connector (2026-11-13): Claude Duet saves the morning devotion
+-- into the Devotion section of a day (services/devotion.py). The written
+-- devotion is Markdown (rendered through bleach); the infographic is JSON
+-- data (a list, so an "added" second devotion keeps both) that the Today
+-- page draws in its own style, never raw HTML. Private: never read publicly.
+ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS devotion_markdown MEDIUMTEXT AFTER devotion_thoughts;
+ALTER TABLE daily_checkins ADD COLUMN IF NOT EXISTS devotion_infographic MEDIUMTEXT AFTER devotion_markdown;
+
+-- Bible progress: one row per chapter a saved morning devotion covered
+-- (night verses don't count). Progress = distinct (book, chapter) of 1,189.
+CREATE TABLE IF NOT EXISTS bible_chapters_read (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    read_date DATE NOT NULL,
+    book VARCHAR(32) NOT NULL,
+    chapter SMALLINT NOT NULL,
+    created_at DATETIME NOT NULL,
+    UNIQUE KEY uq_bible_read (read_date, book, chapter),
+    KEY idx_bible_chapter (book, chapter)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Claude connector sign-in (services/oauth.py). Claude registers itself
+-- (oauth_clients), Glad approves once (oauth_codes, single use, 10 min),
+-- then Claude holds rotating tokens (oauth_tokens). Codes and tokens are
+-- stored only as SHA-256 hashes. Disconnect = revoked = 1 on every token.
+CREATE TABLE IF NOT EXISTS oauth_clients (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    client_id VARCHAR(64) NOT NULL UNIQUE,
+    client_name VARCHAR(100) NOT NULL,
+    redirect_uris TEXT NOT NULL,
+    created_at DATETIME NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS oauth_codes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    code_hash CHAR(64) NOT NULL UNIQUE,
+    client_id VARCHAR(64) NOT NULL,
+    redirect_uri VARCHAR(500) NOT NULL,
+    code_challenge VARCHAR(128) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    used TINYINT(1) NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS oauth_tokens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    token_hash CHAR(64) NOT NULL UNIQUE,
+    kind ENUM('access', 'refresh') NOT NULL,
+    client_id VARCHAR(64) NOT NULL,
+    grant_id CHAR(32) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    revoked TINYINT(1) NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL,
+    last_used_at DATETIME,
+    KEY idx_oauth_grant (grant_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

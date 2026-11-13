@@ -102,12 +102,12 @@ class ReminderTickTests(unittest.TestCase):
         return claim, send
 
     def test_morning_tick_sends_once_without_a_session(self):
-        claim, send = self._tick(8, None)
+        claim, send = self._tick(6, None)
         claim.assert_called_once_with("2026-10-16:morning")
         self.assertEqual(send.call_args[1]["tag"], "checkin-morning")
 
     def test_already_claimed_reminder_is_not_resent(self):
-        _, send = self._tick(8, None, claimed=False)
+        _, send = self._tick(6, None, claimed=False)
         send.assert_not_called()
 
     def test_off_hours_tick_does_nothing(self):

@@ -44,8 +44,13 @@ class Config:
     VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")
     VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT") or "https://glad.codes"
     # Local hours (24h clock) when the reminder tick nudges (services/reminders.py).
-    CHECKIN_MORNING_HOUR = int(os.environ.get("CHECKIN_MORNING_HOUR") or 8)
+    CHECKIN_MORNING_HOUR = int(os.environ.get("CHECKIN_MORNING_HOUR") or 6)
     CHECKIN_EVENING_HOUR = int(os.environ.get("CHECKIN_EVENING_HOUR") or 21)
+
+    # The Claude connector (/gc-admin/mcp + its OAuth token/register
+    # endpoints) only answers these networks: Anthropic's published outbound
+    # ranges (platform.claude.com/docs/en/api/ip-addresses). Empty = anyone.
+    MCP_ALLOWED_NETWORKS = os.environ.get("MCP_ALLOWED_NETWORKS", "160.79.104.0/21,153.61.208.0/20")
 
     # Contact form delivery. Defaults assume a Python app on cPanel shared
     # hosting, where Exim already handles mail for the account and accepts

@@ -16,7 +16,8 @@ import pymysql
 from flask import current_app, jsonify, redirect, render_template, request, url_for
 
 from database.db import execute, query, query_one, utc_now
-from services import tracking
+from services import devotion, tracking
+from services.content import render_markdown
 
 from . import admin_bp
 
@@ -153,19 +154,59 @@ def _checkin_values():
     )
 
 
+# Boxes Claude Duet can also fill (services/devotion.py), each with the
+# columns that follow it. The Today page sends what each box held when it
+# loaded (loaded_<name>); autosave only writes the box if you changed it,
+# so a page left open can't blank out a prayer Duet saved meanwhile.
+DUET_BOXES = {
+    "morning_prayer_note": ("morning_prayer_note", "morning_prayer"),
+    "night_prayer_note": ("night_prayer_note", "night_prayer"),
+    "bible_passage": ("bible_passage",),
+}
+
+
+def _box_changed(name) -> bool:
+    loaded = request.form.get(f"loaded_{name}")
+    if loaded is None:  # a page from before this guard: old behaviour
+        return True
+    return request.form.get(name, "").strip() != loaded.strip()
+
+
 def save_checkin(day: date) -> None:
     columns = ", ".join(CHECKIN_FIELDS)
     placeholders = ", ".join(["%s"] * (len(CHECKIN_FIELDS) + 2))
-    updates = ", ".join(f"{c} = VALUES({c})" for c in CHECKIN_FIELDS + ("updated_at",))
+    guard = {column: box for box, cols in DUET_BOXES.items() for column in cols}
+    updates, update_params = [], []
+    for c in CHECKIN_FIELDS + ("updated_at",):
+        if c in guard:
+            updates.append(f"{c} = IF(%s, VALUES({c}), {c})")
+            update_params.append(_box_changed(guard[c]))
+        else:
+            updates.append(f"{c} = VALUES({c})")
     # Column names come from the fixed CHECKIN_FIELDS tuple above, never input.
     execute(
         f"""
         INSERT INTO daily_checkins (checkin_date, {columns}, updated_at)
         VALUES ({placeholders})
-        ON DUPLICATE KEY UPDATE {updates}
+        ON DUPLICATE KEY UPDATE {", ".join(updates)}
         """,
-        (day, *_checkin_values(), utc_now()),
+        (day, *_checkin_values(), utc_now(), *update_params),
     )
+
+
+def devotion_view(entry):
+    """The devotion Duet saved for this day, ready to show read-only in the
+    Devotion card: infographic data + the written devotion as sanitized HTML."""
+    entry = entry or {}
+    markdown_text = entry.get("devotion_markdown")
+    infographics = devotion.load_infographics(entry.get("devotion_infographic"))
+    if not markdown_text and not infographics:
+        return None
+    return {
+        "title": devotion.devotion_title(markdown_text, infographics),
+        "infographics": infographics,
+        "html": render_markdown(markdown_text) if markdown_text else "",
+    }
 
 
 def _wants_json() -> bool:
@@ -190,6 +231,7 @@ def today():
 
     day = parse_day(request.args.get("date"), today_date)
     entry = query_one("SELECT * FROM daily_checkins WHERE checkin_date = %s", (day,))
+    saved_devotion = devotion_view(entry)
 
     taken = tracking.doses_taken(day, day)
     medications = [
@@ -221,6 +263,7 @@ def today():
         next_day=day + timedelta(days=1) if day < today_date else None,
         today_date=today_date,
         entry=entry,
+        saved_devotion=saved_devotion,
         greeting=greeting,
         streak=checkin_streak(today_date),
         moods=MOODS,

@@ -53,6 +53,11 @@
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <input type="hidden" name="checkin_date" value="{{ day.isoformat() }}">
     <input type="hidden" name="tz" id="checkinTz" value="">
+    {# What the boxes Duet can fill held when this page loaded: autosave only
+       overwrites one you actually changed (checkin.DUET_BOXES). #}
+    {% for box in ('morning_prayer_note', 'night_prayer_note', 'bible_passage') %}
+    <input type="hidden" name="loaded_{{ box }}" value="{{ entry[box] if entry and entry[box] else '' }}">
+    {% endfor %}
 
     {# Desktop: cards sit in pairs (Morning|Devotion, Medicine|Body), the
        food log full width, then Learnings|My emotions, and prayers last at
@@ -66,6 +71,58 @@
     <section class="card checkin-card">
       <h2><i data-lucide="book-heart"></i> Devotion</h2>
       {{ textbox('bible_passage', 'Bible passage', placeholder='e.g. Psalm 23, John 15:1-17') }}
+      {% if saved_devotion %}
+      {# Saved by Claude Duet; read-only here. Infographic is data drawn in
+         the site's style (never outside HTML); the written devotion is
+         Markdown sanitized by bleach (render_markdown). #}
+      <div class="devotion-saved">
+        <p class="devotion-saved-title"><i data-lucide="sparkles"></i> {{ saved_devotion.title }}</p>
+        {% for g in saved_devotion.infographics %}
+        <details class="devotion-panel" open>
+          <summary>Infographic{% if saved_devotion.infographics|length > 1 %} {{ loop.index }}{% endif %}</summary>
+          <div class="devo-graphic">
+            <h3 class="devo-title">{{ g.title }}</h3>
+            {% if g.subtitle %}<p class="devo-subtitle">{{ g.subtitle }}</p>{% endif %}
+            {% if g.key_verse %}
+            <blockquote class="devo-key-verse"><p>{{ g.key_verse.text }}</p>{% if g.key_verse.ref %}<cite>{{ g.key_verse.ref }}</cite>{% endif %}</blockquote>
+            {% endif %}
+            {% if g.cards %}
+            <div class="devo-cards">
+              {% for c in g.cards %}
+              <article class="devo-card devo-card--{{ loop.index0 % 5 }}">
+                {% if c.label %}<p class="devo-card-label">{{ c.label }}</p>{% endif %}
+                {% if c.title %}<h4>{{ c.title }}</h4>{% endif %}
+                {% if c.passage %}<p class="devo-card-passage">{{ c.passage }}</p>{% endif %}
+                {% if c.summary %}<p>{{ c.summary }}</p>{% endif %}
+                {% if c.quote %}<blockquote><p>{{ c.quote }}</p>{% if c.quote_ref %}<cite>{{ c.quote_ref }}</cite>{% endif %}</blockquote>{% endif %}
+              </article>
+              {% endfor %}
+            </div>
+            {% endif %}
+            {% if g.tiles %}
+            <div class="devo-tiles-wrap">
+              {% if g.tiles_heading %}<h4>{{ g.tiles_heading }}</h4>{% endif %}
+              <div class="devo-tiles">
+                {% for t in g.tiles %}
+                <div class="devo-tile"><strong>{{ t.title }}</strong>{% if t.text %}<span>{{ t.text }}</span>{% endif %}{% if t.ref %}<small>{{ t.ref }}</small>{% endif %}</div>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+            {% if g.closing_verse %}
+            <blockquote class="devo-closing"><p>{{ g.closing_verse.text }}</p><cite>{{ g.closing_verse.ref }}{% if g.translation %} · {{ g.translation }}{% endif %}</cite></blockquote>
+            {% endif %}
+          </div>
+        </details>
+        {% endfor %}
+        {% if saved_devotion.html %}
+        <details class="devotion-panel">
+          <summary>Read the full devotion</summary>
+          <div class="devo-prose">{{ saved_devotion.html|safe }}</div>
+        </details>
+        {% endif %}
+      </div>
+      {% endif %}
       {{ textbox('devotion_thoughts', 'Thoughts on the devotion', rows=4) }}
     </section>
 

@@ -14,7 +14,7 @@ from datetime import timedelta
 from flask import abort, current_app, jsonify, redirect, render_template, request, url_for
 
 from database.db import query
-from services import tracking
+from services import oauth, tracking
 from services.github import configured_username, get_weekly_activity
 
 from . import admin_bp
@@ -163,6 +163,8 @@ def personal_dashboard():
         token=tracking.ingest_token(),
         site_base=current_app.config["PUBLIC_SITE_URL"].rstrip("/"),
         status=tracking.tracking_status(),
+        connector=oauth.connection_status(),
+        connector_url=current_app.config["PUBLIC_SITE_URL"].rstrip("/") + url_for("admin.mcp"),
     )
 
 

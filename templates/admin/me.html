@@ -110,6 +110,22 @@
       <button type="submit" class="btn-link btn-link-danger">Make a new key</button>
     </form>
   </section>
+
+  <section class="card personal-tracking personal-connector" id="connector">
+    <h2><i data-lucide="plug"></i> Claude connector</h2>
+    <p class="admin-meta">Claude Duet saves your prayers and morning devotions here. Add this address in Claude under Customize → Connectors → Add custom connector.</p>
+    <dl class="personal-tracking-grid">
+      <dt>Connector address</dt><dd><code>{{ connector_url }}</code></dd>
+      <dt>Status</dt><dd><span class="connector-state {{ 'is-on' if connector.connected }}">{{ 'Connected' if connector.connected else 'Not connected' }}</span></dd>
+      <dt>Last used</dt><dd>{% if connector.last_used %}{{ connector.last_used|human_date }}{% else %}Never{% endif %}</dd>
+    </dl>
+    {% if connector.connected %}
+    <form method="post" action="{{ url_for('admin.connector_disconnect') }}" onsubmit="return confirm('Disconnect Claude? It will need you to approve it again before it can save prayers.');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button type="submit" class="btn-link btn-link-danger">Disconnect</button>
+    </form>
+    {% endif %}
+  </section>
 </div>
 {% endblock %}
 

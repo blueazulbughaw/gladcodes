@@ -401,4 +401,36 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   income vs expenses, fixed expenses paid/overdue, largest transactions.
   Endpoint names stay `admin.money_*`. Currency symbol lives in
   `checkin_app_state.money_currency` (never `site_settings`, which is public).
-  Placeholder/sample text stays neutral (no culture-specific brands).
+  Placeholder/sample text stays neutral (no culture-specific brands).- **Claude connector** (Claude Duet saves prayers + morning devotions). A
+  remote MCP server at `/gc-admin/mcp` (`blueprints/admin/connector.py`,
+  `services/mcp_server.py`), hand-written JSON-RPC over Streamable HTTP
+  (plain JSON replies, no SSE, no sessions) because the MCP SDK needs
+  Python 3.10+ and the server is 3.9. Four tools only: `save_prayer`,
+  `save_devotion`, `get_day`, `get_bible_progress`; all data access is in
+  `services/devotion.py`, which only touches the prayer notes/flags,
+  `bible_passage`, `devotion_markdown`, `devotion_infographic` and
+  `bible_chapters_read`. It must never reach medicine/body/food/learnings/
+  emotions, never delete a day, and never write `devotion_thoughts`
+  (Glad's own box). Prayers are stored exactly as sent (no strip). A save
+  into a box that already has text returns `needs_choice` and changes
+  nothing until Claude calls again with `if_exists` replace/add (Glad asked
+  to be asked). Never log prayer/devotion text (crash logs are type +
+  traceback only). Infographic = validated JSON data drawn by today.html in
+  the site palette, never stored/rendered HTML; the devotion Markdown goes
+  through `render_markdown` (bleach). Bible progress counts only morning
+  devotion chapters (night verses don't count), 66-book canon = 1,189.
+- Connector auth is OAuth 2.1 built in (`services/oauth.py`): DCR at
+  `/gc-admin/oauth/register` (only claude.ai/claude.com callback or
+  loopback redirect URIs), Glad approves once at `/gc-admin/oauth/authorize`
+  (asks for the password itself when there's no session; CSRF-protected),
+  PKCE S256 required, 1h access + rotating 1-year refresh tokens stored as
+  SHA-256 hashes; a reused refresh token revokes that whole grant.
+  Discovery docs live at path-suffixed `/.well-known/...` URLs on
+  `wellknown_bp` (bare `/.well-known/*` stays 404 so nothing reveals the
+  admin path). `/mcp`, `/token` and `/register` answer only
+  `MCP_ALLOWED_NETWORKS` (Anthropic's outbound ranges; 404 otherwise).
+  My dashboard's "Claude connector" card shows status and Disconnect
+  (revokes all tokens).
+- The Today page sends `loaded_<box>` for the boxes Duet can fill
+  (`checkin.DUET_BOXES`); autosave only writes a box you changed, so a
+  page left open can't blank a prayer Duet saved meanwhile.
