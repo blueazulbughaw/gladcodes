@@ -22,7 +22,7 @@ class BackButtonTests(unittest.TestCase):
             return back_url()
 
     def test_homes_have_no_back_button(self):
-        self.assertIsNone(self.back_for("/gc-admin/today"))
+        self.assertIsNone(self.back_for("/gc-admin/me"))
         self.assertIsNone(self.back_for("/gc-admin/"))
 
     def test_edit_and_create_pages_go_to_their_list(self):
@@ -32,10 +32,11 @@ class BackButtonTests(unittest.TestCase):
         self.assertEqual(self.back_for("/gc-admin/tutorials/new"), "/gc-admin/tutorials")
         self.assertEqual(self.back_for("/gc-admin/pdf-library/new"), "/gc-admin/pdf-library")
 
-    def test_personal_pages_go_back_to_today(self):
-        self.assertEqual(self.back_for("/gc-admin/me"), "/gc-admin/today")
-        self.assertEqual(self.back_for("/gc-admin/medications"), "/gc-admin/today")
-        self.assertEqual(self.back_for("/gc-admin/app_ideas"), "/gc-admin/today")
+    def test_personal_pages_go_back_to_my_dashboard(self):
+        for path in ("/gc-admin/prayer", "/gc-admin/emotions", "/gc-admin/body", "/gc-admin/medicine",
+                     "/gc-admin/learnings", "/gc-admin/medications", "/gc-admin/app_ideas",
+                     "/gc-admin/connectors/claude", "/gc-admin/connectors/phone"):
+            self.assertEqual(self.back_for(path), "/gc-admin/me", path)
 
     def test_site_pages_go_back_to_site_dashboard(self):
         self.assertEqual(self.back_for("/gc-admin/skills"), "/gc-admin/")

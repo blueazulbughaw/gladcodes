@@ -4,7 +4,7 @@ from database.db import query_one
 from services.metrics import get_chart_series
 
 from . import admin_bp
-from .checkin import checkin_streak, has_checked_in, local_today
+from .checkin import SECTION_ENDPOINTS, checkin_streak, has_checked_in, local_today
 from .auth import (
     COOKIE_NAME,
     clear_attempts,
@@ -61,7 +61,7 @@ def inject_csrf():
 
 # Pages that are a "home" (no Back button) and personal resources whose
 # lists sit under Today rather than the site dashboard.
-NO_BACK_ENDPOINTS = {"admin.today", "admin.index", "admin.login"}
+NO_BACK_ENDPOINTS = {"admin.personal_dashboard", "admin.index", "admin.login"}
 PERSONAL_RESOURCES = {"medications", "app_ideas"}
 MONEY_RESOURCES = {"recurring_bills", "credit_cards"}
 
@@ -70,7 +70,7 @@ def back_url():
     """Where the Back button goes: the page's parent, not browser history
     (history.back() after saving a form lands on the stale form, and the
     installed app has no browser back button). Edit/create → its list;
-    personal pages → Today; site editors → their index or the site dashboard."""
+    personal pages → My dashboard; site editors → their index or the site dashboard."""
     endpoint = request.endpoint or ""
     if endpoint in NO_BACK_ENDPOINTS:
         return None
@@ -79,8 +79,10 @@ def back_url():
         return url_for("admin.simple_list", resource=resource)
     if resource in MONEY_RESOURCES:
         return url_for("admin.money_index")
-    if resource in PERSONAL_RESOURCES or endpoint in ("admin.personal_dashboard", "admin.money_index"):
-        return url_for("admin.today")
+    if (resource in PERSONAL_RESOURCES or endpoint in SECTION_ENDPOINTS
+            or endpoint in ("admin.connector_claude", "admin.connector_phone", "admin.dashboard_settings",
+                            "admin.money_index")):
+        return url_for("admin.personal_dashboard")
     name = endpoint.split(".", 1)[-1]
     index = f"admin.{name.rsplit('_', 1)[0]}_index"  # journal_edit -> journal_index
     if index != endpoint and index in current_app.view_functions:
@@ -118,9 +120,8 @@ def login():
             password = request.form.get("password", "")
             if verify_credentials(username, password):
                 clear_attempts(ip)
-                # Morning ritual: land on the daily check-in until today's is done.
-                landing = "admin.personal_dashboard" if has_checked_in(local_today()) else "admin.today"
-                response = redirect(url_for(landing))
+                # Land on My dashboard: its Today strip shows what's left to do.
+                response = redirect(url_for("admin.personal_dashboard"))
                 remember = request.form.get("remember") == "1"
                 response.set_cookie(
                     COOKIE_NAME,

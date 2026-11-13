@@ -1,27 +1,57 @@
-"""Personal dashboard (/gc-admin/me): everything from the daily check-in
-and the phone, kept separate from the website CMS dashboard (/gc-admin/).
-Weekly (Sunday-Saturday) or monthly view: an emoji/check grid (mood, energy,
-prayers, devotion, medicines, water, movement, period, meals, learnings),
-mood/energy/sleep/Instagram graphs, and the period cycle. No sentences here
-by request: tapping a day opens that day's check-in with everything written.
+"""Personal dashboard (/gc-admin/me): the landing page after login. A
+"Today" strip on top (what's done today, each item opening its input page),
+then collapsible sections matching the sidebar groups: Prayer & devotion
+(prayer streak, Bible progress), Mental wellbeing, Health & fitness, Growth,
+and App & reminders. Weekly (Sunday-Saturday) or monthly emoji/check grids
+and graphs; no sentences here by request: the words live on the input pages
+(checkin.SECTIONS), which each day header opens.
 
 Also the phone-automation endpoints (/gc-admin/track/*), authenticated by a
 bearer token instead of the JWT cookie, since an iPhone Shortcut / Android
-automation has no browser session.
+automation has no browser session, and the Phone tracking setup page.
 """
 from datetime import timedelta
 
 from flask import abort, current_app, jsonify, redirect, render_template, request, url_for
 
-from database.db import query
-from services import oauth, tracking
+import pymysql
+
+from database.db import execute, query, query_one
+from services import devotion, tracking
 from services.github import configured_username, get_weekly_activity
 
 from . import admin_bp
-from .checkin import MOODS, checkin_streak, current_streak, local_today, local_tz_name, parse_day
+from .checkin import MOODS, checkin_streak, current_streak, hour_label, local_today, local_tz_name, parse_day
 
 ENERGY_EMOJI = {1: "🪫", 2: "😴", 3: "🙂", 4: "💪", 5: "⚡"}
+
+# My dashboard sections, in page order; each can be switched off in
+# Dashboard settings (stored in checkin_app_state.dashboard_hidden, so the
+# phone and the computer show the same dashboard).
+DASHBOARD_SECTIONS = (
+    ("today", "☀️", "Today"),
+    ("prayer", "🙏", "Prayer & devotion"),
+    ("mind", "🧠", "Mental wellbeing"),
+    ("health", "💪", "Health & fitness"),
+    ("growth", "🌱", "Growth"),
+    ("app", "📱", "App & reminders"),
+)
+SECTION_KEYS = tuple(key for key, _, _ in DASHBOARD_SECTIONS)
+
+
+def hidden_sections() -> set:
+    try:
+        row = query_one("SELECT dashboard_hidden FROM checkin_app_state WHERE id = 1")
+    except pymysql.err.MySQLError:  # column not created yet / DB unreachable in tests
+        return set()
+    return {k for k in ((row or {}).get("dashboard_hidden") or "").split(",") if k in SECTION_KEYS}
+
+
+def save_hidden_sections(hidden) -> None:
+    value = ",".join(k for k in SECTION_KEYS if k in hidden)
+    execute("UPDATE checkin_app_state SET dashboard_hidden = %s WHERE id = 1", (value,))
 VIEWS = ("week", "month")
+MEALS = ("food_breakfast", "food_lunch", "food_dinner", "food_snacks")
 
 
 def _series(by_day, days, key):
@@ -48,6 +78,21 @@ def _check(value):
     return {"text": "✓", "state": "done"} if value else {"text": "", "state": "empty"}
 
 
+def devotion_state(e):
+    """The devotion counts as done only once Glad has written her own
+    "Thoughts on the devotion"; a passage or Duet's saved devotion without
+    them is half done (amber)."""
+    if e and (e["devotion_thoughts"] or "").strip():
+        return "done"
+    if e and (e["bible_passage"] or e.get("devotion_markdown")):
+        return "part"
+    return "empty"
+
+
+def _state_cell(state):
+    return {"text": "✓" if state in ("done", "part") else "", "state": state}
+
+
 def medicine_cell(med, day, taken):
     """Checks only: ✓ all doses, amber ✓ some, empty if missed, blank if not due."""
     got = len(taken.get((med["id"], day), ()))
@@ -59,8 +104,9 @@ def medicine_cell(med, day, taken):
 
 
 def build_grid(days, by_day, meds, taken, today):
-    """Rows of emoji/check cells, one column per day, for the dashboard grid.
-    No sentences: the words live on each day's check-in (tap the day)."""
+    """Emoji/check rows per dashboard section ("prayer", "mind", "health",
+    "growth"), one cell per day. No sentences: the words live on the input
+    pages (tap a day)."""
     mood_emoji = {value: emoji for value, emoji, _ in MOODS}
 
     def row(emoji, label, cell_fn):
@@ -76,16 +122,8 @@ def build_grid(days, by_day, meds, taken, today):
     def field(key):
         return lambda d, e: _check(e and e[key])
 
-    rows = [
-        row("😊", "Mood", lambda d, e: {"text": mood_emoji.get(e["mood"], ""), "state": "emoji"} if e and e["mood"] else {"text": "", "state": "empty"}),
-        row("⚡", "Energy", lambda d, e: {"text": ENERGY_EMOJI.get(e["energy"], ""), "state": "emoji"} if e and e["energy"] else {"text": "", "state": "empty"}),
-        # A prayer counts when it's written (older days also used a checkbox).
-        row("🙏", "Morning prayer", lambda d, e: _check(e and (e["morning_prayer_note"] or e["morning_prayer"]))),
-        row("📖", "Devotion", lambda d, e: _check(e and (e["bible_passage"] or e["devotion_thoughts"]))),
-    ]
-    for med in meds:
-        rows.append(row("💊", med["name"], lambda d, e, med=med: medicine_cell(med, d, taken)))
-    rows += [
+    health = [row("💊", med["name"], lambda d, e, med=med: medicine_cell(med, d, taken)) for med in meds]
+    health += [
         row("💧", "Water", lambda d, e: {"text": str(e["water_glasses"]), "state": "water-%d" % min(8, e["water_glasses"])} if e and e["water_glasses"] else {"text": "", "state": "empty"}),
         row("🏃", "Moved", field("exercised")),
         row("🩸", "Period", lambda d, e: {"text": "🩸", "state": "emoji"} if e and e["period_day"] else {"text": "", "state": "empty"}),
@@ -93,10 +131,55 @@ def build_grid(days, by_day, meds, taken, today):
         row("🥗", "Lunch", field("food_lunch")),
         row("🍲", "Dinner", field("food_dinner")),
         row("🍎", "Snacks", field("food_snacks")),
-        row("📚", "Learnings", lambda d, e: _check(e and (e["reading"] or e["learnings"] or e["win"]))),
-        row("🌙", "Evening prayer", lambda d, e: _check(e and (e["night_prayer_note"] or e["night_prayer"]))),
     ]
-    return rows
+    return {
+        "prayer": [
+            # A prayer counts when it's written (older days also used a checkbox).
+            row("🙏", "Morning prayer", lambda d, e: _check(e and (e["morning_prayer_note"] or e["morning_prayer"]))),
+            row("📖", "Devotion", lambda d, e: _state_cell(devotion_state(e))),
+            row("🌙", "Evening prayer", lambda d, e: _check(e and (e["night_prayer_note"] or e["night_prayer"]))),
+        ],
+        "mind": [
+            row("😊", "Mood", lambda d, e: {"text": mood_emoji.get(e["mood"], ""), "state": "emoji"} if e and e["mood"] else {"text": "", "state": "empty"}),
+            row("⚡", "Energy", lambda d, e: {"text": ENERGY_EMOJI.get(e["energy"], ""), "state": "emoji"} if e and e["energy"] else {"text": "", "state": "empty"}),
+            row("🌻", "Thankful", field("grateful")),
+        ],
+        "health": health,
+        "growth": [
+            row("📚", "Learnings", lambda d, e: _check(e and (e["reading"] or e["learnings"] or e["win"]))),
+        ],
+    }
+
+
+def today_strip(entry, meds, taken, today):
+    """What's done today, one tappable item per thing (emoji + check/count)."""
+    e = entry
+    mood = {value: emoji for value, emoji, _ in MOODS}.get(e["mood"]) if e and e["mood"] else None
+    due = [m for m in meds if tracking.medication_due(m, today) and m["frequency"] != "as_needed"]
+    need = sum(tracking.dose_count(m) for m in due)
+    got = sum(min(len(taken.get((m["id"], today), ())), tracking.dose_count(m)) for m in due)
+    water = e["water_glasses"] if e and e["water_glasses"] else 0
+    meals = sum(1 for k in MEALS if e and e[k])
+
+    def item(emoji, label, endpoint, text, state):
+        return {"emoji": emoji, "label": label, "url": url_for(endpoint), "text": text, "state": state}
+
+    def done(value):
+        return ("✓", "done") if value else ("", "empty")
+
+    def count(have, total):
+        return f"{have}/{total}", "done" if total and have >= total else "part" if have else "empty"
+
+    return [
+        item("🙏", "Morning prayer", "admin.checkin_prayer", *done(e and (e["morning_prayer_note"] or e["morning_prayer"]))),
+        item("📖", "Devotion", "admin.checkin_prayer", "✓" if devotion_state(e) != "empty" else "", devotion_state(e)),
+        item("😊", "Mood", "admin.checkin_emotions", mood or "", "emoji" if mood else "empty"),
+        item("💊", "Medicines", "admin.checkin_medicine", *(count(got, need) if need else ("—", "off"))),
+        item("💧", "Water", "admin.checkin_body", *count(water, 8)),
+        item("🍽️", "Meals", "admin.checkin_body", *count(meals, 4)),
+        item("📚", "Learnings", "admin.checkin_learnings", *done(e and (e["reading"] or e["learnings"] or e["win"]))),
+        item("🌙", "Evening prayer", "admin.checkin_prayer", *done(e and (e["night_prayer_note"] or e["night_prayer"]))),
+    ]
 
 
 @admin_bp.route("/me")
@@ -109,14 +192,15 @@ def personal_dashboard():
     past = [d for d in days if d <= today]
 
     rows = query(
-        "SELECT * FROM daily_checkins WHERE checkin_date BETWEEN %s AND %s ORDER BY checkin_date",
-        (days[0], days[-1]),
+        "SELECT * FROM daily_checkins WHERE checkin_date = %s OR checkin_date BETWEEN %s AND %s ORDER BY checkin_date",
+        (today, days[0], days[-1]),
     )
     by_day = {row["checkin_date"]: row for row in rows}
     sleep = tracking.sleep_by_day(past)
     app_minutes = tracking.app_minutes_by_day(tracking.TRACKED_APP, past, tz_name)
     meds = tracking.active_medications()
-    grid = build_grid(days, by_day, meds, tracking.doses_taken(days[0], days[-1]), today)
+    taken = tracking.doses_taken(min(days[0], today), max(days[-1], today))
+    grid = build_grid(days, by_day, meds, taken, today)
 
     prayer_days = [r["checkin_date"] for r in query(
         "SELECT checkin_date FROM daily_checkins WHERE morning_prayer = 1 AND night_prayer = 1 AND checkin_date <= %s",
@@ -140,10 +224,13 @@ def personal_dashboard():
         prev_anchor=prev_anchor,
         next_anchor=next_anchor if next_anchor <= today else None,
         grid=grid,
+        today_items=today_strip(by_day.get(today), meds, taken, today),
         streak=checkin_streak(today),
+        bible=devotion.bible_progress(),
         # GitHub pushes this week (Monday-start buckets from services/github);
         # None when GitHub is unreachable, so the tile just shows a dash.
         github_pushes=(lambda g: g["data"][-1] if g else None)(get_weekly_activity(configured_username())),
+        app_idea_count=(query("SELECT COUNT(*) AS n FROM app_ideas") or [{"n": 0}])[0]["n"],
         prayer_streak=current_streak(prayer_days, today),
         avg_sleep=round(sum(period_sleep) / len(period_sleep)) if period_sleep else None,
         avg_water=round(sum(period_water) / len(period_water), 1) if period_water else None,
@@ -160,18 +247,40 @@ def personal_dashboard():
         },
         periods=list(reversed(periods))[:6],
         cycle=cycle,
+        hidden=hidden_sections(),
+        vapid_public_key=current_app.config.get("VAPID_PUBLIC_KEY") or None,
+        morning_hour=hour_label(current_app.config["CHECKIN_MORNING_HOUR"]),
+        evening_hour=hour_label(current_app.config["CHECKIN_EVENING_HOUR"]),
+    )
+
+
+@admin_bp.route("/me/settings", methods=["GET", "POST"])
+def dashboard_settings():
+    """Switch My dashboard sections on or off."""
+    if request.method == "POST":
+        shown = set(request.form.getlist("show"))
+        save_hidden_sections({k for k in SECTION_KEYS if k not in shown})
+        return redirect(url_for("admin.personal_dashboard"))
+    return render_template("dashboard_settings.html", sections=DASHBOARD_SECTIONS, hidden=hidden_sections())
+
+
+@admin_bp.route("/connectors/phone")
+def connector_phone():
+    """Connectors → Phone tracking: the addresses + private key a phone
+    automation uses to send sleep and Instagram time."""
+    return render_template(
+        "connector_phone.html",
         token=tracking.ingest_token(),
         site_base=current_app.config["PUBLIC_SITE_URL"].rstrip("/"),
         status=tracking.tracking_status(),
-        connector=oauth.connection_status(),
-        connector_url=current_app.config["PUBLIC_SITE_URL"].rstrip("/") + url_for("admin.mcp"),
+        tracked_app=tracking.TRACKED_APP,
     )
 
 
 @admin_bp.route("/me/regenerate-token", methods=["POST"])
 def regenerate_tracking_token():
     tracking.regenerate_ingest_token()
-    return redirect(url_for("admin.personal_dashboard") + "#tracking")
+    return redirect(url_for("admin.connector_phone"))
 
 
 # --- phone automations ------------------------------------------------------

@@ -1,0 +1,57 @@
+{% extends "admin/_shell.html" %}
+
+{% block title %}Phone tracking{% endblock %}
+
+{% block content %}
+<div class="container checkin personal">
+  <div class="admin-page-header">
+    <div>
+      <h1><i data-lucide="radio" class="checkin-title-icon"></i> Phone tracking</h1>
+      <span class="admin-meta">Sleep and {{ tracked_app }} time come from your phone automatically.</span>
+    </div>
+  </div>
+
+  <section class="card personal-tracking" id="tracking">
+    <p class="admin-meta">A phone automation sends them to these addresses with your private key.</p>
+    <dl class="personal-tracking-grid">
+      <dt>Sleep address</dt><dd><code>{{ site_base }}{{ url_for('admin.track_sleep') }}</code></dd>
+      <dt>{{ tracked_app }} address</dt><dd><code>{{ site_base }}{{ url_for('admin.track_app') }}</code></dd>
+      <dt>Private key</dt>
+      <dd>
+        {% if token %}
+        <code class="personal-token" id="trackToken" data-token="{{ token }}">••••••••••••••••</code>
+        <button type="button" class="btn-secondary-admin" id="revealToken">Show</button>
+        <button type="button" class="btn-secondary-admin" id="copyToken">Copy</button>
+        {% else %}Created when the app next restarts.{% endif %}
+      </dd>
+      <dt>Last sleep received</dt><dd>{% if status.last_sleep %}{{ status.last_sleep.sleep_date|human_date }} ({{ status.last_sleep.minutes // 60 }}h {{ '%02d'|format(status.last_sleep.minutes % 60) }}m){% else %}Never{% endif %}</dd>
+      <dt>Last {{ tracked_app }} event</dt><dd>{% if status.last_app %}{{ status.last_app.opened_at|human_date }}{% else %}Never{% endif %}</dd>
+    </dl>
+    <form method="post" action="{{ url_for('admin.regenerate_tracking_token') }}" onsubmit="return confirm('Make a new key? Your phone automations will stop until you paste the new one in.');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button type="submit" class="btn-link btn-link-danger">Make a new key</button>
+    </form>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var token = document.getElementById("trackToken");
+    if (!token) return;
+    document.getElementById("revealToken").addEventListener("click", function () {
+      var hidden = token.textContent.indexOf("•") === 0;
+      token.textContent = hidden ? token.dataset.token : "••••••••••••••••";
+      this.textContent = hidden ? "Hide" : "Show";
+    });
+    document.getElementById("copyToken").addEventListener("click", function () {
+      var btn = this;
+      navigator.clipboard.writeText(token.dataset.token).then(function () {
+        btn.textContent = "Copied";
+        setTimeout(function () { btn.textContent = "Copy"; }, 1500);
+      });
+    });
+  });
+</script>
+{% endblock %}

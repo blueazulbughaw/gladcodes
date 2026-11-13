@@ -1,0 +1,30 @@
+{% extends "admin/_shell.html" %}
+
+{% block title %}Claude connector{% endblock %}
+
+{% block content %}
+<div class="container checkin personal">
+  <div class="admin-page-header">
+    <div>
+      <h1><i data-lucide="plug" class="checkin-title-icon"></i> Claude connector</h1>
+      <span class="admin-meta">Claude Duet saves your prayers and morning devotions here.</span>
+    </div>
+  </div>
+
+  <section class="card personal-tracking personal-connector" id="connector">
+    <p class="admin-meta">To connect: in Claude, go to Customize → Connectors → Add custom connector, paste this address, keep "Sign in now" and "Register automatically", then approve it with your glad.codes login.</p>
+    <dl class="personal-tracking-grid">
+      <dt>Connector address</dt><dd><code>{{ connector_url }}</code></dd>
+      <dt>Status</dt><dd><span class="connector-state {{ 'is-on' if connector.connected }}">{{ 'Connected' if connector.connected else 'Not connected' }}</span></dd>
+      <dt>Last used</dt><dd>{% if connector.last_used %}{{ connector.last_used|human_date }}{% else %}Never{% endif %}</dd>
+      <dt>Can use</dt><dd>Prayers, the Devotion section, Bible progress. Nothing else; can't delete.</dd>
+    </dl>
+    {% if connector.connected %}
+    <form method="post" action="{{ url_for('admin.connector_disconnect') }}" onsubmit="return confirm('Disconnect Claude? It will need you to approve it again before it can save prayers.');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button type="submit" class="btn-link btn-link-danger">Disconnect</button>
+    </form>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

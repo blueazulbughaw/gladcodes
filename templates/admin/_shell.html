@@ -33,11 +33,23 @@
     </button>
   </div>
   <nav>
+    {% set res = request.view_args.get('resource') if request.view_args else None %}
     <span class="admin-nav-group">Personal</span>
-    <a href="{{ url_for('admin.today') }}" class="{{ 'active' if request.endpoint == 'admin.today' }}"><i data-lucide="sun"></i><span>Today</span></a>
     <a href="{{ url_for('admin.personal_dashboard') }}" class="{{ 'active' if request.endpoint == 'admin.personal_dashboard' }}"><i data-lucide="layout-dashboard"></i><span>My dashboard</span></a>
-    <a href="{{ url_for('admin.simple_list', resource='medications') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'medications' }}"><i data-lucide="pill"></i><span>Medicines</span></a>
-    <a href="{{ url_for('admin.simple_list', resource='app_ideas') }}" class="{{ 'active' if request.view_args and request.view_args.get('resource') == 'app_ideas' }}"><i data-lucide="lightbulb"></i><span>App ideas</span></a>
+    <a href="{{ url_for('admin.dashboard_settings') }}" class="{{ 'active' if request.endpoint == 'admin.dashboard_settings' }}"><i data-lucide="sliders-horizontal"></i><span>Dashboard settings</span></a>
+    <span class="admin-nav-group">Prayer &amp; devotion</span>
+    <a href="{{ url_for('admin.checkin_prayer') }}" class="{{ 'active' if request.endpoint == 'admin.checkin_prayer' }}"><i data-lucide="book-heart"></i><span>Prayers &amp; devotion</span></a>
+    <span class="admin-nav-group">Mental wellbeing</span>
+    <a href="{{ url_for('admin.checkin_emotions') }}" class="{{ 'active' if request.endpoint == 'admin.checkin_emotions' }}"><i data-lucide="heart"></i><span>My emotions</span></a>
+    <span class="admin-nav-group">Health &amp; fitness</span>
+    <a href="{{ url_for('admin.checkin_body') }}" class="{{ 'active' if request.endpoint == 'admin.checkin_body' }}"><i data-lucide="heart-pulse"></i><span>Body &amp; food</span></a>
+    <a href="{{ url_for('admin.checkin_medicine') }}" class="{{ 'active' if request.endpoint == 'admin.checkin_medicine' or res == 'medications' }}"><i data-lucide="pill"></i><span>Medicines</span></a>
+    <span class="admin-nav-group">Growth</span>
+    <a href="{{ url_for('admin.checkin_learnings') }}" class="{{ 'active' if request.endpoint == 'admin.checkin_learnings' }}"><i data-lucide="graduation-cap"></i><span>Learnings</span></a>
+    <a href="{{ url_for('admin.simple_list', resource='app_ideas') }}" class="{{ 'active' if res == 'app_ideas' }}"><i data-lucide="lightbulb"></i><span>App ideas</span></a>
+    <span class="admin-nav-group">Connectors</span>
+    <a href="{{ url_for('admin.connector_claude') }}" class="{{ 'active' if request.endpoint == 'admin.connector_claude' }}"><i data-lucide="plug"></i><span>Claude connector</span></a>
+    <a href="{{ url_for('admin.connector_phone') }}" class="{{ 'active' if request.endpoint == 'admin.connector_phone' }}"><i data-lucide="radio"></i><span>Phone tracking</span></a>
     <span class="admin-nav-group">Financial</span>
     <a href="{{ url_for('admin.money_index') }}" class="{{ 'active' if request.endpoint in ('admin.money_index',) or (request.view_args and request.view_args.get('resource') in ('recurring_bills', 'credit_cards')) }}"><i data-lucide="book-open-check"></i><span>Ledger</span></a>
     <a href="{{ url_for('admin.money_dashboard') }}" class="{{ 'active' if request.endpoint == 'admin.money_dashboard' }}"><i data-lucide="pie-chart"></i><span>Financial dashboard</span></a>

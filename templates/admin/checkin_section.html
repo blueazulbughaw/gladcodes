@@ -1,6 +1,10 @@
 {% extends "admin/_shell.html" %}
 
-{% block title %}Today{% endblock %}
+{# One daily-input page (checkin.SECTIONS): Prayers & devotion, My emotions,
+   Body & food, Medicines or Learnings. Same day navigation and autosave on
+   every page; each page posts (and the server saves) only its own boxes. #}
+
+{% block title %}{{ section.title }}{% endblock %}
 
 {% macro check(name, label, icon) %}
 <label class="checkin-toggle"><input type="checkbox" name="{{ name }}" value="1" {{ 'checked' if entry and entry[name] }}><i data-lucide="{{ icon }}"></i><span>{{ label }}</span></label>
@@ -10,30 +14,25 @@
 <label class="admin-field"><span>{{ label }}{% if hint %} <small>{{ hint }}</small>{% endif %}</span><textarea name="{{ name }}" rows="{{ rows }}" placeholder="{{ placeholder }}">{{ entry[name] if entry and entry[name] else '' }}</textarea></label>
 {% endmacro %}
 
+{% macro day_url(d) %}{{ url_for(endpoint) if d == today_date else url_for(endpoint, date=d.isoformat()) }}{% endmacro %}
+
 {% block content %}
-<div class="container checkin">
+<div class="container checkin checkin--{{ section_key }}">
   <div class="admin-page-header">
     <div>
-      {% if is_today %}
-      <h1>{{ greeting }}, Glad</h1>
+      <h1><i data-lucide="{{ section.icon }}" class="checkin-title-icon"></i> {{ section.title }}</h1>
       <span class="admin-meta">{{ day.strftime('%A') }}, {{ day|human_date }}</span>
-      {% else %}
-      <h1>{{ day.strftime('%A') }}, {{ day|human_date }}</h1>
-      {% endif %}
     </div>
     <div class="checkin-badges">
-      <span class="checkin-save-state" id="saveState" aria-live="polite">Saves automatically</span>
-      <span class="checkin-badge"><i data-lucide="flame"></i>{{ streak }}-day streak</span>
-      <a class="checkin-badge checkin-badge--teal checkin-badge--link" href="{{ url_for('admin.personal_dashboard') }}"><i data-lucide="layout-dashboard"></i>My dashboard</a>
+      {% if section.fields %}<span class="checkin-save-state" id="saveState" aria-live="polite">Saves automatically</span>{% else %}<span class="checkin-save-state" id="saveState" aria-live="polite">Saves when you tap</span>{% endif %}
     </div>
   </div>
 
   {# Day navigation: go back to any earlier day to fill in what you forgot.
      Future days aren't allowed (the server clamps ?date= to today). #}
-  {% macro day_url(d) %}{{ url_for('admin.today') if d == today_date else url_for('admin.today', date=d.isoformat()) }}{% endmacro %}
   <nav class="checkin-daynav" aria-label="Choose a day">
     <a class="checkin-daynav-step" href="{{ day_url(prev_day) }}" aria-label="Previous day"><i data-lucide="chevron-left"></i><span>{{ prev_day.strftime('%a %b') }} {{ prev_day.day }}</span></a>
-    <form class="checkin-daynav-pick" method="get" action="{{ url_for('admin.today') }}">
+    <form class="checkin-daynav-pick" method="get" action="{{ url_for(endpoint) }}">
       <label class="visually-hidden" for="dayPicker">Go to day</label>
       <input type="date" id="dayPicker" name="date" value="{{ day.isoformat() }}" max="{{ today_date.isoformat() }}" onchange="this.form.submit()">
       <noscript><button type="submit" class="btn-secondary-admin">Go</button></noscript>
@@ -45,26 +44,24 @@
     {% endif %}
   </nav>
   {% if not is_today %}
-  <div class="checkin-pastday"><i data-lucide="history"></i><p>You're editing <strong>{{ day.strftime('%A') }}, {{ day|human_date }}</strong>. Everything you change saves to that day. <a href="{{ url_for('admin.today') }}">Back to today</a></p></div>
+  <div class="checkin-pastday"><i data-lucide="history"></i><p>You're editing <strong>{{ day.strftime('%A') }}, {{ day|human_date }}</strong>. Everything you change saves to that day. <a href="{{ url_for(endpoint) }}">Back to today</a></p></div>
   {% endif %}
 
   {# No Save button: every change is saved in the background (see script below). #}
-  <form method="post" class="checkin-form" id="checkinForm" action="{{ url_for('admin.today') }}">
+  <form method="post" class="checkin-form checkin-form--{{ section_key }}" id="checkinForm" action="{{ url_for(endpoint) }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <input type="hidden" name="checkin_date" value="{{ day.isoformat() }}">
     <input type="hidden" name="tz" id="checkinTz" value="">
+
+    {% if section_key == 'prayer' %}
     {# What the boxes Duet can fill held when this page loaded: autosave only
        overwrites one you actually changed (checkin.DUET_BOXES). #}
     {% for box in ('morning_prayer_note', 'night_prayer_note', 'bible_passage') %}
     <input type="hidden" name="loaded_{{ box }}" value="{{ entry[box] if entry and entry[box] else '' }}">
     {% endfor %}
 
-    {# Desktop: cards sit in pairs (Morning|Devotion, Medicine|Body), the
-       food log full width, then Learnings|My emotions, and prayers last at
-       full width. Phones: one column in the same order. #}
     <section class="card checkin-card">
       <h2><i data-lucide="sunrise"></i> Morning</h2>
-
       {{ textbox('morning_prayer_note', 'My prayer', rows=4, placeholder='Write your prayer for today…') }}
     </section>
 
@@ -127,82 +124,11 @@
     </section>
 
     <section class="card checkin-card">
-      <h2><i data-lucide="pill"></i> Medicine</h2>
-      {% if medications %}
-      <div class="checkin-meds">
-        {% for med in medications %}
-        <div class="checkin-med">
-          <div class="checkin-med-name"><strong>{{ med.name }}</strong>{% if med.notes %}<small>{{ med.notes }}</small>{% endif %}</div>
-          <div class="checkin-doses">
-            {% for index, taken in med.doses %}
-            <label class="checkin-dose" title="Dose {{ index }}">
-              <input type="checkbox" class="dose-box" data-medication="{{ med.id }}" data-dose="{{ index }}" {{ 'checked' if taken }}>
-              <span>{{ index }}</span>
-            </label>
-            {% endfor %}
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-      {% else %}
-      <p class="admin-meta">No medicines for today. <a href="{{ url_for('admin.simple_list', resource='medications') }}">Add your medicines</a>: name, how many times a day, and how often.</p>
-      {% endif %}
-      <a class="admin-meta" href="{{ url_for('admin.simple_list', resource='medications') }}">Edit medicines →</a>
+      <h2><i data-lucide="moon"></i> Evening</h2>
+      {{ textbox('night_prayer_note', 'My prayer', rows=4, placeholder='Write your prayer for tonight…') }}
     </section>
 
-    <section class="card checkin-card">
-      <h2><i data-lucide="heart-pulse"></i> Body</h2>
-      <div class="checkin-tracked">
-        <div class="checkin-tracked-item">
-          <i data-lucide="bed"></i>
-          <span>Sleep last night</span>
-          <strong>{% if sleep_minutes is not none %}{{ sleep_minutes // 60 }}h {{ '%02d'|format(sleep_minutes % 60) }}m{% else %}—{% endif %}</strong>
-        </div>
-        <div class="checkin-tracked-item">
-          <i data-lucide="smartphone"></i>
-          <span>{{ tracked_app }} today</span>
-          <strong>{% if tracking_connected %}{{ app_minutes }} min{% else %}—{% endif %}</strong>
-        </div>
-      </div>
-      {% if not tracking_connected %}
-      <p class="admin-meta">Sleep and {{ tracked_app }} time are tracked by your phone, not typed in. <a href="{{ url_for('admin.personal_dashboard') }}#tracking">Set up phone tracking</a>.</p>
-      {% endif %}
-      <fieldset class="checkin-scale checkin-water">
-        <legend>Water <small id="waterCount">{{ entry.water_glasses if entry and entry.water_glasses else 0 }} of 8 glasses</small></legend>
-        <div class="checkin-glasses">
-          {% for i in range(1, 9) %}
-          <label class="checkin-glass" title="Glass {{ i }}">
-            <input type="checkbox" name="water" value="{{ i }}" {{ 'checked' if entry and entry.water_glasses and entry.water_glasses >= i }}>
-            <span><i data-lucide="glass-water" width="18" height="18"></i></span>
-          </label>
-          {% endfor %}
-        </div>
-      </fieldset>
-      <div class="checkin-row">
-        {{ check('exercised', 'Moved my body', 'footprints') }}
-        {{ check('period_day', 'Period day', 'droplet') }}
-      </div>
-    </section>
-
-    <section class="card checkin-card checkin-card--wide">
-      <h2><i data-lucide="utensils"></i> Food</h2>
-      <div class="checkin-food">
-        {{ textbox('food_breakfast', 'Breakfast', placeholder='e.g. Oatmeal, banana, coffee') }}
-        {{ textbox('food_lunch', 'Lunch') }}
-        {{ textbox('food_dinner', 'Dinner') }}
-        {{ textbox('food_snacks', 'Snacks') }}
-      </div>
-    </section>
-
-    <section class="card checkin-card">
-      <h2><i data-lucide="graduation-cap"></i> Learnings</h2>
-      {{ textbox('reading', 'What did you read?', hint='Book, article, docs: anything counts') }}
-      {{ textbox('learnings', 'Learnings', rows=3) }}
-      {{ textbox('win', 'Wins') }}
-      {{ textbox('notes', 'Notes') }}
-      <a class="admin-meta" href="{{ url_for('admin.simple_create', resource='app_ideas') }}"><i data-lucide="lightbulb"></i> Got an app idea? Add it to your list →</a>
-    </section>
-
+    {% elif section_key == 'emotions' %}
     <section class="card checkin-card">
       <h2><i data-lucide="heart"></i> My emotions</h2>
       <fieldset class="checkin-scale">
@@ -230,39 +156,107 @@
       {{ textbox('grateful', 'What are you thankful for today?', rows=3, placeholder='1.\n2.\n3.') }}
     </section>
 
-    <section class="card checkin-card checkin-card--wide">
-      <h2><i data-lucide="moon"></i> Evening</h2>
-      {{ textbox('night_prayer_note', 'My prayer', rows=4, placeholder='Write your prayer for tonight…') }}
+    {% elif section_key == 'body' %}
+    <section class="card checkin-card">
+      <h2><i data-lucide="heart-pulse"></i> Body</h2>
+      <div class="checkin-tracked">
+        <div class="checkin-tracked-item">
+          <i data-lucide="bed"></i>
+          <span>Sleep last night</span>
+          <strong>{% if sleep_minutes is not none %}{{ sleep_minutes // 60 }}h {{ '%02d'|format(sleep_minutes % 60) }}m{% else %}—{% endif %}</strong>
+        </div>
+        <div class="checkin-tracked-item">
+          <i data-lucide="smartphone"></i>
+          <span>{{ tracked_app }} today</span>
+          <strong>{% if tracking_connected %}{{ app_minutes }} min{% else %}—{% endif %}</strong>
+        </div>
+      </div>
+      {% if not tracking_connected %}
+      <p class="admin-meta">Sleep and {{ tracked_app }} time are tracked by your phone, not typed in. <a href="{{ url_for('admin.connector_phone') }}">Set up phone tracking</a>.</p>
+      {% endif %}
+      <fieldset class="checkin-scale checkin-water">
+        <legend>Water <small id="waterCount">{{ entry.water_glasses if entry and entry.water_glasses else 0 }} of 8 glasses</small></legend>
+        <div class="checkin-glasses">
+          {% for i in range(1, 9) %}
+          <label class="checkin-glass" title="Glass {{ i }}">
+            <input type="checkbox" name="water" value="{{ i }}" {{ 'checked' if entry and entry.water_glasses and entry.water_glasses >= i }}>
+            <span><i data-lucide="glass-water" width="18" height="18"></i></span>
+          </label>
+          {% endfor %}
+        </div>
+      </fieldset>
+      <div class="checkin-row">
+        {{ check('exercised', 'Moved my body', 'footprints') }}
+        {{ check('period_day', 'Period day', 'droplet') }}
+      </div>
     </section>
 
-    <noscript><button type="submit" class="btn btn-primary">Save</button></noscript>
+    <section class="card checkin-card">
+      <h2><i data-lucide="utensils"></i> Food</h2>
+      <div class="checkin-food">
+        {{ textbox('food_breakfast', 'Breakfast', placeholder='e.g. Oatmeal, banana, coffee') }}
+        {{ textbox('food_lunch', 'Lunch') }}
+        {{ textbox('food_dinner', 'Dinner') }}
+        {{ textbox('food_snacks', 'Snacks') }}
+      </div>
+    </section>
+
+    {% elif section_key == 'medicine' %}
+    <section class="card checkin-card">
+      <h2><i data-lucide="pill"></i> Today's doses</h2>
+      {% if medications %}
+      <div class="checkin-meds">
+        {% for med in medications %}
+        <div class="checkin-med">
+          <div class="checkin-med-name"><strong>{{ med.name }}</strong>{% if med.notes %}<small>{{ med.notes }}</small>{% endif %}</div>
+          <div class="checkin-doses">
+            {% for index, taken in med.doses %}
+            <label class="checkin-dose" title="Dose {{ index }}">
+              <input type="checkbox" class="dose-box" data-medication="{{ med.id }}" data-dose="{{ index }}" {{ 'checked' if taken }}>
+              <span>{{ index }}</span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="admin-meta">No medicines due this day. <a href="{{ url_for('admin.simple_list', resource='medications') }}">Add your medicines</a>: name, how many times a day, and how often.</p>
+      {% endif %}
+      <a class="admin-meta" href="{{ url_for('admin.simple_list', resource='medications') }}"><i data-lucide="list"></i> Edit medicine list →</a>
+    </section>
+
+    {% elif section_key == 'learnings' %}
+    <section class="card checkin-card">
+      <h2><i data-lucide="graduation-cap"></i> Learnings</h2>
+      {{ textbox('reading', 'What did you read?', hint='Book, article, docs: anything counts') }}
+      {{ textbox('learnings', 'Learnings', rows=3) }}
+      {{ textbox('win', 'Wins') }}
+      {{ textbox('notes', 'Notes') }}
+      <a class="admin-meta" href="{{ url_for('admin.simple_create', resource='app_ideas') }}"><i data-lucide="lightbulb"></i> Got an app idea? Add it to your list →</a>
+    </section>
+    {% endif %}
+
+    {% if section.fields %}<noscript><button type="submit" class="btn btn-primary">Save</button></noscript>{% endif %}
   </form>
 
-  <p class="checkin-dashboard-link"><a href="{{ url_for('admin.personal_dashboard') }}"><i data-lucide="layout-dashboard"></i> See your week on My dashboard →</a></p>
-
-  <section class="card checkin-app" id="appCard">
-    <div>
-      <h2><i data-lucide="smartphone"></i> Make it an app</h2>
-      <p class="admin-meta" id="appStatus">Install Today on this device and get a nudge at {{ morning_hour }} and {{ evening_hour }} instead of reaching for Instagram.</p>
-    </div>
-    <div class="checkin-app-actions">
-      <button type="button" class="btn btn-primary" id="installBtn" hidden><i data-lucide="download"></i> Install app</button>
-      <button type="button" class="btn-secondary-admin" id="pushBtn" hidden>Turn on reminders</button>
-      <button type="button" class="btn-secondary-admin" id="pushTestBtn" hidden>Send a test</button>
-    </div>
-  </section>
+  <p class="checkin-dashboard-link"><a href="{{ url_for('admin.personal_dashboard') }}"><i data-lucide="layout-dashboard"></i> Back to My dashboard →</a></p>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-  // Autosave: post the whole form in the background on every change — no
+  // Autosave: post this page's form in the background on every change — no
   // Save button. Text waits until typing pauses; taps save immediately.
   // Medicine checkboxes save one dose at a time to their own endpoint.
   (function () {
     var form = document.getElementById("checkinForm");
     var state = document.getElementById("saveState");
     var timer = null, inFlight = false, pending = false, dirty = false;
+
+    // The browser knows where Glad actually is; the server uses it to decide
+    // what "today" is and when the reminders are due.
+    try { document.getElementById("checkinTz").value = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch (_) {}
 
     function show(text, cls) { state.textContent = text; state.className = "checkin-save-state" + (cls ? " " + cls : ""); }
 
@@ -337,137 +331,6 @@
         });
       });
     });
-  })();
-</script>
-<script>
-  // Install + reminder controls. Inline (not /static/) so no public file
-  // ever names the admin URLs.
-  (function () {
-    var CSRF = {{ csrf_token|tojson }};
-    var VAPID_KEY = {{ vapid_public_key|tojson }};
-    var SW_URL = {{ url_for('admin.service_worker')|tojson }};
-    var URLS = {
-      subscribe: {{ url_for('admin.push_subscribe')|tojson }},
-      unsubscribe: {{ url_for('admin.push_unsubscribe')|tojson }},
-      test: {{ url_for('admin.push_test')|tojson }}
-    };
-    var status = document.getElementById("appStatus");
-    var installBtn = document.getElementById("installBtn");
-    var pushBtn = document.getElementById("pushBtn");
-    var testBtn = document.getElementById("pushTestBtn");
-    var standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
-    var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-    var pushSupported = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
-
-    function say(text) { status.textContent = text; }
-
-    function post(url, fields) {
-      var body = new URLSearchParams(fields || {});
-      body.set("csrf_token", CSRF);
-      return fetch(url, { method: "POST", body: body, credentials: "same-origin" }).then(function (r) {
-        return r.json().catch(function () { return {}; });
-      });
-    }
-
-    function b64urlToBytes(s) {
-      var pad = "=".repeat((4 - (s.length % 4)) % 4);
-      var raw = atob((s + pad).replace(/-/g, "+").replace(/_/g, "/"));
-      return Uint8Array.from(raw, function (c) { return c.charCodeAt(0); });
-    }
-
-    // The browser knows where Glad actually is; the server uses it to decide
-    // what "today" is and when 8am happens (no LOCAL_TIMEZONE to configure).
-    var TZ = "";
-    try { TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch (_) {}
-    document.getElementById("checkinTz").value = TZ;
-
-    function subFields(sub) {
-      var json = sub.toJSON();
-      return { endpoint: json.endpoint, p256dh: json.keys.p256dh, auth: json.keys.auth, tz: TZ };
-    }
-
-    // Install: Chrome/Edge (desktop + Android) fire beforeinstallprompt.
-    var deferred = null;
-    window.addEventListener("beforeinstallprompt", function (e) {
-      e.preventDefault();
-      deferred = e;
-      installBtn.hidden = false;
-    });
-    installBtn.addEventListener("click", function () {
-      if (!deferred) return;
-      deferred.prompt();
-      deferred.userChoice.finally(function () { deferred = null; installBtn.hidden = true; });
-    });
-    window.addEventListener("appinstalled", function () {
-      installBtn.hidden = true;
-      say("Installed. Open Today from your taskbar, Start menu, or home screen.");
-    });
-
-    if (isIOS && !standalone) {
-      say("On iPhone: tap Share, then Add to Home Screen. Open Today from there to turn on reminders.");
-      return;
-    }
-    if (!pushSupported) return;
-    if (!VAPID_KEY) {
-      if (standalone) say("Installed. Reminders will turn on after the app restarts on the server.");
-      return;
-    }
-
-    function registration() {
-      return navigator.serviceWorker.register(SW_URL).then(function () { return navigator.serviceWorker.ready; });
-    }
-
-    function refresh() {
-      if (Notification.permission === "denied") {
-        pushBtn.hidden = true; testBtn.hidden = true;
-        say("Notifications are blocked for this site. Allow them in your browser's site settings, then reload.");
-        return;
-      }
-      registration().then(function (reg) { return reg.pushManager.getSubscription(); }).then(function (sub) {
-        var on = !!sub && Notification.permission === "granted";
-        pushBtn.hidden = false;
-        pushBtn.textContent = on ? "Turn off reminders" : "Turn on reminders";
-        pushBtn.dataset.on = on ? "1" : "";
-        testBtn.hidden = !on;
-        if (on) {
-          say("Reminders are on for this device: {{ morning_hour }} if you haven't checked in, {{ evening_hour }} for the evening half.");
-          post(URLS.subscribe, subFields(sub)); // keep the server's copy fresh
-        }
-      });
-    }
-
-    pushBtn.addEventListener("click", function () {
-      pushBtn.disabled = true;
-      var done = function () { pushBtn.disabled = false; refresh(); };
-      if (pushBtn.dataset.on) {
-        registration().then(function (reg) { return reg.pushManager.getSubscription(); }).then(function (sub) {
-          if (!sub) return;
-          return post(URLS.unsubscribe, { endpoint: sub.endpoint }).then(function () { return sub.unsubscribe(); });
-        }).then(function () { say("Reminders are off for this device."); }).finally(done);
-        return;
-      }
-      Notification.requestPermission().then(function (perm) {
-        if (perm !== "granted") throw new Error("denied");
-        return registration();
-      }).then(function (reg) {
-        return reg.pushManager.getSubscription().then(function (sub) {
-          return sub || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64urlToBytes(VAPID_KEY) });
-        });
-      }).then(function (sub) {
-        return post(URLS.subscribe, subFields(sub));
-      }).catch(function () {
-        say("Couldn't turn on reminders on this device. Check the browser's notification permission and try again.");
-      }).finally(done);
-    });
-
-    testBtn.addEventListener("click", function () {
-      testBtn.disabled = true;
-      post(URLS.test).then(function (r) {
-        say(r.sent ? "Test sent. It should pop up in a few seconds." : "The push service didn't accept it. Try turning reminders off and on.");
-      }).finally(function () { testBtn.disabled = false; });
-    });
-
-    refresh();
   })();
 </script>
 {% endblock %}

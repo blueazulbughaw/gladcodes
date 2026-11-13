@@ -54,11 +54,12 @@ self.addEventListener("notificationclick", (e) => {
 def manifest():
     icon = lambda name: url_for("static", filename=f"icons/{name}")  # noqa: E731
     data = {
+        # id stays /gc-admin/today: changing it would make installed copies a different app.
         "id": url_for("admin.today"),
         "name": "GladCodes Today",
         "short_name": "Today",
         "description": "Daily check-in: mood, reading, gratitude, and the one thing to ship.",
-        "start_url": url_for("admin.today"),
+        "start_url": url_for("admin.personal_dashboard"),
         "scope": url_for("admin.index"),
         "display": "standalone",
         "background_color": "#FAF6EF",
@@ -78,7 +79,7 @@ def manifest():
 def service_worker():
     js = SERVICE_WORKER_JS % {
         "icon": url_for("static", filename="icons/app-192.png"),
-        "start": url_for("admin.today"),
+        "start": url_for("admin.personal_dashboard"),
     }
     response = Response(js, mimetype="application/javascript")
     response.headers["Cache-Control"] = "no-cache"
@@ -116,7 +117,7 @@ def push_unsubscribe():
 def push_test():
     if not enabled():
         return jsonify({"ok": False, "sent": 0}), 503
-    sent = send_to_all("It works ✨", "This is where your check-in reminders will show up.", url_for("admin.today"), tag="test")
+    sent = send_to_all("It works ✨", "This is where your check-in reminders will show up.", url_for("admin.personal_dashboard"), tag="test")
     return jsonify({"ok": sent > 0, "sent": sent})
 
 
@@ -133,5 +134,5 @@ def reminders_tick():
                             current_app.config["CHECKIN_EVENING_HOUR"], entry)
         if kind and claim_reminder(f"{now.date().isoformat()}:{kind}"):
             title, body = reminder_text(kind, entry)
-            send_to_all(title, body, url_for("admin.today"), tag=f"checkin-{kind}")
+            send_to_all(title, body, url_for("admin.personal_dashboard"), tag=f"checkin-{kind}")
     return "", 204

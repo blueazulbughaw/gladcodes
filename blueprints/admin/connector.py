@@ -238,9 +238,14 @@ def mcp():
     return _private_json(reply)
 
 
-# --- My dashboard ---------------------------------------------------------------
+# --- Connectors -> Claude connector (Glad's page) -------------------------------
 
-@admin_bp.route("/me/connector/disconnect", methods=["POST"])
+@admin_bp.route("/connectors/claude")
+def connector_claude():
+    return render_template("connector_claude.html", connector=oauth.connection_status(), connector_url=resource_url())
+
+
+@admin_bp.route("/connectors/claude/disconnect", methods=["POST"])
 def connector_disconnect():
     oauth.revoke_all()
-    return redirect(url_for("admin.personal_dashboard") + "#connector")
+    return redirect(url_for("admin.connector_claude"))

@@ -144,7 +144,8 @@ class PersonalDashboardTests(unittest.TestCase):
              "morning_prayer_note": "Guide me", "night_prayer_note": None, "bible_passage": "Psalm 23",
              "devotion_thoughts": None, "water_glasses": 6, "exercised": 1, "period_day": 0,
              "food_breakfast": "Oatmeal", "food_lunch": None, "food_dinner": "Sinigang", "food_snacks": None,
-             "reading": None, "learnings": "Jinja", "win": None}
+             "reading": None, "learnings": "Jinja", "win": None, "grateful": None}
+    BIBLE = {"covered": 112, "total": 1189, "percent": 9.4, "books_started": 9, "books_finished": 2, "by_book": {}}
 
     def render(self, path):
         def fake_query(sql, *args):
@@ -152,6 +153,8 @@ class PersonalDashboardTests(unittest.TestCase):
                 return [{"checkin_date": date(2026, 9, 18)}, {"checkin_date": date(2026, 9, 19)}]
             if "morning_prayer = 1 AND night_prayer = 1" in sql:
                 return []
+            if "FROM app_ideas" in sql:
+                return [{"n": 4}]
             return [self.ENTRY]
 
         with patch("blueprints.admin.personal.checkin_streak", return_value=3), \
@@ -160,7 +163,7 @@ class PersonalDashboardTests(unittest.TestCase):
              patch("blueprints.admin.personal.query", side_effect=fake_query), \
              patch("blueprints.admin.personal.configured_username", return_value="glad"), \
              patch("blueprints.admin.personal.get_weekly_activity", return_value={"labels": ["Oct 12"], "data": [2]}), \
-             patch("blueprints.admin.personal.oauth.connection_status", return_value={"connected": False, "last_used": None}), \
+             patch("blueprints.admin.personal.devotion.bible_progress", return_value=self.BIBLE), \
              patch("blueprints.admin.personal.tracking") as t:
             t.sleep_by_day.return_value = {TODAY: 420}
             t.app_minutes_by_day.return_value = {TODAY: 30}
@@ -170,36 +173,65 @@ class PersonalDashboardTests(unittest.TestCase):
             t.dose_count.side_effect = tracking.dose_count
             t.periods_from_days.side_effect = tracking.periods_from_days
             t.cycle_summary.side_effect = tracking.cycle_summary
-            t.ingest_token.return_value = "secret-token"
-            t.tracking_status.return_value = {"last_sleep": None, "last_app": None}
             t.TRACKED_APP = "Instagram"
             resp = self.client.get(path)
         self.assertEqual(resp.status_code, 200)
         return resp.get_data(as_text=True)
 
-    def test_weekly_grid_starts_sunday_and_shows_only_emojis_and_checks(self):
+    @staticmethod
+    def section(body, key):
+        return body.split(f'data-section="{key}"')[1].split("</details>")[0]
+
+    def test_sections_in_order_and_collapsible(self):
+        body = self.render("/gc-admin/me")
+        keys = ["today", "prayer", "mind", "health", "growth", "app"]
+        positions = [body.index(f'data-section="{k}"') for k in keys]
+        self.assertEqual(positions, sorted(positions))
+        self.assertIn('<details class="card dash-section" data-section="prayer" open>', body)
+        self.assertIn('<details class="card dash-section" data-section="app">', body)  # closed by default
+        self.assertIn("gc-dashboard-sections", body)  # remembers open/closed per device
+
+    def test_today_strip_links_to_each_input_page(self):
+        strip = self.section(self.render("/gc-admin/me"), "today")
+        self.assertIn('today-item--done" href="/gc-admin/prayer" title="Morning prayer"', strip)
+        self.assertIn('today-item--empty" href="/gc-admin/prayer" title="Evening prayer"', strip)
+        self.assertIn('href="/gc-admin/emotions" title="Mood"', strip)
+        self.assertIn("🙂", strip)
+        self.assertIn('today-item--part" href="/gc-admin/medicine" title="Medicines"', strip)
+        self.assertIn(">1/2<", strip)   # doses
+        self.assertIn(">6/8<", strip)   # water
+        self.assertIn(">2/4<", strip)   # meals
+        self.assertIn('href="/gc-admin/learnings"', strip)
+
+    def test_weekly_grids_start_sunday_and_show_only_emojis_and_checks(self):
         body = self.render("/gc-admin/me")  # TODAY is Friday Oct 16
         self.assertIn("Oct 11 – Oct 17", body)                   # Sunday..Saturday
         first_day = body.split('class="habit-dow">')[1][:1]
         self.assertEqual(first_day, "S")
-        self.assertIn('href="/gc-admin/today?date=2026-10-11"', body)
-        self.assertIn('habit-cell--emoji is-today">🙂', body)   # mood 4
-        self.assertIn('habit-cell--emoji is-today">⚡', body)    # energy 5
-        self.assertIn('habit-cell--part is-today">✓', body)      # 1 of 2 doses: amber check, no numbers
-        self.assertNotIn("%", body.split('class="habit-grid')[1].split("</table>")[0])
-        self.assertIn('habit-cell--water-6 is-today">6', body)
-        self.assertIn('💻 2</span><span class="overview-label">GitHub pushes this week', body)
-        # Sentences are gone: only the grid, graphs, cycle chips and phone setup.
-        content = body.split('<main class="admin-main">')[1]  # the sidebar still links App ideas
-        for gone in ("Why I felt that way", "Food log", "Oatmeal", "Psalm 23", "App ideas", "Guide me", "Jinja"):
+        self.assertIn('href="/gc-admin/prayer?date=2026-10-11"', self.section(body, "prayer"))
+        self.assertIn('href="/gc-admin/emotions?date=2026-10-11"', self.section(body, "mind"))
+        self.assertIn('href="/gc-admin/body?date=2026-10-11"', self.section(body, "health"))
+        self.assertIn('href="/gc-admin/learnings?date=2026-10-11"', self.section(body, "growth"))
+        mind, health = self.section(body, "mind"), self.section(body, "health")
+        self.assertIn('habit-cell--emoji is-today">🙂', mind)   # mood 4
+        self.assertIn('habit-cell--emoji is-today">⚡', mind)    # energy 5
+        self.assertIn('habit-cell--part is-today">✓', health)   # 1 of 2 doses: amber check, no numbers
+        self.assertIn('habit-cell--water-6 is-today">6', health)
+        self.assertIn('💻 2</span><span class="overview-label">GitHub pushes this week', self.section(body, "growth"))
+        # No sentences: the words live on the input pages.
+        content = body.split('<main class="admin-main">')[1]
+        for gone in ("Why I felt that way", "Food log", "Oatmeal", "Psalm 23", "Guide me", "Jinja"):
             self.assertNotIn(gone, content)
-        self.assertIn('data-token="secret-token"', body)
-        self.assertNotIn(">secret-token<", body)
         self.assertIn('name="robots" content="noindex, nofollow"', body)
 
+    def test_bible_progress_in_prayer_section(self):
+        prayer = self.section(self.render("/gc-admin/me"), "prayer")
+        self.assertIn("📖 112 <small>/ 1,189</small>", prayer)
+        self.assertIn('aria-valuenow="112"', prayer)
+        self.assertIn("width: 9.4%", prayer)
+
     def test_prayer_rows_check_when_a_prayer_was_written(self):
-        body = self.render("/gc-admin/me")
-        grid = body.split('class="habit-grid')[1]
+        grid = self.section(self.render("/gc-admin/me"), "prayer")
         morning = grid.split("Morning prayer</span></th>")[1].split("</tr>")[0]
         evening = grid.split("Evening prayer</span></th>")[1].split("</tr>")[0]
         self.assertIn('habit-cell--done is-today">✓', morning)   # wrote a morning prayer
@@ -208,13 +240,69 @@ class PersonalDashboardTests(unittest.TestCase):
     def test_monthly_tab_and_period_navigation(self):
         body = self.render("/gc-admin/me?view=month&d=2026-10-05")
         self.assertIn("October 2026", body)
-        self.assertEqual(body.count('class="habit-dom">'), 31)
+        self.assertEqual(self.section(body, "prayer").count('class="habit-dom">'), 31)
         self.assertIn('href="/gc-admin/me?view=month&amp;d=2026-09-01"', body)  # previous month
         self.assertIn("checkin-daynav-step is-disabled", body)                  # no future months
 
     def test_dashboard_requires_login(self):
         resp = self.app.test_client().get("/gc-admin/me")
         self.assertEqual(resp.status_code, 302)
+
+    def test_devotion_is_done_only_with_my_thoughts(self):
+        from blueprints.admin.personal import devotion_state
+        base = {"bible_passage": None, "devotion_thoughts": None, "devotion_markdown": None}
+        self.assertEqual(devotion_state(None), "empty")
+        self.assertEqual(devotion_state(base), "empty")
+        self.assertEqual(devotion_state(dict(base, bible_passage="Psalm 37")), "part")
+        self.assertEqual(devotion_state(dict(base, devotion_markdown="# Waiting on God")), "part")
+        self.assertEqual(devotion_state(dict(base, bible_passage="Psalm 37", devotion_thoughts="  ")), "part")
+        self.assertEqual(devotion_state(dict(base, bible_passage="Psalm 37", devotion_thoughts="He is near")), "done")
+        # ENTRY has a passage but no thoughts: amber on the strip and in the grid.
+        body = self.render("/gc-admin/me")
+        self.assertIn('today-item--part" href="/gc-admin/prayer" title="Devotion"', self.section(body, "today"))
+        devotion_row = self.section(body, "prayer").split("Devotion</span></th>")[1].split("</tr>")[0]
+        self.assertIn('habit-cell--part is-today">✓', devotion_row)
+
+    def test_switched_off_sections_are_not_shown(self):
+        with patch("blueprints.admin.personal.hidden_sections", return_value={"mind", "app"}):
+            body = self.render("/gc-admin/me")
+        for key in ("today", "prayer", "health", "growth"):
+            self.assertIn(f'data-section="{key}"', body)
+        self.assertNotIn('data-section="mind"', body)
+        self.assertNotIn('data-section="app"', body)
+        self.assertNotIn("installBtn", body)  # its script is skipped too
+        self.assertIn('href="/gc-admin/me/settings"', body)
+
+    def test_settings_page_saves_which_sections_show(self):
+        with patch("blueprints.admin.personal.hidden_sections", return_value={"growth"}):
+            page = self.client.get("/gc-admin/me/settings").get_data(as_text=True)
+        self.assertIn('name="show" value="prayer" role="switch" checked', page)
+        self.assertIn('name="show" value="growth" role="switch" >', page)
+        with patch("blueprints.admin.personal.execute") as mock_execute:
+            resp = self.client.post("/gc-admin/me/settings", data={
+                "csrf_token": "test-csrf", "show": ["today", "prayer", "health", "bogus"]})
+        self.assertTrue(resp.headers["Location"].endswith("/gc-admin/me"))
+        self.assertEqual(mock_execute.call_args[0][1], ("mind,growth,app",))
+        with patch("blueprints.admin.personal.execute") as mock_execute:
+            self.client.post("/gc-admin/me/settings", data={"show": ["today"]})  # no CSRF token
+        self.assertFalse(mock_execute.called)
+
+    def test_hidden_sections_ignores_unknown_keys(self):
+        from blueprints.admin import personal
+        with patch("blueprints.admin.personal.query_one", return_value={"dashboard_hidden": "mind,bogus,app"}):
+            self.assertEqual(personal.hidden_sections(), {"mind", "app"})
+        with patch("blueprints.admin.personal.query_one", return_value={"dashboard_hidden": None}):
+            self.assertEqual(personal.hidden_sections(), set())
+
+    def test_phone_tracking_page_hides_the_key(self):
+        with patch("blueprints.admin.personal.tracking") as t:
+            t.ingest_token.return_value = "secret-token"
+            t.tracking_status.return_value = {"last_sleep": None, "last_app": None}
+            t.TRACKED_APP = "Instagram"
+            body = self.client.get("/gc-admin/connectors/phone").get_data(as_text=True)
+        self.assertIn('data-token="secret-token"', body)
+        self.assertNotIn(">secret-token<", body)
+        self.assertIn("/gc-admin/track/sleep", body)
 
 
 class MedicinesEditorTests(unittest.TestCase):

@@ -26,7 +26,8 @@ class InstallableAppTests(unittest.TestCase):
         resp = self.anon.get("/gc-admin/manifest.webmanifest")
         self.assertEqual(resp.status_code, 200)
         manifest = json.loads(resp.get_data(as_text=True))
-        self.assertEqual(manifest["start_url"], "/gc-admin/today")
+        self.assertEqual(manifest["start_url"], "/gc-admin/me")
+        self.assertEqual(manifest["id"], "/gc-admin/today")  # unchanged, so installed copies stay the same app
         self.assertEqual(manifest["scope"], "/gc-admin/")
         self.assertEqual(manifest["display"], "standalone")
         self.assertEqual(resp.headers["X-Robots-Tag"], "noindex, nofollow")

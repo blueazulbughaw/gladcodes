@@ -378,15 +378,26 @@ class McpEndpointTests(Base):
 class DisconnectTests(Base):
     @patch("blueprints.admin.connector.oauth.revoke_all")
     def test_disconnect_needs_session_and_csrf(self, mock_revoke):
-        resp = self.client.post("/gc-admin/me/connector/disconnect")
+        resp = self.client.post("/gc-admin/connectors/claude/disconnect")
         self.assertEqual(resp.status_code, 302)
         self.assertIn("/gc-admin/login", resp.headers["Location"])
         with self.app.app_context():
             self.client.set_cookie(COOKIE_NAME, issue_token("glad"))
         self.client.set_cookie(CSRF_COOKIE_NAME, "t")
-        resp = self.client.post("/gc-admin/me/connector/disconnect", data={"csrf_token": "t"})
-        self.assertTrue(resp.headers["Location"].endswith("/gc-admin/me#connector"))
+        resp = self.client.post("/gc-admin/connectors/claude/disconnect", data={"csrf_token": "t"})
+        self.assertTrue(resp.headers["Location"].endswith("/gc-admin/connectors/claude"))
         mock_revoke.assert_called_once()
+
+
+class ConnectorPageTests(Base):
+    def test_claude_connector_page(self):
+        with self.app.app_context():
+            self.client.set_cookie(COOKIE_NAME, issue_token("glad"))
+        with patch("blueprints.admin.connector.oauth.connection_status", return_value={"connected": True, "last_used": None}):
+            body = self.client.get("/gc-admin/connectors/claude").get_data(as_text=True)
+        self.assertIn("https://glad.codes/gc-admin/mcp", body)
+        self.assertIn("connector-state is-on", body)
+        self.assertIn("/gc-admin/connectors/claude/disconnect", body)
 
 
 class PublicPagesNeverMentionConnector(Base):

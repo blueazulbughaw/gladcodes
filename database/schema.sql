@@ -792,3 +792,7 @@ CREATE TABLE IF NOT EXISTS oauth_tokens (
     last_used_at DATETIME,
     KEY idx_oauth_grant (grant_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- My dashboard sections switched off in Dashboard settings (comma list of
+-- personal.DASHBOARD_SECTIONS keys). Server-side so every device matches.
+ALTER TABLE checkin_app_state ADD COLUMN IF NOT EXISTS dashboard_hidden VARCHAR(255);

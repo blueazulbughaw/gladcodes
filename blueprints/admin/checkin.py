@@ -1,11 +1,9 @@
-"""Private daily check-in (/gc-admin/today): prayers, mood + why, energy,
-gratitude, medicine doses, devotion (Bible passage + thoughts), learnings
-(reading, learnings, wins, notes), body
-(water, movement, period day), the food log (breakfast, lunch, dinner,
-snacks), the evening prayer, and My emotions
-(mood, why, energy, gratitude). Autosaves: no Save button.
-Sleep and Instagram time are shown but never typed; the phone sends them
-(personal.py /track/*). Login lands here until today's entry exists.
+"""Private daily check-in, one page per section (SECTIONS): Prayers &
+devotion (/gc-admin/prayer), My emotions (/emotions), Body & food (/body),
+Medicines (/medicine) and Learnings (/learnings). All autosave (no Save
+button) and save only their own columns. Sleep and Instagram time are shown
+but never typed; the phone sends them (personal.py /track/*). The overview
+and "Today" strip live on My dashboard (personal.py), where login lands.
 
 Never exposed publicly — nothing here is read by blueprints/public.
 """
@@ -125,39 +123,48 @@ CHECKIN_FIELDS = (
     "food_breakfast", "food_lunch", "food_dinner", "food_snacks",
 )
 
+_TEXT_FIELDS = (
+    "mood_reason", "reading", "learnings", "bible_passage", "grateful", "win", "notes", "morning_prayer_note",
+    "night_prayer_note", "devotion_thoughts", "food_breakfast", "food_lunch", "food_dinner", "food_snacks",
+)
 
-def _checkin_values():
-    """Today form → column values, in CHECKIN_FIELDS order."""
-    return (
-        _scale("mood"),
-        _text("mood_reason"),
-        _scale("energy"),
-        # No checkboxes for prayers any more: writing a prayer is what counts.
-        1 if _text("morning_prayer_note") else 0,
-        1 if _text("night_prayer_note") else 0,
-        _flag("exercised"),
-        _flag("period_day"),
-        _text("reading"),
-        _text("learnings"),
-        _text("bible_passage"),
-        _text("grateful"),
-        _text("win"),
-        _text("notes"),
-        _text("morning_prayer_note"),
-        _water(),
-        _text("night_prayer_note"),
-        _text("devotion_thoughts"),
-        _text("food_breakfast"),
-        _text("food_lunch"),
-        _text("food_dinner"),
-        _text("food_snacks"),
-    )
+# Form -> column value for each check-in column.
+FIELD_VALUES = {
+    "mood": lambda: _scale("mood"),
+    "energy": lambda: _scale("energy"),
+    # No checkboxes for prayers: writing a prayer is what counts.
+    "morning_prayer": lambda: 1 if _text("morning_prayer_note") else 0,
+    "night_prayer": lambda: 1 if _text("night_prayer_note") else 0,
+    "exercised": lambda: _flag("exercised"),
+    "period_day": lambda: _flag("period_day"),
+    "water_glasses": lambda: _water(),
+}
+FIELD_VALUES.update({name: (lambda name=name: _text(name)) for name in _TEXT_FIELDS})
+
+# The daily inputs, one page each (sidebar groups: Prayer & devotion, Mental
+# wellbeing, Health & fitness, Growth). Each page saves ONLY its own
+# columns, so autosaving one page can never blank another page's boxes.
+SECTIONS = {
+    "prayer": {"title": "Prayers & devotion", "icon": "book-heart", "endpoint": "admin.checkin_prayer",
+               "fields": ("morning_prayer_note", "morning_prayer", "bible_passage", "devotion_thoughts",
+                          "night_prayer_note", "night_prayer")},
+    "emotions": {"title": "My emotions", "icon": "heart", "endpoint": "admin.checkin_emotions",
+                 "fields": ("mood", "mood_reason", "energy", "grateful")},
+    "body": {"title": "Body & food", "icon": "heart-pulse", "endpoint": "admin.checkin_body",
+             "fields": ("water_glasses", "exercised", "period_day",
+                        "food_breakfast", "food_lunch", "food_dinner", "food_snacks")},
+    "medicine": {"title": "Medicines", "icon": "pill", "endpoint": "admin.checkin_medicine",
+                 "fields": ()},  # doses save one checkbox at a time (/today/dose)
+    "learnings": {"title": "Learnings", "icon": "graduation-cap", "endpoint": "admin.checkin_learnings",
+                  "fields": ("reading", "learnings", "win", "notes")},
+}
+SECTION_ENDPOINTS = {s["endpoint"] for s in SECTIONS.values()}
 
 
 # Boxes Claude Duet can also fill (services/devotion.py), each with the
-# columns that follow it. The Today page sends what each box held when it
-# loaded (loaded_<name>); autosave only writes the box if you changed it,
-# so a page left open can't blank out a prayer Duet saved meanwhile.
+# columns that follow it. The page sends what each box held when it loaded
+# (loaded_<name>); autosave only writes the box if you changed it, so a
+# page left open can't blank out a prayer Duet saved meanwhile.
 DUET_BOXES = {
     "morning_prayer_note": ("morning_prayer_note", "morning_prayer"),
     "night_prayer_note": ("night_prayer_note", "night_prayer"),
@@ -172,25 +179,27 @@ def _box_changed(name) -> bool:
     return request.form.get(name, "").strip() != loaded.strip()
 
 
-def save_checkin(day: date) -> None:
-    columns = ", ".join(CHECKIN_FIELDS)
-    placeholders = ", ".join(["%s"] * (len(CHECKIN_FIELDS) + 2))
+def save_checkin(day: date, fields) -> None:
+    """Upsert the given columns (one section's) from the posted form."""
+    fields = tuple(f for f in fields if f in FIELD_VALUES)
+    if not fields:
+        return
     guard = {column: box for box, cols in DUET_BOXES.items() for column in cols}
     updates, update_params = [], []
-    for c in CHECKIN_FIELDS + ("updated_at",):
+    for c in fields + ("updated_at",):
         if c in guard:
             updates.append(f"{c} = IF(%s, VALUES({c}), {c})")
             update_params.append(_box_changed(guard[c]))
         else:
             updates.append(f"{c} = VALUES({c})")
-    # Column names come from the fixed CHECKIN_FIELDS tuple above, never input.
+    # Column names come from the fixed FIELD_VALUES/SECTIONS tables, never input.
     execute(
         f"""
-        INSERT INTO daily_checkins (checkin_date, {columns}, updated_at)
-        VALUES ({placeholders})
+        INSERT INTO daily_checkins (checkin_date, {", ".join(fields)}, updated_at)
+        VALUES ({", ".join(["%s"] * (len(fields) + 2))})
         ON DUPLICATE KEY UPDATE {", ".join(updates)}
         """,
-        (day, *_checkin_values(), utc_now(), *update_params),
+        (day, *(FIELD_VALUES[f]() for f in fields), utc_now(), *update_params),
     )
 
 
@@ -213,28 +222,10 @@ def _wants_json() -> bool:
     return request.headers.get("X-Requested-With") == "fetch"
 
 
-@admin_bp.route("/today", methods=["GET", "POST"])
-def today():
-    today_date = local_today()
-
-    if request.method == "POST":
-        # Autosave: the page posts the whole form in the background on every
-        # change (no Save button). The <noscript> fallback does a normal post.
-        save_timezone(request.form.get("tz"))
-        day = parse_day(request.form.get("checkin_date"), today_date)
-        save_checkin(day)
-        if _wants_json():
-            return jsonify({"ok": True})
-        if day == today_date:
-            return redirect(url_for("admin.today"))
-        return redirect(url_for("admin.today", date=day.isoformat()))
-
-    day = parse_day(request.args.get("date"), today_date)
-    entry = query_one("SELECT * FROM daily_checkins WHERE checkin_date = %s", (day,))
-    saved_devotion = devotion_view(entry)
-
+def medications_for(day: date):
+    """Medicines due that day, each with its dose checkboxes (taken or not)."""
     taken = tracking.doses_taken(day, day)
-    medications = [
+    return [
         {
             "id": med["id"],
             "name": med["name"],
@@ -246,16 +237,54 @@ def today():
         if tracking.medication_due(med, day)
     ]
 
-    tz_name = local_tz_name()
-    sleep_minutes = tracking.sleep_by_day([day]).get(day)
-    app_minutes = tracking.app_minutes_by_day(tracking.TRACKED_APP, [day], tz_name).get(day, 0)
-    has_tracking = tracking.tracking_status()
 
-    hour = local_now().hour
-    greeting = "Good morning" if hour < 12 else "Good afternoon" if hour < 18 else "Good evening"
+@admin_bp.route("/today", methods=["GET", "POST"])
+def today():
+    """The old single check-in page. Everything moved to the section pages
+    and My dashboard; this stays so the installed app's id, old bookmarks
+    and reminder taps still land somewhere sensible."""
+    day = request.args.get("date")
+    return redirect(url_for("admin.personal_dashboard", d=day) if day else url_for("admin.personal_dashboard"))
+
+
+def section_page(key):
+    section = SECTIONS[key]
+    endpoint = section["endpoint"]
+    today_date = local_today()
+
+    if request.method == "POST":
+        # Autosave: the page posts its form in the background on every change
+        # (no Save button). The <noscript> fallback does a normal post.
+        save_timezone(request.form.get("tz"))
+        day = parse_day(request.form.get("checkin_date"), today_date)
+        save_checkin(day, section["fields"])
+        if _wants_json():
+            return jsonify({"ok": True})
+        return redirect(url_for(endpoint) if day == today_date else url_for(endpoint, date=day.isoformat()))
+
+    day = parse_day(request.args.get("date"), today_date)
+    entry = query_one("SELECT * FROM daily_checkins WHERE checkin_date = %s", (day,))
+    context = {}
+    if key == "prayer":
+        context["saved_devotion"] = devotion_view(entry)
+    elif key == "emotions":
+        context["moods"] = MOODS
+    elif key == "medicine":
+        context["medications"] = medications_for(day)
+    elif key == "body":
+        has_tracking = tracking.tracking_status()
+        context.update(
+            sleep_minutes=tracking.sleep_by_day([day]).get(day),
+            app_minutes=tracking.app_minutes_by_day(tracking.TRACKED_APP, [day], local_tz_name()).get(day, 0),
+            tracked_app=tracking.TRACKED_APP,
+            tracking_connected=bool(has_tracking["last_sleep"] or has_tracking["last_app"]),
+        )
 
     return render_template(
-        "today.html",
+        "checkin_section.html",
+        section_key=key,
+        section=section,
+        endpoint=endpoint,
         day=day,
         is_today=day == today_date,
         # Day navigation: edit any past day (forgot something yesterday?).
@@ -263,19 +292,33 @@ def today():
         next_day=day + timedelta(days=1) if day < today_date else None,
         today_date=today_date,
         entry=entry,
-        saved_devotion=saved_devotion,
-        greeting=greeting,
-        streak=checkin_streak(today_date),
-        moods=MOODS,
-        medications=medications,
-        sleep_minutes=sleep_minutes,
-        app_minutes=app_minutes,
-        tracked_app=tracking.TRACKED_APP,
-        tracking_connected=bool(has_tracking["last_sleep"] or has_tracking["last_app"]),
-        vapid_public_key=current_app.config.get("VAPID_PUBLIC_KEY") or None,
-        morning_hour=hour_label(current_app.config["CHECKIN_MORNING_HOUR"]),
-        evening_hour=hour_label(current_app.config["CHECKIN_EVENING_HOUR"]),
+        **context,
     )
+
+
+@admin_bp.route("/prayer", methods=["GET", "POST"])
+def checkin_prayer():
+    return section_page("prayer")
+
+
+@admin_bp.route("/emotions", methods=["GET", "POST"])
+def checkin_emotions():
+    return section_page("emotions")
+
+
+@admin_bp.route("/body", methods=["GET", "POST"])
+def checkin_body():
+    return section_page("body")
+
+
+@admin_bp.route("/medicine", methods=["GET", "POST"])
+def checkin_medicine():
+    return section_page("medicine")
+
+
+@admin_bp.route("/learnings", methods=["GET", "POST"])
+def checkin_learnings():
+    return section_page("learnings")
 
 
 @admin_bp.route("/today/dose", methods=["POST"])

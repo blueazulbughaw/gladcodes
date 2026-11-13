@@ -216,12 +216,16 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   honeypot field (`company`, absolutely positioned off-screen); a
   filled honeypot silently "succeeds" without sending mail rather than
   telling the bot it was caught.
-- The private daily check-in (`/gc-admin/today`, `blueprints/admin/checkin.py`,
-  `daily_checkins` table) is the admin's landing page after login until
-  today's row exists — the point is to make the site the first thing
-  opened each morning instead of social media. Mood, meds, gratitude, etc.
-  are personal: nothing in `blueprints/public` ever reads this table.
-  "Today" is the calendar day in the timezone the Today page's browser
+- The private daily check-in (`blueprints/admin/checkin.py`,
+  `daily_checkins` table) is one input page per section (`checkin.SECTIONS`):
+  Prayers & devotion `/gc-admin/prayer`, My emotions `/emotions`, Body &
+  food `/body`, Medicines `/medicine`, Learnings `/learnings`. Login (and
+  the installed app, and reminder taps) land on My dashboard, whose Today
+  strip shows what's left and links to each page — the point is to make
+  the site the first thing opened each morning instead of social media.
+  `/gc-admin/today` only redirects to My dashboard now. Mood, meds,
+  gratitude, etc. are personal: nothing in `blueprints/public` ever reads
+  this table. "Today" is the calendar day in the timezone the browser
   last reported (`checkin_app_state.local_timezone`, sent with check-in
   saves and push subscribes), falling back to `LOCAL_TIMEZONE`; `tzdata` is in requirements because Windows
   dev machines have no system tz database for `zoneinfo`.
@@ -229,12 +233,13 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   counts **pushes**, not commits, from the public events feed — GitHub
   removed commit counts from PushEvent payloads in 2025. Same
   `{"labels", "data"}` shape and `github_cache` pattern as everything else.
-- The admin is an installable PWA ("Today", start URL `/gc-admin/today`)
+- The admin is an installable PWA ("Today", start URL `/gc-admin/me`; its
+  manifest `id` stays `/gc-admin/today` so installed copies stay one app)
   with Web Push reminders, modeled on Secret Santa's setup. To keep the
   admin URL secret, **nothing PWA-related lives in `/static/`**: the
   manifest and service worker are routes in `blueprints/admin/app_shell.py`
   (`/gc-admin/manifest.webmanifest`, `/gc-admin/sw.js`), and the install/
-  push JS is inline in `today.html`. The `<link rel="manifest">` and SW
+  push JS is inline in `me.html` (App & reminders section). The `<link rel="manifest">` and SW
   registration are in `_shell.html` (authenticated pages), never
   `base_admin.html`, so the login page stays bare. Manifest + SW are the
   auth-exempt admin endpoints besides login and the reminder tick (`routes.PUBLIC_ENDPOINTS`)
@@ -252,26 +257,30 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   not by a person, and panel env vars can't be written programmatically).
   Never put them — or anything private — in `site_settings`, whose rows go
   to every public template as `settings`. Env `VAPID_*` vars override.
-- **Personal area is separate from the website CMS.** Sidebar has a
-  "Personal" group (Today, My dashboard `/gc-admin/me`, Medicines) above
-  the "Website" group (Site dashboard `/gc-admin/` + all site editors).
-  After login: Today until checked in, then My dashboard.
-- Today **autosaves** (whole form POSTed with `X-Requested-With: fetch` on
-  every change; `<noscript>` Save fallback). Medicine doses save per
+- **Personal area is separate from the website CMS.** Sidebar groups (by
+  request, like Financial): Personal (My dashboard `/gc-admin/me`), Prayer &
+  devotion, Mental wellbeing (My emotions), Health & fitness (Body & food,
+  Medicines), Growth (Learnings, App ideas), Connectors (Claude connector
+  `/connectors/claude`, Phone tracking `/connectors/phone`), then Financial
+  and Website (Site dashboard `/gc-admin/` + all site editors).
+- Input pages **autosave** (the page's form POSTed with `X-Requested-With:
+  fetch` on every change; `<noscript>` Save fallback) and each saves ONLY
+  its own section's columns (`save_checkin(day, section["fields"])`), so
+  one page can never blank another's boxes. Medicine doses save per
   checkbox via `/gc-admin/today/dose`. `medications` is a `simple_crud`
   resource; `doses_per_day` (1–8) = number of checkboxes; `frequency`
   daily / every_other_day / weekly (weekday of `start_date`) / as_needed.
 - Sleep and Instagram time are **never typed in** — phone automations POST
   to `/gc-admin/track/sleep` and `/gc-admin/track/app` with
-  `Authorization: Bearer <checkin_app_state.ingest_token>` (shown on My
-  dashboard). Those two endpoints skip JWT + CSRF (`routes.TOKEN_ENDPOINTS`)
+  `Authorization: Bearer <checkin_app_state.ingest_token>` (shown on
+  Connectors → Phone tracking). Those two endpoints skip JWT + CSRF (`routes.TOKEN_ENDPOINTS`)
   and 404 on a bad token. They write `sleep_logs` / `app_sessions`, not
   `daily_checkins`, so an early sleep upload doesn't count as checked in.
 - Period tracking = the `period_day` checkbox; runs of days (bridging one
   forgotten day) become periods in `services/tracking.periods_from_days`,
   with average cycle + predicted next start on My dashboard.
 - App ideas are a standalone list (`app_ideas` simple_crud resource,
-  Personal nav), not a daily question; the old `daily_checkins.app_ideas`
+  Growth nav), not a daily question; the old `daily_checkins.app_ideas`
   column is kept but unused (schema.sql copied its contents over once).
   The daily "What did you learn today?" answer is `daily_checkins.learnings`.
 - `simple_crud` resources can set `"group_by": "<column>"` (skills use
@@ -281,10 +290,10 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   within a group; a drop saves the order of every card on the page so
   sort_order stays one sequence. New rows in grouped resources get
   `MAX(sort_order)+1`, so adding one never jumps its group to the top.
-- Every admin page except Today and the site dashboard shows a **Back**
+- Every admin page except My dashboard and the site dashboard shows a **Back**
   button (`_shell.html` `before_content` block, `routes.back_url()`). It
   goes to the page's *parent* (edit/create → its list, personal pages →
-  Today, `<x>_edit/_new` → `<x>_index`, else site dashboard), never
+  My dashboard, `<x>_edit/_new` → `<x>_index`, else site dashboard), never
   `history.back()`: that lands on just-saved forms, and the installed app
   has no browser back button. Sidebar "View site" opens `/` in a new tab
   (admin may link to the public site, never the reverse).
@@ -339,37 +348,47 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   `apple-touch-icon.png`) are the mark on a navy tile and are linked from
   base_public only: the admin keeps its own Today PWA icons, and the admin
   login stays unbranded.
-- Today's layout (by request): desktop shows cards in pairs, phones one
-  column in the same order: **Morning** (morning prayer + "My prayer",
-  `morning_prayer_note`) | **Devotion** (Bible passage + `devotion_thoughts`);
-  **Medicine** | **Body** (sleep/Instagram tracked, **water** = 8 tappable
-  glasses saved as `water_glasses` 0-8: tapping glass N fills 1..N, tapping
-  the last filled one empties it, plus moved/period); **Food** full width
-  (`food_breakfast/lunch/dinner/snacks`, 2x2 inside); **Learnings** (what
-  did you read `reading`, learnings, wins `win`, notes) | **My emotions**
-  (mood + why, energy, gratitude); then **Evening** prayers last at full
-  width (`checkin-card--wide`: `night_prayer_note`). Prayers have **no
-  checkboxes**: writing the prayer is what counts, and save sets the
+- Input page contents (`checkin_section.html`): **Prayers & devotion** =
+  Morning (`morning_prayer_note`), Devotion (Bible passage, Duet's saved
+  devotion read-only, `devotion_thoughts`), Evening (`night_prayer_note`);
+  **My emotions** = mood + why, energy, gratitude; **Body & food** = Body
+  (sleep/Instagram tracked, **water** = 8 tappable glasses saved as
+  `water_glasses` 0-8: tapping glass N fills 1..N, tapping the last filled
+  one empties it, plus moved/period) | Food (`food_breakfast/lunch/dinner/
+  snacks`); **Medicines** = the day's dose checkboxes + link to the list;
+  **Learnings** = what did you read `reading`, learnings, wins `win`, notes.
+  Prayers have **no checkboxes**: writing the prayer is what counts, and save sets the
   `morning_prayer`/`night_prayer` flags from whether the note has text (so
   the prayer streak and evening reminder keep working). The evening
   reminder counts the evening half done once night prayer, win, or mood is
   set.
-- Any past day is editable: Today has prev/next arrows and a date picker
+- Any past day is editable: every input page has prev/next arrows and a date picker
   (`?date=YYYY-MM-DD`, clamped to today; no future days) plus an amber
   "You're editing <day>" banner. Autosave, medicine doses and tracked
   sleep/Instagram all follow the selected day. Dates on My dashboard link
-  to that day's check-in.
+  to that section's page for the day.
 - **My dashboard is emojis and checks only, no sentences** (by request):
-  Weekly (Sunday–Saturday) / Monthly tabs with prev/next (`?view=week|month
-  &d=YYYY-MM-DD`, no future periods); compact emoji stat tiles; one
-  `habit-grid` (days as columns, `personal.build_grid`): mood + energy
+  a Today strip (`personal.today_strip`: ✓ / counts per item, each linking
+  to its input page), then Weekly (Sunday–Saturday) / Monthly tabs with
+  prev/next (`?view=week|month&d=YYYY-MM-DD`, no future periods) and
+  collapsible `<details>` sections (open/closed remembered per device in
+  localStorage; charts drawn when their section first opens): Prayer &
+  devotion (prayer streak, Bible progress X / 1,189 + bar, books finished),
+  Mental wellbeing, Health & fitness, Growth, App & reminders (closed by
+  default). Dashboard settings (`/gc-admin/me/settings`) switches whole
+  sections on/off, stored server-side in `checkin_app_state.dashboard_hidden`
+  so every device matches. The devotion check (strip + grid,
+  `personal.devotion_state`) is green only once Glad's own
+  `devotion_thoughts` is written; a passage or Duet's saved devotion
+  without thoughts is amber (half done). Each section has its own `habit-grid` (days as columns,
+  `personal.build_grid` returns rows per section): mood + energy
   emojis (`ENERGY_EMOJI`), ✓ for prayers (written), devotion, each meal
   logged, moved, learnings; medicine is checks only (green all doses, amber
   some, empty missed, blank not due, never numbers/%); water shows the glass
   count shaded by amount; 🩸 period. Mood/energy graphs use emoji y-axis
   ticks (`charts.js` `tickLabels`); sleep/Instagram bar charts; period
-  cycle as chips. Written content lives on each day's check-in: day headers
-  link to `/gc-admin/today?date=…`. Phones show emoji-only row labels.
+  cycle as chips. Written content lives on the input pages: day headers
+  link to that section's page `?date=…`. Phones show emoji-only row labels.
 - Phone tracking on Glad's Samsung uses MacroDroid: Instagram open/close ->
   `/track/app` {"event": "opened"|"closed"}; Sleep mode / Do Not
   Disturb on/off -> `/track/sleep` {"event": "start"|"end"}. The server
@@ -377,8 +396,7 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   in `checkin_app_state.sleep_started_at`; gaps under 1h or over 16h are
   ignored) for the morning you woke up. `{"hours"|"minutes"}` still works.
 - GitHub pushes this week is a My dashboard tile (`get_weekly_activity`,
-  dash when GitHub is unreachable), not a Today badge; Today's header has a
-  "My dashboard" link instead.
+  dash when GitHub is unreachable), in the Growth section.
 - **Financial** (its own sidebar group, below Personal; private like all of
   /gc-admin, linked from nowhere public). UI uses accounting terms by
   request (no "money"): **Ledger** `/gc-admin/finance/ledger` is a one-page
@@ -415,7 +433,7 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   into a box that already has text returns `needs_choice` and changes
   nothing until Claude calls again with `if_exists` replace/add (Glad asked
   to be asked). Never log prayer/devotion text (crash logs are type +
-  traceback only). Infographic = validated JSON data drawn by today.html in
+  traceback only). Infographic = validated JSON data drawn by checkin_section.html in
   the site palette, never stored/rendered HTML; the devotion Markdown goes
   through `render_markdown` (bleach). Bible progress counts only morning
   devotion chapters (night verses don't count), 66-book canon = 1,189.
@@ -429,8 +447,8 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   `wellknown_bp` (bare `/.well-known/*` stays 404 so nothing reveals the
   admin path). `/mcp`, `/token` and `/register` answer only
   `MCP_ALLOWED_NETWORKS` (Anthropic's outbound ranges; 404 otherwise).
-  My dashboard's "Claude connector" card shows status and Disconnect
-  (revokes all tokens).
-- The Today page sends `loaded_<box>` for the boxes Duet can fill
+  Connectors → Claude connector shows status and Disconnect (revokes all
+  tokens).
+- The prayer page sends `loaded_<box>` for the boxes Duet can fill
   (`checkin.DUET_BOXES`); autosave only writes a box you changed, so a
   page left open can't blank a prayer Duet saved meanwhile.

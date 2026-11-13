@@ -25,6 +25,7 @@ class RememberDeviceTests(unittest.TestCase):
         cookie = next(h for h in resp.headers.getlist("Set-Cookie") if h.startswith(COOKIE_NAME + "="))
         token = cookie.split(";", 1)[0].split("=", 1)[1]
         payload = jwt.decode(token, self.app.config["JWT_SECRET"], algorithms=["HS256"])
+        self.assertTrue(resp.headers["Location"].endswith("/gc-admin/me"))  # always lands on My dashboard
         return cookie, payload["exp"] - payload["iat"]
 
     def test_default_session_is_short(self):

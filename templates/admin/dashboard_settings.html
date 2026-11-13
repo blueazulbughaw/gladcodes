@@ -1,0 +1,26 @@
+{% extends "admin/_shell.html" %}
+
+{% block title %}Dashboard settings{% endblock %}
+
+{% block content %}
+<div class="container checkin personal">
+  <div class="admin-page-header">
+    <div>
+      <h1><i data-lucide="sliders-horizontal" class="checkin-title-icon"></i> Dashboard settings</h1>
+      <span class="admin-meta">Choose what My dashboard shows. Same on every device.</span>
+    </div>
+  </div>
+
+  <form method="post" class="card dash-settings" action="{{ url_for('admin.dashboard_settings') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    {% for key, emoji, title in sections %}
+    <label class="dash-switch">
+      <span class="dash-switch-label"><span aria-hidden="true">{{ emoji }}</span> {{ title }}</span>
+      <input type="checkbox" name="show" value="{{ key }}" role="switch" {{ 'checked' if key not in hidden }}>
+      <span class="dash-switch-track" aria-hidden="true"></span>
+    </label>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Save</button>
+  </form>
+</div>
+{% endblock %}

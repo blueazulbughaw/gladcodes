@@ -2,15 +2,71 @@
 
 {% block title %}My dashboard{% endblock %}
 
+{# One emoji/check grid per section: one column per day; tapping a day opens
+   that section's input page for the day (no sentences here, by request). #}
+{% macro habit_grid(rows, endpoint) %}
+<div class="habit-scroll">
+  <table class="habit-grid habit-grid--{{ view }}">
+    <thead>
+      <tr>
+        <th scope="col" class="habit-label"></th>
+        {% for d in days %}
+        <th scope="col" class="{{ 'is-today' if d == today }}{{ ' is-future' if d > today }}">
+          {% if d <= today %}<a href="{{ url_for(endpoint, date=d.isoformat()) }}" title="Open {{ d|human_date }}">{% endif %}
+          <span class="habit-dow">{{ d.strftime('%a')[0] }}</span><span class="habit-dom">{{ d.day }}</span>
+          {% if d <= today %}</a>{% endif %}
+        </th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <th scope="row" class="habit-label" title="{{ row.label }}"><span aria-hidden="true">{{ row.emoji }}</span> <span class="habit-label-text">{{ row.label }}</span></th>
+        {% for cell in row.cells %}
+        <td class="habit-cell habit-cell--{{ cell.state }}{{ ' is-today' if days[loop.index0] == today }}">{{ cell.text }}</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endmacro %}
+
+{% macro section_head(key, emoji, title) %}
+<summary class="dash-summary"><h2><span aria-hidden="true">{{ emoji }}</span> {{ title }}</h2><i data-lucide="chevron-down" class="dash-chevron"></i></summary>
+{% endmacro %}
+
 {% block content %}
 <div class="container checkin personal">
   <div class="admin-page-header">
     <div>
       <h1>My dashboard</h1>
-      <span class="admin-meta">Private: just you.</span>
+      <span class="admin-meta">{{ today.strftime('%A') }}, {{ today|human_date }}</span>
     </div>
-    <a class="btn btn-primary" href="{{ url_for('admin.today') }}"><i data-lucide="sun"></i> Today's check-in</a>
+    <div class="checkin-badges">
+      <span class="checkin-badge"><i data-lucide="flame"></i>{{ streak }}-day streak</span>
+      <a class="checkin-badge checkin-badge--teal checkin-badge--link" href="{{ url_for('admin.dashboard_settings') }}"><i data-lucide="sliders-horizontal"></i>Settings</a>
+    </div>
   </div>
+
+  {# Today at a glance: each item opens its input page for today. #}
+  {% if 'today' not in hidden %}
+  <details class="card dash-section dash-today" data-section="today" open>
+    {{ section_head('today', '☀️', 'Today') }}
+    <div class="dash-body">
+      <div class="today-strip">
+        {% for item in today_items %}
+        <a class="today-item today-item--{{ item.state }}" href="{{ item.url }}" title="{{ item.label }}">
+          <span class="today-emoji" aria-hidden="true">{{ item.emoji }}</span>
+          <span class="today-value">{{ item.text }}</span>
+          <span class="today-label">{{ item.label }}</span>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </details>
+  {% endif %}
 
   <div class="personal-toolbar">
     <div class="personal-tabs" role="tablist">
@@ -28,104 +84,93 @@
     </div>
   </div>
 
-  <div class="overview-cards personal-tiles">
-    <div class="overview-card"><span class="overview-value">🔥 {{ streak }}</span><span class="overview-label">Check-in streak</span></div>
-    <div class="overview-card"><span class="overview-value">🙏 {{ prayer_streak }}</span><span class="overview-label">Prayer streak</span></div>
-    <div class="overview-card"><span class="overview-value">😴 {% if avg_sleep is not none %}{{ avg_sleep // 60 }}h{{ '%02d'|format(avg_sleep % 60) }}{% else %}—{% endif %}</span><span class="overview-label">Avg sleep</span></div>
-    <div class="overview-card"><span class="overview-value">💧 {{ avg_water if avg_water is not none else '—' }}</span><span class="overview-label">Avg glasses</span></div>
-    <div class="overview-card"><span class="overview-value">📱 {{ (avg_app ~ 'm') if avg_app is not none else '—' }}</span><span class="overview-label">Avg {{ tracked_app }}</span></div>
-    <div class="overview-card"><span class="overview-value">💻 {{ github_pushes if github_pushes is not none else '—' }}</span><span class="overview-label">GitHub pushes this week</span></div>
-    <div class="overview-card"><span class="overview-value overview-value--small">🩸 {% if cycle.next_start %}{{ cycle.next_start.strftime('%b') }} {{ cycle.next_start.day }}{% else %}—{% endif %}</span><span class="overview-label">Next period</span></div>
-  </div>
+  {% if 'prayer' not in hidden %}
+  <details class="card dash-section" data-section="prayer" open>
+    {{ section_head('prayer', '🙏', 'Prayer & devotion') }}
+    <div class="dash-body">
+      <div class="overview-cards personal-tiles">
+        <div class="overview-card"><span class="overview-value">🙏 {{ prayer_streak }}</span><span class="overview-label">Prayer streak</span></div>
+        <div class="overview-card bible-progress">
+          <span class="overview-value">📖 {{ '{:,}'.format(bible.covered) }} <small>/ {{ '{:,}'.format(bible.total) }}</small></span>
+          <span class="bible-bar" role="progressbar" aria-valuemin="0" aria-valuemax="{{ bible.total }}" aria-valuenow="{{ bible.covered }}" aria-label="Bible chapters covered"><span style="width: {{ [bible.percent, 100]|min }}%"></span></span>
+          <span class="overview-label">Bible chapters · {{ bible.percent }}%</span>
+        </div>
+        <div class="overview-card"><span class="overview-value">📚 {{ bible.books_finished }}</span><span class="overview-label">Books finished</span></div>
+      </div>
+      {{ habit_grid(grid.prayer, 'admin.checkin_prayer') }}
+    </div>
+  </details>
+  {% endif %}
 
-  {# Emoji/check grid: one column per day; tap a day to open its check-in,
-     where everything written lives (no sentences here, by request). #}
-  <section class="card personal-grid-card">
-    <div class="habit-scroll">
-      <table class="habit-grid habit-grid--{{ view }}">
-        <thead>
-          <tr>
-            <th scope="col" class="habit-label"></th>
-            {% for d in days %}
-            <th scope="col" class="{{ 'is-today' if d == today }}{{ ' is-future' if d > today }}">
-              {% if d <= today %}<a href="{{ url_for('admin.today', date=d.isoformat()) }}" title="Open {{ d|human_date }}">{% endif %}
-              <span class="habit-dow">{{ d.strftime('%a')[0] }}</span><span class="habit-dom">{{ d.day }}</span>
-              {% if d <= today %}</a>{% endif %}
-            </th>
-            {% endfor %}
-          </tr>
-        </thead>
-        <tbody>
-          {% for row in grid %}
-          <tr>
-            <th scope="row" class="habit-label" title="{{ row.label }}"><span aria-hidden="true">{{ row.emoji }}</span> <span class="habit-label-text">{{ row.label }}</span></th>
-            {% for cell in row.cells %}
-            <td class="habit-cell habit-cell--{{ cell.state }}{{ ' is-today' if days[loop.index0] == today }}">{{ cell.text }}</td>
-            {% endfor %}
-          </tr>
+  {% if 'mind' not in hidden %}
+  <details class="card dash-section" data-section="mind" open>
+    {{ section_head('mind', '🧠', 'Mental wellbeing') }}
+    <div class="dash-body">
+      {{ habit_grid(grid.mind, 'admin.checkin_emotions') }}
+      <div class="checkin-charts">
+        <div class="chart-card"><h3>😊 Mood</h3><canvas id="moodChart" height="200"></canvas></div>
+        <div class="chart-card"><h3>⚡ Energy</h3><canvas id="energyChart" height="200"></canvas></div>
+      </div>
+    </div>
+  </details>
+  {% endif %}
+
+  {% if 'health' not in hidden %}
+  <details class="card dash-section" data-section="health" open>
+    {{ section_head('health', '💪', 'Health & fitness') }}
+    <div class="dash-body">
+      <div class="overview-cards personal-tiles">
+        <div class="overview-card"><span class="overview-value">😴 {% if avg_sleep is not none %}{{ avg_sleep // 60 }}h{{ '%02d'|format(avg_sleep % 60) }}{% else %}—{% endif %}</span><span class="overview-label">Avg sleep</span></div>
+        <div class="overview-card"><span class="overview-value">💧 {{ avg_water if avg_water is not none else '—' }}</span><span class="overview-label">Avg glasses</span></div>
+        <div class="overview-card"><span class="overview-value">📱 {{ (avg_app ~ 'm') if avg_app is not none else '—' }}</span><span class="overview-label">Avg {{ tracked_app }}</span></div>
+        <div class="overview-card"><span class="overview-value overview-value--small">🩸 {% if cycle.next_start %}{{ cycle.next_start.strftime('%b') }} {{ cycle.next_start.day }}{% else %}—{% endif %}</span><span class="overview-label">Next period</span></div>
+      </div>
+      {{ habit_grid(grid.health, 'admin.checkin_body') }}
+      <div class="checkin-charts">
+        <div class="chart-card"><h3>😴 Sleep (hours)</h3><canvas id="sleepChart" height="200"></canvas></div>
+        <div class="chart-card"><h3>📱 {{ tracked_app }} (minutes)</h3><canvas id="appChart" height="200"></canvas></div>
+      </div>
+      <div class="personal-cycle">
+        <h3>🩸 Period cycle</h3>
+        {% if periods %}
+        <div class="personal-cycle-row">
+          {% if cycle.average_cycle %}<span class="cycle-chip">🔁 {{ cycle.average_cycle }}d cycle</span>{% endif %}
+          {% for start, end in periods %}
+          <a class="cycle-chip" href="{{ url_for('admin.checkin_body', date=start.isoformat()) }}">{{ start.strftime('%b') }} {{ start.day }}{% if end != start %}–{{ end.day if end.month == start.month else end.strftime('%b ') ~ end.day }}{% endif %} · {{ (end - start).days + 1 }}d</a>
           {% endfor %}
-        </tbody>
-      </table>
+        </div>
+        {% else %}<p class="admin-meta">🩸 Tick Period day on Body &amp; food.</p>{% endif %}
+      </div>
     </div>
-  </section>
+  </details>
+  {% endif %}
 
-  <div class="checkin-charts">
-    <div class="card chart-card"><h3>😊 Mood</h3><canvas id="moodChart" height="200"></canvas></div>
-    <div class="card chart-card"><h3>⚡ Energy</h3><canvas id="energyChart" height="200"></canvas></div>
-    <div class="card chart-card"><h3>😴 Sleep (hours)</h3><canvas id="sleepChart" height="200"></canvas></div>
-    <div class="card chart-card"><h3>📱 {{ tracked_app }} (minutes)</h3><canvas id="appChart" height="200"></canvas></div>
-  </div>
-
-  <section class="card personal-cycle">
-    <h2>🩸 Period cycle</h2>
-    {% if periods %}
-    <div class="personal-cycle-row">
-      {% if cycle.average_cycle %}<span class="cycle-chip">🔁 {{ cycle.average_cycle }}d cycle</span>{% endif %}
-      {% for start, end in periods %}
-      <a class="cycle-chip" href="{{ url_for('admin.today', date=start.isoformat()) }}">{{ start.strftime('%b') }} {{ start.day }}{% if end != start %}–{{ end.day if end.month == start.month else end.strftime('%b ') ~ end.day }}{% endif %} · {{ (end - start).days + 1 }}d</a>
-      {% endfor %}
+  {% if 'growth' not in hidden %}
+  <details class="card dash-section" data-section="growth" open>
+    {{ section_head('growth', '🌱', 'Growth') }}
+    <div class="dash-body">
+      <div class="overview-cards personal-tiles">
+        <div class="overview-card"><span class="overview-value">💻 {{ github_pushes if github_pushes is not none else '—' }}</span><span class="overview-label">GitHub pushes this week</span></div>
+        <a class="overview-card" href="{{ url_for('admin.simple_list', resource='app_ideas') }}"><span class="overview-value">💡 {{ app_idea_count }}</span><span class="overview-label">App ideas</span></a>
+      </div>
+      {{ habit_grid(grid.growth, 'admin.checkin_learnings') }}
     </div>
-    {% else %}<p class="admin-meta">🩸 Tick Period day on Today.</p>{% endif %}
-  </section>
+  </details>
+  {% endif %}
 
-  <section class="card personal-tracking" id="tracking">
-    <h2><i data-lucide="radio"></i> Phone tracking</h2>
-    <p class="admin-meta">Sleep and {{ tracked_app }} time come from your phone automatically. A phone automation sends them to these addresses with your private key.</p>
-    <dl class="personal-tracking-grid">
-      <dt>Sleep address</dt><dd><code>{{ site_base }}{{ url_for('admin.track_sleep') }}</code></dd>
-      <dt>{{ tracked_app }} address</dt><dd><code>{{ site_base }}{{ url_for('admin.track_app') }}</code></dd>
-      <dt>Private key</dt>
-      <dd>
-        {% if token %}
-        <code class="personal-token" id="trackToken" data-token="{{ token }}">••••••••••••••••</code>
-        <button type="button" class="btn-secondary-admin" id="revealToken">Show</button>
-        <button type="button" class="btn-secondary-admin" id="copyToken">Copy</button>
-        {% else %}Created when the app next restarts.{% endif %}
-      </dd>
-      <dt>Last sleep received</dt><dd>{% if status.last_sleep %}{{ status.last_sleep.sleep_date|human_date }} ({{ status.last_sleep.minutes // 60 }}h {{ '%02d'|format(status.last_sleep.minutes % 60) }}m){% else %}Never{% endif %}</dd>
-      <dt>Last {{ tracked_app }} event</dt><dd>{% if status.last_app %}{{ status.last_app.opened_at|human_date }}{% else %}Never{% endif %}</dd>
-    </dl>
-    <form method="post" action="{{ url_for('admin.regenerate_tracking_token') }}" onsubmit="return confirm('Make a new key? Your phone automations will stop until you paste the new one in.');">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-      <button type="submit" class="btn-link btn-link-danger">Make a new key</button>
-    </form>
-  </section>
-
-  <section class="card personal-tracking personal-connector" id="connector">
-    <h2><i data-lucide="plug"></i> Claude connector</h2>
-    <p class="admin-meta">Claude Duet saves your prayers and morning devotions here. Add this address in Claude under Customize → Connectors → Add custom connector.</p>
-    <dl class="personal-tracking-grid">
-      <dt>Connector address</dt><dd><code>{{ connector_url }}</code></dd>
-      <dt>Status</dt><dd><span class="connector-state {{ 'is-on' if connector.connected }}">{{ 'Connected' if connector.connected else 'Not connected' }}</span></dd>
-      <dt>Last used</dt><dd>{% if connector.last_used %}{{ connector.last_used|human_date }}{% else %}Never{% endif %}</dd>
-    </dl>
-    {% if connector.connected %}
-    <form method="post" action="{{ url_for('admin.connector_disconnect') }}" onsubmit="return confirm('Disconnect Claude? It will need you to approve it again before it can save prayers.');">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-      <button type="submit" class="btn-link btn-link-danger">Disconnect</button>
-    </form>
-    {% endif %}
-  </section>
+  {% if 'app' not in hidden %}
+  <details class="card dash-section" data-section="app">
+    {{ section_head('app', '📱', 'App & reminders') }}
+    <div class="dash-body checkin-app" id="appCard">
+      <p class="admin-meta" id="appStatus">Install Today on this device and get a nudge at {{ morning_hour }} and {{ evening_hour }} instead of reaching for Instagram.</p>
+      <div class="checkin-app-actions">
+        <button type="button" class="btn btn-primary" id="installBtn" hidden><i data-lucide="download"></i> Install app</button>
+        <button type="button" class="btn-secondary-admin" id="pushBtn" hidden>Turn on reminders</button>
+        <button type="button" class="btn-secondary-admin" id="pushTestBtn" hidden>Send a test</button>
+      </div>
+    </div>
+  </details>
+  {% endif %}
 </div>
 {% endblock %}
 
@@ -133,30 +178,174 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer></script>
 <script src="{{ url_for('static', filename='js/charts.js') }}" defer></script>
 <script>
+  // Collapsible sections: remembered per device (open/closed per section).
+  // Charts are drawn the first time their section is open, so a chart in a
+  // closed section doesn't render at zero size.
   document.addEventListener("DOMContentLoaded", function () {
-    if (window.GladCharts) {
-      var labels = {{ chart.labels|tojson }};
-      GladCharts.multiLineChart("moodChart", labels, [{ label: "Mood", data: {{ chart.mood|tojson }} }],
-        { min: 1, max: 5, tickLabels: {{ chart.mood_ticks|tojson }} });
-      GladCharts.multiLineChart("energyChart", labels, [{ label: "Energy", data: {{ chart.energy|tojson }} }],
-        { min: 1, max: 5, tickLabels: {{ chart.energy_ticks|tojson }}, colorIndex: 2 });
-      GladCharts.barChart("sleepChart", labels, {{ chart.sleep|tojson }}, "Hours");
-      GladCharts.barChart("appChart", labels, {{ chart.app|tojson }}, "Minutes");
+    var KEY = "gc-dashboard-sections";
+    var saved = {};
+    try { saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (_) {}
+    var labels = {{ chart.labels|tojson }};
+    var drawn = {};
+    var charts = {
+      mind: function () {
+        GladCharts.multiLineChart("moodChart", labels, [{ label: "Mood", data: {{ chart.mood|tojson }} }],
+          { min: 1, max: 5, tickLabels: {{ chart.mood_ticks|tojson }} });
+        GladCharts.multiLineChart("energyChart", labels, [{ label: "Energy", data: {{ chart.energy|tojson }} }],
+          { min: 1, max: 5, tickLabels: {{ chart.energy_ticks|tojson }}, colorIndex: 2 });
+      },
+      health: function () {
+        GladCharts.barChart("sleepChart", labels, {{ chart.sleep|tojson }}, "Hours");
+        GladCharts.barChart("appChart", labels, {{ chart.app|tojson }}, "Minutes");
+      }
+    };
+    function draw(section) {
+      if (!section.open || drawn[section.dataset.section] || !window.GladCharts) return;
+      var fn = charts[section.dataset.section];
+      if (fn) { drawn[section.dataset.section] = true; fn(); }
     }
-    var token = document.getElementById("trackToken");
-    if (!token) return;
-    document.getElementById("revealToken").addEventListener("click", function () {
-      var hidden = token.textContent.indexOf("•") === 0;
-      token.textContent = hidden ? token.dataset.token : "••••••••••••••••";
-      this.textContent = hidden ? "Hide" : "Show";
-    });
-    document.getElementById("copyToken").addEventListener("click", function () {
-      var btn = this;
-      navigator.clipboard.writeText(token.dataset.token).then(function () {
-        btn.textContent = "Copied";
-        setTimeout(function () { btn.textContent = "Copy"; }, 1500);
+    document.querySelectorAll(".dash-section").forEach(function (section) {
+      var key = section.dataset.section;
+      if (key in saved) section.open = !!saved[key];
+      draw(section);
+      section.addEventListener("toggle", function () {
+        saved[key] = section.open;
+        try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (_) {}
+        draw(section);
       });
     });
   });
 </script>
+{% if 'app' not in hidden %}
+<script>
+  // Install + reminder controls. Inline (not /static/) so no public file
+  // ever names the admin URLs.
+  (function () {
+    var CSRF = {{ csrf_token|tojson }};
+    var VAPID_KEY = {{ vapid_public_key|tojson }};
+    var SW_URL = {{ url_for('admin.service_worker')|tojson }};
+    var URLS = {
+      subscribe: {{ url_for('admin.push_subscribe')|tojson }},
+      unsubscribe: {{ url_for('admin.push_unsubscribe')|tojson }},
+      test: {{ url_for('admin.push_test')|tojson }}
+    };
+    var status = document.getElementById("appStatus");
+    var installBtn = document.getElementById("installBtn");
+    var pushBtn = document.getElementById("pushBtn");
+    var testBtn = document.getElementById("pushTestBtn");
+    var standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+    var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    var pushSupported = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+
+    function say(text) { status.textContent = text; }
+
+    function post(url, fields) {
+      var body = new URLSearchParams(fields || {});
+      body.set("csrf_token", CSRF);
+      return fetch(url, { method: "POST", body: body, credentials: "same-origin" }).then(function (r) {
+        return r.json().catch(function () { return {}; });
+      });
+    }
+
+    function b64urlToBytes(s) {
+      var pad = "=".repeat((4 - (s.length % 4)) % 4);
+      var raw = atob((s + pad).replace(/-/g, "+").replace(/_/g, "/"));
+      return Uint8Array.from(raw, function (c) { return c.charCodeAt(0); });
+    }
+
+    // The browser knows where Glad actually is; the server uses it to decide
+    // what "today" is and when the reminders are due.
+    var TZ = "";
+    try { TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch (_) {}
+
+    function subFields(sub) {
+      var json = sub.toJSON();
+      return { endpoint: json.endpoint, p256dh: json.keys.p256dh, auth: json.keys.auth, tz: TZ };
+    }
+
+    // Install: Chrome/Edge (desktop + Android) fire beforeinstallprompt.
+    var deferred = null;
+    window.addEventListener("beforeinstallprompt", function (e) {
+      e.preventDefault();
+      deferred = e;
+      installBtn.hidden = false;
+    });
+    installBtn.addEventListener("click", function () {
+      if (!deferred) return;
+      deferred.prompt();
+      deferred.userChoice.finally(function () { deferred = null; installBtn.hidden = true; });
+    });
+    window.addEventListener("appinstalled", function () {
+      installBtn.hidden = true;
+      say("Installed. Open Today from your taskbar, Start menu, or home screen.");
+    });
+
+    if (isIOS && !standalone) {
+      say("On iPhone: tap Share, then Add to Home Screen. Open Today from there to turn on reminders.");
+      return;
+    }
+    if (!pushSupported) return;
+    if (!VAPID_KEY) {
+      if (standalone) say("Installed. Reminders will turn on after the app restarts on the server.");
+      return;
+    }
+
+    function registration() {
+      return navigator.serviceWorker.register(SW_URL).then(function () { return navigator.serviceWorker.ready; });
+    }
+
+    function refresh() {
+      if (Notification.permission === "denied") {
+        pushBtn.hidden = true; testBtn.hidden = true;
+        say("Notifications are blocked for this site. Allow them in your browser's site settings, then reload.");
+        return;
+      }
+      registration().then(function (reg) { return reg.pushManager.getSubscription(); }).then(function (sub) {
+        var on = !!sub && Notification.permission === "granted";
+        pushBtn.hidden = false;
+        pushBtn.textContent = on ? "Turn off reminders" : "Turn on reminders";
+        pushBtn.dataset.on = on ? "1" : "";
+        testBtn.hidden = !on;
+        if (on) {
+          say("Reminders are on for this device: {{ morning_hour }} if you haven't checked in, {{ evening_hour }} for the evening half.");
+          post(URLS.subscribe, subFields(sub)); // keep the server's copy (and timezone) fresh
+        }
+      });
+    }
+
+    pushBtn.addEventListener("click", function () {
+      pushBtn.disabled = true;
+      var done = function () { pushBtn.disabled = false; refresh(); };
+      if (pushBtn.dataset.on) {
+        registration().then(function (reg) { return reg.pushManager.getSubscription(); }).then(function (sub) {
+          if (!sub) return;
+          return post(URLS.unsubscribe, { endpoint: sub.endpoint }).then(function () { return sub.unsubscribe(); });
+        }).then(function () { say("Reminders are off for this device."); }).finally(done);
+        return;
+      }
+      Notification.requestPermission().then(function (perm) {
+        if (perm !== "granted") throw new Error("denied");
+        return registration();
+      }).then(function (reg) {
+        return reg.pushManager.getSubscription().then(function (sub) {
+          return sub || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64urlToBytes(VAPID_KEY) });
+        });
+      }).then(function (sub) {
+        return post(URLS.subscribe, subFields(sub));
+      }).catch(function () {
+        say("Couldn't turn on reminders on this device. Check the browser's notification permission and try again.");
+      }).finally(done);
+    });
+
+    testBtn.addEventListener("click", function () {
+      testBtn.disabled = true;
+      post(URLS.test).then(function (r) {
+        say(r.sent ? "Test sent. It should pop up in a few seconds." : "The push service didn't accept it. Try turning reminders off and on.");
+      }).finally(function () { testBtn.disabled = false; });
+    });
+
+    refresh();
+  })();
+</script>
+{% endif %}
 {% endblock %}

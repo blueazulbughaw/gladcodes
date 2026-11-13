@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 from app import create_app
 from blueprints.admin.auth import COOKIE_NAME, issue_token
-from blueprints.admin.checkin import CHECKIN_FIELDS
+from blueprints.admin.checkin import SECTIONS
 from blueprints.admin.csrf import CSRF_COOKIE_NAME
 from services import bible, devotion
 
@@ -303,7 +303,7 @@ class TodayDevotionPageTests(unittest.TestCase):
         mock_tracking.tracking_status.return_value = {"last_sleep": None, "last_app": None}
         mock_tracking.TRACKED_APP = "Instagram"
 
-        body = self.client.get("/gc-admin/today").get_data(as_text=True)
+        body = self.client.get("/gc-admin/prayer").get_data(as_text=True)
         card = body.split("Devotion</h2>")[1].split("</section>")[0]
         for text in ("Waiting on God", "Exiles get a letter", "Jeremiah 29:13", "How to wait today",
                      "Read the full devotion", "A letter to people stuck", "Romans 8:31 · KJV", "My own thoughts"):
@@ -322,12 +322,12 @@ class TodayDevotionPageTests(unittest.TestCase):
         mock_tracking.sleep_by_day.return_value = {}
         mock_tracking.app_minutes_by_day.return_value = {}
         mock_tracking.tracking_status.return_value = {"last_sleep": None, "last_app": None}
-        body = self.client.get("/gc-admin/today").get_data(as_text=True)
+        body = self.client.get("/gc-admin/prayer").get_data(as_text=True)
         self.assertNotIn("Read the full devotion", body)
 
 
 class AutosaveGuardTests(unittest.TestCase):
-    """An open Today page must not overwrite a prayer Duet saved after it loaded."""
+    """An open prayer page must not overwrite a prayer Duet saved after it loaded."""
 
     def setUp(self):
         self.app = create_app()
@@ -340,9 +340,9 @@ class AutosaveGuardTests(unittest.TestCase):
 
     def post(self, mock_execute, **fields):
         data = {"csrf_token": "test-csrf", "checkin_date": "2026-11-13", **fields}
-        self.client.post("/gc-admin/today", headers={"X-Requested-With": "fetch"}, data=data)
+        self.client.post("/gc-admin/prayer", headers={"X-Requested-With": "fetch"}, data=data)
         sql, params = mock_execute.call_args[0]
-        update_flags = params[len(CHECKIN_FIELDS) + 2:]
+        update_flags = params[len(SECTIONS["prayer"]["fields"]) + 2:]
         return sql, update_flags
 
     @patch("blueprints.admin.checkin.saved_timezone", return_value=None)
@@ -351,10 +351,11 @@ class AutosaveGuardTests(unittest.TestCase):
     def test_unchanged_boxes_keep_database_value(self, mock_execute, *_):
         sql, flags = self.post(mock_execute, morning_prayer_note="", loaded_morning_prayer_note="",
                                night_prayer_note="", loaded_night_prayer_note="",
-                               bible_passage="", loaded_bible_passage="", water=["1"])
+                               bible_passage="", loaded_bible_passage="", devotion_thoughts="Mine", water=["1"])
         self.assertIn("morning_prayer_note = IF(%s, VALUES(morning_prayer_note), morning_prayer_note)", sql)
         self.assertIn("morning_prayer = IF(%s, VALUES(morning_prayer), morning_prayer)", sql)
-        self.assertIn("water_glasses = VALUES(water_glasses)", sql)
+        self.assertIn("devotion_thoughts = VALUES(devotion_thoughts)", sql)  # Glad's own box: always saved
+        self.assertNotIn("water_glasses", sql)  # the prayer page never touches other sections
         self.assertNotIn("devotion_markdown", sql)
         self.assertEqual(flags, (False,) * 5)
 
@@ -365,9 +366,8 @@ class AutosaveGuardTests(unittest.TestCase):
         _, flags = self.post(mock_execute, morning_prayer_note="Edited", loaded_morning_prayer_note="Duet's",
                              night_prayer_note="", loaded_night_prayer_note="",
                              bible_passage="Psalm 1", loaded_bible_passage="Psalm 1 ")
-        # order follows CHECKIN_FIELDS: morning_prayer, night_prayer, bible_passage, morning_prayer_note, night_prayer_note
-        guarded = [c for c in CHECKIN_FIELDS if c in ("morning_prayer", "night_prayer", "bible_passage",
-                                                      "morning_prayer_note", "night_prayer_note")]
+        # one flag per guarded column, in the prayer page's field order
+        guarded = [c for c in SECTIONS["prayer"]["fields"] if c != "devotion_thoughts"]
         self.assertEqual(dict(zip(guarded, flags)), {
             "morning_prayer": True, "night_prayer": False, "bible_passage": False,
             "morning_prayer_note": True, "night_prayer_note": False,
