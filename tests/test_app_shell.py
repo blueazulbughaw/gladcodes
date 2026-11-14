@@ -36,6 +36,7 @@ class InstallableAppTests(unittest.TestCase):
         self.assertEqual(sw.status_code, 200)
         self.assertIn("javascript", sw.headers["Content-Type"])
         self.assertIn('addEventListener("push"', sw.get_data(as_text=True))
+        self.assertIn('badge: "/static/icons/badge-96.png', sw.get_data(as_text=True))
 
     def test_login_page_stays_bare(self):
         body = self.anon.get("/gc-admin/login").get_data(as_text=True)

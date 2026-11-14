@@ -245,6 +245,13 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   auth-exempt admin endpoints besides login and the reminder tick (`routes.PUBLIC_ENDPOINTS`)
   so installs and background SW updates survive JWT expiry. The SW has no
   fetch handler/offline cache on purpose — admin pages must always be live.
+  App icons (`static/icons/app-192/512.png`, `apple-touch-icon.png`) are
+  Glad's own <G/C> artwork (stencil-cut letters, #318182 slash) on a navy
+  square, mark at 72% width so it survives the maskable circle crop. The
+  notification `badge` (`badge-96.png`) is the same mark in white on
+  transparent: Android draws badges from alpha only, so a full-square icon
+  shows as a white blob. All four were colour-keyed from Glad's artwork JPG
+  (its checkerboard is baked in), not from the site's SVG `logo_mark` redraw.
 - `url_for('static', ...)` appends `?v=<mtime>` (`app.py::static_cache_bust`)
   so deploys aren't masked by browser-cached CSS/JS.
 - Login has a "Remember this device" checkbox: a `REMEMBER_DEVICE_DAYS`

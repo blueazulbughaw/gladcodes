@@ -29,7 +29,7 @@ self.addEventListener("push", (e) => {
   e.waitUntil(self.registration.showNotification(data.title || "Today", {
     body: data.body || "",
     icon: "%(icon)s",
-    badge: "%(icon)s",
+    badge: "%(badge)s",  // status-bar icon: white <G/C>, Android uses only its shape
     tag: data.tag || "checkin",
     renotify: true,
     data: { url: data.url || "%(start)s" },
@@ -79,6 +79,7 @@ def manifest():
 def service_worker():
     js = SERVICE_WORKER_JS % {
         "icon": url_for("static", filename="icons/app-192.png"),
+        "badge": url_for("static", filename="icons/badge-96.png"),
         "start": url_for("admin.personal_dashboard"),
     }
     response = Response(js, mimetype="application/javascript")
