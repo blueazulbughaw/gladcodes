@@ -69,6 +69,23 @@ def create_app(config_class=Config):
             values["v"] = int(os.stat(path).st_mtime)
 
     @app.after_request
+    def add_security_headers(response):
+        # Nothing on this site is meant to be framed by another site:
+        # framing the OAuth approval or admin pages would allow clickjacking.
+        # No includeSubDomains on HSTS: cPanel/webmail subdomains aren't ours to promise.
+        headers = {
+            "Strict-Transport-Security": "max-age=31536000",
+            "X-Frame-Options": "DENY",
+            "Content-Security-Policy": "frame-ancestors 'none'",
+            "X-Content-Type-Options": "nosniff",
+            "Referrer-Policy": "strict-origin-when-cross-origin",
+            "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        }
+        for name, value in headers.items():
+            response.headers.setdefault(name, value)
+        return response
+
+    @app.after_request
     def add_admin_noindex_header(response):
         # /gc-admin/ is never linked publicly and must never be indexed.
         if request.path.startswith("/gc-admin"):
