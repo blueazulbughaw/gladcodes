@@ -113,10 +113,10 @@ def login():
     error = None
     if request.method == "POST":
         ip = request.remote_addr or "unknown"
-        if is_rate_limited(ip):
+        username = request.form.get("username", "").strip()
+        if is_rate_limited(ip, username):
             error = "Too many attempts. Try again later."
         else:
-            username = request.form.get("username", "").strip()
             password = request.form.get("password", "")
             if verify_credentials(username, password):
                 clear_attempts(ip)
@@ -132,7 +132,7 @@ def login():
                     max_age=int(token_lifetime(remember).total_seconds()),
                 )
                 return response
-            record_failed_attempt(ip)
+            record_failed_attempt(ip, username)
             error = "Invalid username or password."
     return render_template("login.html", error=error)
 

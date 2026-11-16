@@ -3,38 +3,54 @@ login rate limiter. See CLAUDE.md for the silent-redirect rule this
 supports: any missing/invalid/expired token means a bare redirect to
 /gc-admin/login, never an error message.
 """
-import time
 from datetime import datetime, timedelta, timezone
 
 import bcrypt
 import jwt
 from flask import current_app
 
-from database.db import query_one
+from database.db import execute, query_one, utc_now
 
 COOKIE_NAME = "gc_session"
 
-# In-memory only — resets on restart and isn't shared across Passenger
-# worker processes. Acceptable for a single-admin personal site; documented
-# as a known simplification in CLAUDE.md rather than pulling in Redis/etc.
-_failed_attempts: dict[str, list[float]] = {}
-MAX_ATTEMPTS = 5
+# Failed logins live in the DB (login_attempts), not process memory:
+# Passenger runs several worker processes and restarts them when idle, so an
+# in-memory counter was per-process and reset itself. Two limits:
+# per IP (stops one source guessing) and per username across all IPs (stops
+# a botnet spreading guesses). The per-username limit is deliberately looser
+# because anyone can trip it; it only blocks *new* sign-ins for the window,
+# devices already signed in keep working.
+MAX_ATTEMPTS = 5                # per IP
+MAX_ATTEMPTS_PER_USERNAME = 20  # all IPs together
 LOCKOUT_WINDOW_SECONDS = 15 * 60
 
 
-def is_rate_limited(ip: str) -> bool:
-    now = time.time()
-    attempts = [t for t in _failed_attempts.get(ip, []) if now - t < LOCKOUT_WINDOW_SECONDS]
-    _failed_attempts[ip] = attempts
-    return len(attempts) >= MAX_ATTEMPTS
+def _window_start():
+    return utc_now() - timedelta(seconds=LOCKOUT_WINDOW_SECONDS)
 
 
-def record_failed_attempt(ip: str) -> None:
-    _failed_attempts.setdefault(ip, []).append(time.time())
+def is_rate_limited(ip: str, username: str = "") -> bool:
+    since = _window_start()
+    by_ip = query_one("SELECT COUNT(*) AS n FROM login_attempts WHERE ip = %s AND attempted_at > %s", (ip, since))
+    if by_ip and by_ip["n"] >= MAX_ATTEMPTS:
+        return True
+    if username:
+        by_user = query_one("SELECT COUNT(*) AS n FROM login_attempts WHERE username = %s AND attempted_at > %s",
+                            (username[:100], since))
+        if by_user and by_user["n"] >= MAX_ATTEMPTS_PER_USERNAME:
+            return True
+    return False
+
+
+def record_failed_attempt(ip: str, username: str = "") -> None:
+    now = utc_now()
+    execute("INSERT INTO login_attempts (ip, username, attempted_at) VALUES (%s, %s, %s)",
+            (ip[:45], (username or "")[:100], now))
+    execute("DELETE FROM login_attempts WHERE attempted_at < %s", (now - timedelta(days=1),))
 
 
 def clear_attempts(ip: str) -> None:
-    _failed_attempts.pop(ip, None)
+    execute("DELETE FROM login_attempts WHERE ip = %s", (ip[:45],))
 
 
 def verify_credentials(username: str, password: str) -> bool:

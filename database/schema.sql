@@ -796,3 +796,14 @@ CREATE TABLE IF NOT EXISTS oauth_tokens (
 -- My dashboard sections switched off in Dashboard settings (comma list of
 -- personal.DASHBOARD_SECTIONS keys). Server-side so every device matches.
 ALTER TABLE checkin_app_state ADD COLUMN IF NOT EXISTS dashboard_hidden VARCHAR(255);
+
+-- Failed admin sign-ins (blueprints/admin/auth.py). Shared by every
+-- Passenger worker; rows older than a day are pruned on each insert.
+CREATE TABLE IF NOT EXISTS login_attempts (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    ip VARCHAR(45) NOT NULL,
+    username VARCHAR(100) NOT NULL DEFAULT '',
+    attempted_at DATETIME NOT NULL,
+    INDEX idx_login_attempts_ip (ip, attempted_at),
+    INDEX idx_login_attempts_user (username, attempted_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

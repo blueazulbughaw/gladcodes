@@ -176,13 +176,14 @@ def oauth_authorize():
             return _back_to_client(redirect_uri, error="access_denied", state=state)
         if not signed_in:
             ip = request.remote_addr or "unknown"
-            if is_rate_limited(ip):
+            username = request.form.get("username", "").strip()
+            if is_rate_limited(ip, username):
                 error = "Too many attempts. Try again later."
-            elif verify_credentials(request.form.get("username", "").strip(), request.form.get("password", "")):
+            elif verify_credentials(username, request.form.get("password", "")):
                 clear_attempts(ip)
                 signed_in = True
             else:
-                record_failed_attempt(ip)
+                record_failed_attempt(ip, username)
                 error = "Invalid username or password."
         if signed_in and not error:
             code = oauth.create_code(client["client_id"], redirect_uri, params["code_challenge"])

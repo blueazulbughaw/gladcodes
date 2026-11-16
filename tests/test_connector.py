@@ -203,16 +203,24 @@ class AuthorizeTests(Base):
         self.assertIn("claude.ai", body)
         self.assertIn('content="noindex, nofollow"', body.replace("noindex,nofollow", "noindex, nofollow"))
 
+    @patch("blueprints.admin.connector.is_rate_limited", return_value=False)
+    @patch("blueprints.admin.connector.record_failed_attempt")
+    @patch("blueprints.admin.connector.clear_attempts")
     @patch("blueprints.admin.connector.verify_credentials", return_value=False)
     @patch("blueprints.admin.connector.oauth.create_code")
-    def test_wrong_password_gives_no_code(self, mock_code, *_):
+    def test_wrong_password_gives_no_code(self, mock_code, *args):
         self.client.set_cookie(CSRF_COOKIE_NAME, "t")
         resp = self.client.post("/gc-admin/oauth/authorize", data=dict(self.QUERY, csrf_token="t", decision="allow",
                                                                         username="glad", password="nope"))
         self.assertEqual(resp.status_code, 200)
         self.assertIn("Invalid username or password.", resp.get_data(as_text=True))
         self.assertFalse(mock_code.called)
+        mock_record = args[2]  # verify_credentials, clear_attempts, record_failed_attempt, ...
+        mock_record.assert_called_once_with("127.0.0.1", "glad")
 
+    @patch("blueprints.admin.connector.is_rate_limited", return_value=False)
+    @patch("blueprints.admin.connector.record_failed_attempt")
+    @patch("blueprints.admin.connector.clear_attempts")
     @patch("blueprints.admin.connector.verify_credentials", return_value=True)
     @patch("blueprints.admin.connector.oauth.create_code", return_value="CODE123")
     def test_password_then_allow_sends_code_back(self, mock_code, *_):
