@@ -37,6 +37,7 @@
     <span class="admin-nav-group">Personal</span>
     <a href="{{ url_for('admin.personal_dashboard') }}" class="{{ 'active' if request.endpoint == 'admin.personal_dashboard' }}"><i data-lucide="layout-dashboard"></i><span>My dashboard</span></a>
     <a href="{{ url_for('admin.dashboard_settings') }}" class="{{ 'active' if request.endpoint == 'admin.dashboard_settings' }}"><i data-lucide="sliders-horizontal"></i><span>Dashboard settings</span></a>
+    <a href="{{ url_for('admin.security') }}" class="{{ 'active' if request.endpoint == 'admin.security' }}"><i data-lucide="shield-check"></i><span>Sign-in &amp; devices</span></a>
     <span class="admin-nav-group">Prayer &amp; devotion</span>
     <a href="{{ url_for('admin.checkin_prayer') }}" class="{{ 'active' if request.endpoint == 'admin.checkin_prayer' }}"><i data-lucide="book-heart"></i><span>Prayers &amp; devotion</span></a>
     <span class="admin-nav-group">Mental wellbeing</span>

@@ -78,12 +78,41 @@ def issue_token(username: str, remember: bool = False) -> str:
     return jwt.encode(payload, current_app.config["JWT_SECRET"], algorithm="HS256")
 
 
-def verify_token(token: str):
-    """Returns the decoded payload, or None for any missing/invalid/expired
-    token — callers must never distinguish these cases to the user."""
+def _decode(token: str):
     if not token:
         return None
     try:
-        return jwt.decode(token, current_app.config["JWT_SECRET"], algorithms=["HS256"])
+        return jwt.decode(token, current_app.config["JWT_SECRET"], algorithms=["HS256"],
+                          options={"require": ["exp", "iat", "sub"]})
     except jwt.PyJWTError:
         return None
+
+
+def verify_token(token: str):
+    """Returns the decoded session payload, or None for any missing/invalid/
+    expired token — callers must never distinguish these cases to the user.
+    Tokens with a "purpose" (the half-way MFA token) are never a session."""
+    payload = _decode(token)
+    if payload is None or "purpose" in payload:
+        return None
+    return payload
+
+
+# Between a correct password and the authenticator code: proves the password
+# step only, for 5 minutes, and can't be used as a session (verify_token).
+PENDING_COOKIE = "gc_mfa"
+PENDING_MINUTES = 5
+
+
+def issue_pending_token(username: str, remember: bool) -> str:
+    now = datetime.now(timezone.utc)
+    payload = {"sub": username, "iat": now, "exp": now + timedelta(minutes=PENDING_MINUTES),
+               "purpose": "mfa", "remember": bool(remember)}
+    return jwt.encode(payload, current_app.config["JWT_SECRET"], algorithm="HS256")
+
+
+def verify_pending_token(token: str):
+    payload = _decode(token)
+    if payload is None or payload.get("purpose") != "mfa":
+        return None
+    return payload

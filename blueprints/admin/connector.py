@@ -20,13 +20,15 @@ import logging
 import traceback
 from urllib.parse import urlencode, urlsplit
 
-from flask import Blueprint, abort, current_app, jsonify, redirect, render_template, request, url_for
+from flask import Blueprint, abort, current_app, g, jsonify, redirect, render_template, request, url_for
 
 from services import mcp_server, oauth
+from services import mfa as mfa_service
 
 from . import admin_bp
-from .auth import COOKIE_NAME, clear_attempts, is_rate_limited, record_failed_attempt, verify_credentials, verify_token
+from .auth import clear_attempts, is_rate_limited, record_failed_attempt, verify_credentials
 from .checkin import local_today
+from .mfa import current_admin, needs_code
 
 log = logging.getLogger(__name__)
 
@@ -169,7 +171,7 @@ def oauth_authorize():
             or not 43 <= len(params["code_challenge"]) <= 128):
         return _back_to_client(redirect_uri, error="invalid_request", state=state)
 
-    signed_in = verify_token(request.cookies.get(COOKIE_NAME)) is not None
+    signed_in = current_admin() is not None
     error = None
     if request.method == "POST":
         if request.form.get("decision") != "allow":
@@ -179,12 +181,17 @@ def oauth_authorize():
             username = request.form.get("username", "").strip()
             if is_rate_limited(ip, username):
                 error = "Too many attempts. Try again later."
-            elif verify_credentials(username, request.form.get("password", "")):
-                clear_attempts(ip)
-                signed_in = True
-            else:
+            elif not verify_credentials(username, request.form.get("password", "")):
                 record_failed_attempt(ip, username)
                 error = "Invalid username or password."
+            elif needs_code(username) and not mfa_service.verify_code(username, request.form.get("code", "")):
+                record_failed_attempt(ip, username)
+                error = "Enter the newest code from your authenticator app."
+            else:
+                if needs_code(username):
+                    g.trust_device_for = username  # passed the code here: trust this browser
+                clear_attempts(ip)
+                signed_in = True
         if signed_in and not error:
             code = oauth.create_code(client["client_id"], redirect_uri, params["code_challenge"])
             return _back_to_client(redirect_uri, code=code, state=state)
@@ -194,6 +201,7 @@ def oauth_authorize():
         params=params,
         signed_in=signed_in,
         error=error,
+        ask_code=not signed_in and mfa_service.any_enabled(),
         return_host=urlsplit(redirect_uri).hostname,
     )
 

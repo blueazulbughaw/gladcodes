@@ -11,6 +11,7 @@ admin_bp = Blueprint(
 )
 
 from . import routes  # noqa: E402,F401
+from . import mfa  # noqa: E402,F401
 from . import simple_crud  # noqa: E402,F401
 from . import now_card  # noqa: E402,F401
 from . import journal  # noqa: E402,F401

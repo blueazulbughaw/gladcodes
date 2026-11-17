@@ -807,3 +807,32 @@ CREATE TABLE IF NOT EXISTS login_attempts (
     INDEX idx_login_attempts_ip (ip, attempted_at),
     INDEX idx_login_attempts_user (username, attempted_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Authenticator sign-in (services/mfa.py). totp_pending_secret is the
+-- not-yet-confirmed QR secret; totp_last_counter blocks reusing a code.
+ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS totp_secret VARCHAR(64) NULL;
+ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS totp_pending_secret VARCHAR(64) NULL;
+ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS totp_enabled_at DATETIME NULL;
+ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS totp_last_counter BIGINT NOT NULL DEFAULT 0;
+
+-- One-time backup codes, SHA-256 hashed; used_at set when spent.
+CREATE TABLE IF NOT EXISTS mfa_recovery_codes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    code_hash CHAR(64) NOT NULL,
+    used_at DATETIME NULL,
+    created_at DATETIME NOT NULL,
+    INDEX idx_mfa_recovery_user (user_id, code_hash)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Browsers that passed the code once (gc_device cookie, SHA-256 hashed).
+CREATE TABLE IF NOT EXISTS trusted_devices (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    device_hash CHAR(64) NOT NULL UNIQUE,
+    label VARCHAR(255) NOT NULL,
+    created_at DATETIME NOT NULL,
+    last_used_at DATETIME NOT NULL,
+    expires_at DATETIME NOT NULL,
+    INDEX idx_trusted_devices_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

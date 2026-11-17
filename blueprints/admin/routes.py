@@ -7,14 +7,15 @@ from . import admin_bp
 from .checkin import SECTION_ENDPOINTS, checkin_streak, has_checked_in, local_today
 from .auth import (
     COOKIE_NAME,
+    PENDING_COOKIE,
+    PENDING_MINUTES,
     clear_attempts,
     is_rate_limited,
-    issue_token,
-    token_lifetime,
+    issue_pending_token,
     record_failed_attempt,
     verify_credentials,
-    verify_token,
 )
+from .mfa import current_admin, finish_sign_in, needs_code
 from .csrf import CSRF_COOKIE_NAME, csrf_cookie_missing, get_or_create_csrf_token, validate_csrf
 
 # Auth flow (login/logout/silent-redirect/CSRF) plus the dashboard landing
@@ -33,7 +34,7 @@ TOKEN_ENDPOINTS = {"admin.track_sleep", "admin.track_app", "admin.mcp", "admin.o
 # app_shell.py for why each is safe), plus the token-checked endpoints and
 # the connector's OAuth metadata + approval page (which asks for the
 # password itself when there's no session; see connector.py).
-PUBLIC_ENDPOINTS = {"admin.login", "admin.manifest", "admin.service_worker", "admin.reminders_tick",
+PUBLIC_ENDPOINTS = {"admin.login", "admin.login_verify", "admin.manifest", "admin.service_worker", "admin.reminders_tick",
                     "admin.oauth_authorize", "admin.oauth_metadata"} | TOKEN_ENDPOINTS
 
 
@@ -41,7 +42,7 @@ PUBLIC_ENDPOINTS = {"admin.login", "admin.manifest", "admin.service_worker", "ad
 def require_auth():
     if request.endpoint in PUBLIC_ENDPOINTS:
         return None
-    payload = verify_token(request.cookies.get(COOKIE_NAME))
+    payload = current_admin()  # session + trusted device when the authenticator is on
     if payload is None:
         return redirect(url_for("admin.login"))
     g.admin_user = payload["sub"]
@@ -61,7 +62,7 @@ def inject_csrf():
 
 # Pages that are a "home" (no Back button) and personal resources whose
 # lists sit under Today rather than the site dashboard.
-NO_BACK_ENDPOINTS = {"admin.personal_dashboard", "admin.index", "admin.login"}
+NO_BACK_ENDPOINTS = {"admin.personal_dashboard", "admin.index", "admin.login", "admin.login_verify"}
 PERSONAL_RESOURCES = {"medications", "app_ideas"}
 MONEY_RESOURCES = {"recurring_bills", "credit_cards"}
 
@@ -81,7 +82,7 @@ def back_url():
         return url_for("admin.money_index")
     if (resource in PERSONAL_RESOURCES or endpoint in SECTION_ENDPOINTS
             or endpoint in ("admin.connector_claude", "admin.connector_phone", "admin.dashboard_settings",
-                            "admin.money_index")):
+                            "admin.security", "admin.money_index")):
         return url_for("admin.personal_dashboard")
     name = endpoint.split(".", 1)[-1]
     index = f"admin.{name.rsplit('_', 1)[0]}_index"  # journal_edit -> journal_index
@@ -119,19 +120,17 @@ def login():
         else:
             password = request.form.get("password", "")
             if verify_credentials(username, password):
+                remember = request.form.get("remember") == "1"
+                if needs_code(username):
+                    # New device: the authenticator code comes next (mfa.py).
+                    # Failed-attempt count is cleared only after the code.
+                    response = redirect(url_for("admin.login_verify"))
+                    response.set_cookie(PENDING_COOKIE, issue_pending_token(username, remember), httponly=True,
+                                        secure=not current_app.debug, samesite="Lax", max_age=PENDING_MINUTES * 60)
+                    return response
                 clear_attempts(ip)
                 # Land on My dashboard: its Today strip shows what's left to do.
-                response = redirect(url_for("admin.personal_dashboard"))
-                remember = request.form.get("remember") == "1"
-                response.set_cookie(
-                    COOKIE_NAME,
-                    issue_token(username, remember),
-                    httponly=True,
-                    secure=not current_app.debug,
-                    samesite="Lax",
-                    max_age=int(token_lifetime(remember).total_seconds()),
-                )
-                return response
+                return finish_sign_in(username, remember)
             record_failed_attempt(ip, username)
             error = "Invalid username or password."
     return render_template("login.html", error=error)

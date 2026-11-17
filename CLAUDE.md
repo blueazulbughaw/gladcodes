@@ -254,6 +254,23 @@ yet to gate access to (`blueprints/api/` is still just stubs).
   (its checkerboard is baked in), not from the site's SVG `logo_mark` redraw.
 - `url_for('static', ...)` appends `?v=<mtime>` (`app.py::static_cache_bust`)
   so deploys aren't masked by browser-cached CSS/JS.
+- **Authenticator (MFA)**, by request asked only on a device never seen
+  before (`services/mfa.py`, `services/totp.py` stdlib RFC 6238,
+  `blueprints/admin/mfa.py`). Switched on at Sign-in & devices
+  `/gc-admin/security` (QR via qrcodejs from cdnjs, 10 one-time backup codes,
+  SHA-256 hashed). A passed code makes the browser a trusted device
+  (`gc_device` HttpOnly cookie, hashed in `trusted_devices`, 1 year from last
+  use). `routes.require_auth` goes through `mfa.current_admin()`: sessions
+  issued *before* MFA was turned on get their device registered
+  automatically (so the already-signed-in phone is never asked); a newer
+  session without a trusted device, or a removed device, is silently sent to
+  login. After a correct password on an untrusted device only a 5-minute
+  `gc_mfa` token is issued (`purpose: "mfa"`, never accepted as a session by
+  `verify_token`); `/gc-admin/login/verify` takes the code. The OAuth
+  approval page asks for the code too when needed. Failed sign-ins and codes
+  share the DB `login_attempts` limit (5/IP, 20/username per 15 min), since
+  Passenger workers don't share memory. Tests that hand-make a session call
+  `tests/mfa_stub.py` in `setUpModule`.
 - Login has a "Remember this device" checkbox: a `REMEMBER_DEVICE_DAYS`
   (30) JWT instead of the default 30 minutes, so the installed Today app
   and reminder taps don't bounce to login. JWTs are stateless, so the only

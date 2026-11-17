@@ -917,3 +917,21 @@ a.overview-card { text-decoration: none; color: inherit; }
 .dash-switch input:checked + .dash-switch-track::after { transform: translateX(18px); }
 .dash-switch input:focus-visible + .dash-switch-track { outline: 2px solid var(--teal); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .dash-switch-track, .dash-switch-track::after { transition: none; } }
+
+/* --- Sign-in & devices (security.html, login_verify.html) --- */
+.admin-success { background: rgba(59, 165, 93, 0.12); color: #1f6b3a; border-radius: 10px; padding: 0.75rem 1rem; margin: 0 0 1rem; font-weight: 600; }
+.security-card { padding: 1.5rem; margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem; min-width: 0; }
+.security-card h2 { margin: 0; font-size: 1.15rem; }
+.security-steps { margin: 0; padding-left: 1.2rem; }
+.security-qr { background: #fff; padding: 12px; border-radius: 12px; width: max-content; box-shadow: 0 1px 4px rgba(26, 46, 68, 0.12); }
+.security-secret { word-break: break-all; font-size: 0.95rem; letter-spacing: 0.04em; }
+.security-form { display: flex; flex-direction: column; gap: 0.75rem; max-width: 22rem; }
+.security-form label { display: flex; flex-direction: column; gap: 0.35rem; font-weight: 600; }
+.security-form input { padding: 0.6rem 0.75rem; border: 1px solid rgba(26, 46, 68, 0.2); border-radius: 10px; font-size: 1.1rem; letter-spacing: 0.15em; }
+.security-form--inline { max-width: none; flex-direction: row; flex-wrap: wrap; align-items: flex-end; }
+.security-devices { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+.security-devices li { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 0.75rem 0; border-bottom: 1px solid rgba(26, 46, 68, 0.08); }
+.security-devices li > div { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+.security-code-list { columns: 2; margin: 0; padding-left: 1.5rem; font-size: 1.05rem; line-height: 1.9; }
+.security-codes { border: 2px solid var(--warn); }
+.login-hint { margin: 0; font-size: 0.85rem; color: rgba(26, 46, 68, 0.7); }

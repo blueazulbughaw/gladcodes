@@ -338,3 +338,14 @@ class MedicinesEditorTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+import mfa_stub  # noqa: E402  (authenticator check needs the DB; see test_mfa.py)
+
+
+def setUpModule():
+    mfa_stub.start()
+
+
+def tearDownModule():
+    mfa_stub.stop()

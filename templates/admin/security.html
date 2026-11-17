@@ -1,0 +1,100 @@
+{% extends "admin/_shell.html" %}
+
+{% block title %}Sign-in &amp; devices{% endblock %}
+
+{% block content %}
+<div class="container checkin personal">
+  <div class="admin-page-header">
+    <div>
+      <h1><i data-lucide="shield-check" class="checkin-title-icon"></i> Sign-in &amp; devices</h1>
+      <span class="admin-meta">Authenticator code only on a device that hasn't been used before.</span>
+    </div>
+  </div>
+
+  {% if message %}<p class="admin-success">{{ message }}</p>{% endif %}
+  {% if error %}<p class="admin-error">{{ error }}</p>{% endif %}
+
+  {% if recovery_codes %}
+  <section class="card security-card security-codes">
+    <h2>Your backup codes</h2>
+    <p>Each one works once, if you ever lose your phone. Save them somewhere safe (a password manager or a printed copy). <strong>They won't be shown again.</strong></p>
+    <ol class="security-code-list">
+      {% for code in recovery_codes %}<li><code>{{ code }}</code></li>{% endfor %}
+    </ol>
+  </section>
+  {% endif %}
+
+  {% if not enabled %}
+  <section class="card security-card">
+    <h2>Turn on the authenticator</h2>
+    <ol class="security-steps">
+      <li>Open your authenticator app (Google Authenticator, Microsoft Authenticator, 1Password…) and add an account by scanning this code:</li>
+    </ol>
+    <div id="totpQr" class="security-qr" data-uri="{{ otpauth }}" aria-label="QR code for your authenticator app"></div>
+    <p class="admin-meta">Can't scan? Type this key instead: <code class="security-secret">{{ secret }}</code></p>
+    <form method="post" class="security-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="hidden" name="action" value="enable">
+      <label>
+        <span>2. Enter the 6-digit code it shows</span>
+        <input type="text" name="code" required inputmode="numeric" autocomplete="one-time-code" maxlength="6" spellcheck="false">
+      </label>
+      <button type="submit" class="btn btn-primary">Turn on</button>
+    </form>
+    <p class="admin-meta">Devices that are signed in right now (like your phone) are registered automatically the next time you open them, so they won't be asked.</p>
+  </section>
+  {% else %}
+  <section class="card security-card">
+    <h2>Trusted devices</h2>
+    <p class="admin-meta">These won't be asked for a code. Remove one you've lost: it's signed out right away.</p>
+    <ul class="security-devices">
+      {% for d in devices %}
+      <li>
+        <div>
+          <strong>{{ d.label }}</strong>{% if d.device_hash == this_device %} <span class="checkin-badge checkin-badge--teal">This device</span>{% endif %}
+          <span class="admin-meta">Added {{ d.created_at|human_date }} · last used {{ d.last_used_at|human_date }}</span>
+        </div>
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <input type="hidden" name="action" value="remove_device">
+          <input type="hidden" name="device_id" value="{{ d.id }}">
+          <button type="submit" class="btn-secondary-admin" onclick="return confirm('Remove this device? It will be signed out.');">Remove</button>
+        </form>
+      </li>
+      {% else %}
+      <li class="admin-meta">No trusted devices yet.</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="card security-card">
+    <h2>Backup codes</h2>
+    <p class="admin-meta">{{ codes_left }} of 10 left.</p>
+    <form method="post" class="security-form security-form--inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label>
+        <span>Authenticator code</span>
+        <input type="text" name="code" required inputmode="numeric" autocomplete="one-time-code" maxlength="20">
+      </label>
+      <button type="submit" name="action" value="new_codes" class="btn btn-primary">Make new backup codes</button>
+      <button type="submit" name="action" value="turn_off" class="btn-secondary-admin" onclick="return confirm('Turn off the authenticator? Every device will be forgotten.');">Turn off</button>
+    </form>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{{ super() }}
+{% if not enabled %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+  (function () {
+    var box = document.getElementById("totpQr");
+    if (box && window.QRCode) {
+      new QRCode(box, { text: box.dataset.uri, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.M });
+    }
+  })();
+</script>
+{% endif %}
+{% endblock %}

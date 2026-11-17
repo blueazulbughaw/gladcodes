@@ -28,8 +28,14 @@
     </label>
     <label>
       <span>Password</span>
-      <input type="password" name="password" required>
+      <input type="password" name="password" required autocomplete="current-password">
     </label>
+    {% if ask_code %}
+    <label>
+      <span>Authenticator code <small>(only on a new device)</small></span>
+      <input type="text" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="20">
+    </label>
+    {% endif %}
     {% endif %}
     <button type="submit" name="decision" value="allow" class="btn btn-primary login-submit">Allow</button>
     <button type="submit" name="decision" value="deny" class="btn-secondary-admin" formnovalidate>Cancel</button>
